@@ -34,19 +34,6 @@ export LC_COLLATE=C
 ##   modify for new process
 ###########################################################
 
-## comology calculator {{{
-## XXX: MODIFY THIS TO YOUR OWN CASE
-## and make sure this `calc' is executable
-## NOTES: use `$HOME' instead of `~' in path
-COSCALC="`which cosmo_calc calc_distance | head -n 1`"
-# COSCALC="_path_to_calc_distance_"
-# COSCALC="$HOME/bin/mass/calc_distance"
-if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
-    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
-    exit 255
-fi
-## }}}
-
 ## about, used in `usage' {{{
 VERSION="v3.0"
 UPDATE="2013-02-09"
@@ -81,6 +68,19 @@ case "$1" in
         ;;
 esac
 ## usage, help }}}
+
+## comology calculator {{{
+## XXX: MODIFY THIS TO YOUR OWN CASE
+## and make sure this `calc' is executable
+## NOTES: use `$HOME' instead of `~' in path
+COSCALC="`which cosmo_calc calc_distance 2>/dev/null | head -n 1`"
+# COSCALC="_path_to_calc_distance_"
+# COSCALC="$HOME/bin/mass/calc_distance"
+if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
+    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
+    exit 255
+fi
+## }}}
 
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files

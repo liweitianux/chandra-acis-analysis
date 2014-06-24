@@ -19,18 +19,6 @@ export LC_COLLATE=C
 ##   2014/06/18: 'cooling_time2.sh' -> 'ciao_calc_ct.sh'
 ###########################################################
 
-## comology calculator {{{
-## XXX: MODIFY THIS TO YOUR OWN CASE
-## and make sure this `calc' is executable
-## NOTES: use `$HOME' instead of `~' in path
-BASE_PATH=`dirname $0`
-COSCALC="`which cosmo_calc calc_distance | head -n 1`"
-if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
-    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
-    exit 255
-fi
-## }}}
-
 ## about, used in `usage' {{{
 VERSION="v1.1"
 UPDATE="2012-08-26"
@@ -57,13 +45,25 @@ ERR_UNI=61
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> r500=<r500_kpc> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> nh=<nH> z=<redshift> arf=<warf_file> rmf=<wrmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
+        printf "    `basename $0` basedir=<repro_dir> evt=<evt2_clean> r500=<r500_kpc> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> nh=<nH> z=<redshift> arf=<warf_file> rmf=<wrmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
         printf "\nversion:\n"
         printf "${VERSION}, ${UPDATE}\n"
         exit ${ERR_USG}
         ;;
 esac
 ## usage, help }}}
+
+## comology calculator {{{
+## XXX: MODIFY THIS TO YOUR OWN CASE
+## and make sure this `calc' is executable
+## NOTES: use `$HOME' instead of `~' in path
+BASE_PATH=`dirname $0`
+COSCALC="`which cosmo_calc calc_distance 2>/dev/null | head -n 1`"
+if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
+    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
+    exit 255
+fi
+## }}}
 
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
@@ -208,6 +208,7 @@ if [ -d "${basedir}" ]; then
 else
     BASEDIR=${DFT_BASEDIR}
 fi
+# json file
 if [ ! -z "${json}" ] && [ -r "${BASEDIR}/${json}" ]; then
     JSON_FILE="${BASEDIR}/${json}"
 elif [ `ls ${BASEDIR}/${DFT_JSON_PAT} 2> /dev/null | wc -l` -eq 1 ]; then

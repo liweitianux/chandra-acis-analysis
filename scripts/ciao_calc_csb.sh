@@ -21,16 +21,6 @@ ERR_Z=21
 ERR_CNT=22
 ## }}}
 
-## cosmology claculator {{{
-## write the path of cosmo claculator here
-BASE_PATH=`dirname $0`
-COSMO_CALC=`which cosmo_calc`
-if [ -z "${COSMO_CALC}" ] || [ ! -x  ${COSMO_CALC} ] ; then 
-    printf "ERROR: ${COSMO_CALC} neither executable nor specified\n"
-    exit ${ERR_CALC}
-fi
-## }}}
-
 ## usage, help {{{
 case "$1" in
     -[hH]*|--[hH]*)
@@ -41,6 +31,16 @@ case "$1" in
         ;;
 esac
 ## usage, help }}}
+
+## cosmology claculator {{{
+## write the path of cosmo claculator here
+BASE_PATH=`dirname $0`
+COSMO_CALC="`which cosmo_calc calc_distance 2>/dev/null | head -n 1`"
+if [ -z "${COSMO_CALC}" ] || [ ! -x  ${COSMO_CALC} ] ; then 
+    printf "ERROR: ${COSMO_CALC} neither executable nor specified\n"
+    exit ${ERR_CALC}
+fi
+## }}}
 
 ## default parameters {{{
 # default basedir relative to 'spc/profile'
@@ -81,13 +81,13 @@ getopt_keyval() {
 getopt_keyval "$@"
 
 # basedir
-if [ -d "${basedir}" ] && ls ${basedir}/*repro_evt2.fits > /dev/null 2>&1; then
+if [ -d "${basedir}" ]; then
     BASEDIR=${basedir}
-elif [ -d "${DFT_BASEDIR}" ] && ls ${DFT_BASEDIR}/*repro_evt2.fits > /dev/null 2>&1; then
+elif [ -d "${DFT_BASEDIR}" ]; then
     BASEDIR=${DFT_BASEDIR}
 else
     read -p "> basedir (contains info json): " BASEDIR
-    if [ ! -d "${BASEDIR}" ] || ! ls ${BASEDIR}/*repro_evt2.fits >/dev/null 2>&1; then
+    if [ ! -d "${BASEDIR}" ]; then
         printf "ERROR: given \`${BASEDIR}' invalid!\n"
         exit ${ERR_DIR}
     fi
@@ -159,7 +159,7 @@ Z=`grep -i '"redshift"' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
 R500=`grep '"R500.*kpc' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
 OBS_ID=`grep '"Obs.*ID' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
 OBJ_NAME=`grep '"Source\ Name' ${JSON_FILE} | awk -F':' '{ print $2 }' | sed -e 's/\ *"//' -e 's/"\ *,$//'`
-CT=`grep '"Cooling_time' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
+#CT=`grep '"Cooling_time' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
 
 cd ${IMG_DIR}
 printf "entered img directory\n"
@@ -172,8 +172,9 @@ if [ `echo "${Z} < 0.3" | bc -l` -eq 1 ]; then
 #    exit ${ERR_Z}
 fi
 
-KPC_PER_PIXEL=`${COSMO_CALC} ${Z} | grep 'kpc/pixel' | awk '{ print $3 }'`
-RC_PIX=`echo "scale=2; 0.048 * ${R500} / ${KPC_PER_PIXEL}" | bc -l`
+#KPC_PER_PIX=`${COSMO_CALC} ${Z} | grep 'kpc/pixel' | awk '{ print $3 }'`
+KPC_PER_PIX=`${COSMO_CALC} ${Z} | grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+RC_PIX=`echo "scale=2; 0.048 * ${R500} / ${KPC_PER_PIX}" | bc -l`
 # test counts_in_0.048R500<500?
 RC_REG="pie(${X},${Y},0,${RC_PIX},0,360)"
 punlearn dmlist
@@ -189,8 +190,8 @@ fi
 TMP_REG="_tmp_csb.reg"
 TMP_S="_tmp_csb.fits"
 
-R1=`echo "scale=2;  40 / ${KPC_PER_PIXEL}" | bc -l`
-R2=`echo "scale=2; 400 / ${KPC_PER_PIXEL}" | bc -l` 
+R1=`echo "scale=2;  40 / ${KPC_PER_PIX}" | bc -l`
+R2=`echo "scale=2; 400 / ${KPC_PER_PIX}" | bc -l` 
 cat > ${TMP_REG} << _EOF_
 pie(${X},${Y},0,${R1},0,360)
 pie(${X},${Y},0,${R2},0,360)
@@ -227,8 +228,8 @@ printf "S1=${S1}, S2=${S2} (sur_flux)\n" | tee -a ${CSB_RES}
 printf "C_sb: ${CSB}\n" | tee -a ${CSB_RES}
 [ "x${F_WZ}" = "xtrue" ] && printf "${WZ}\n" | tee -a ${CSB_RES}
 [ "x${F_WC}" = "xtrue" ] && printf "${WC}\n" | tee -a ${CSB_RES}
-printf "# OBS_ID,OBJ_NAME,Z,R500,RC_PIX,CNT_RC,CT,R1_PIX,R2_PIX,S1,S2,CSB,WZ,WC,WR\n" | tee -a ${CSB_RES}
-printf "# $OBS_ID,$OBJ_NAME,$Z,$R500,$RC_PIX,$CNT_RC,$CT,$R1,$R2,$S1,$S2,$CSB,$WZ,$WC,$WR\n\n" | tee -a ${CSB_RES}
+printf "# OBS_ID,OBJ_NAME,Z,R500,RC_PIX,CNT_RC,R1_PIX,R2_PIX,S1,S2,CSB,WZ,WC,WR\n" | tee -a ${CSB_RES}
+printf "# $OBS_ID,$OBJ_NAME,$Z,$R500,$RC_PIX,$CNT_RC,$R1,$R2,$S1,$S2,$CSB,$WZ,$WC,$WR\n\n" | tee -a ${CSB_RES}
 ## main }}}
 
 exit 0
