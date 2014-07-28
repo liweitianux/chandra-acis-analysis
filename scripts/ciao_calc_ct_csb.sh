@@ -15,10 +15,12 @@ SCRIPT_CSB="${BASE_PATH}/ciao_calc_csb.sh"
 echo "### CALCULATE COOLING TIME ###"
 echo "### ${SCRIPT_CT} ###"
 #ciao_calc_ct.sh
+${SCRIPT_CT}
 
 echo "### CALCULATE CSB VALUE ###"
 echo "### ${SCRIPT_CSB} ###"
 #ciao_calc_csb.sh
+${SCRIPT_CSB}
 
 echo "### PROCESS RESULTS ###"
 CT_RES="cooling_results.txt"
