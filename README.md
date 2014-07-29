@@ -4,6 +4,7 @@ README.md
 
 Install/Compile
 ---------------
+needs `libgsl-dev'
 (1) mass_profile
 $ cd mass_profile
 $ make clean

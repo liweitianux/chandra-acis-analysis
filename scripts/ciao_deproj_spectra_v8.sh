@@ -39,6 +39,10 @@ export LC_COLLATE=C
 ## v8, 2012/08/14, LIweitiaNux
 ##   use `cmdline' args instead of `cfg file'
 ##   add `logging' function
+## v8.1, 2014/07/29, Weitian LI
+##   fix variable 'ABUND=grsa'
+## v8.2, 2014/07/29, Weitian LI
+##   fix 'pbkfile' parameters for CIAO-4.6
 ###########################################################
 
 ## about, used in `usage' {{{
@@ -88,6 +92,9 @@ DFT_BPIX_PAT="acis*repro*bpix?.fits"
 DFT_PBK_PAT="acis*pbk?.fits"
 # default `msk file pattern'
 DFT_MSK_PAT="acis*msk?.fits"
+
+## abundance standard
+ABUND="grsa"
 ## default parameters }}}
 
 ## error code {{{
@@ -416,10 +423,17 @@ for i in `seq ${LINES}`; do
     # NO background response files
     # NO background spectrum (generate by self)
     # NO spectrum grouping (group by self using `grppha')
+    # 'pbkfile' parameter deprecated in CIAO-4.6
+    if `pget specextract pbkfile >/dev/null 2>&1`; then
+        P_PBKFILE="pbkfile='${PBK}'"
+    else
+        P_PBKFILE=""
+    fi
+    #
     punlearn specextract
     specextract infile="${EVT}[sky=region(${REG_CIAO})]" \
         outroot="r${i}_${ROOTNAME}" bkgfile="" asp="@${ASOLIS}" \
-        pbkfile="${PBK}" mskfile="${MSK}" badpixfile="${BPIX}" \
+        ${P_PBKFILE} mskfile="${MSK}" badpixfile="${BPIX}" \
         weight=yes correct=no bkgresp=no \
         energy="0.3:11.0:0.01" channel="1:1024:1" \
         combine=no binarfwmap=2 \

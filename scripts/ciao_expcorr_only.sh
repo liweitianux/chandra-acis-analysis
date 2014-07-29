@@ -5,7 +5,7 @@ export LC_COLLATE=C
 ###########################################################
 ## make `image' from `evt file'                          ##
 ## make `spectral weight' using `make_instmap_weights'   ##
-## use `merge_all' to generating `exposure map'          ##
+## use `fluximage' to generating `exposure map'          ##
 ## make `exposure-corrected' image                       ##
 ## and extract `surface brighness profile'               ##
 ##                                                       ##
@@ -23,6 +23,8 @@ export LC_COLLATE=C
 ##   fix a bug with `sed'
 ## v1.2, 2012-08-21, LIweitiaNux
 ##   set `ardlib' before process `merge_all'
+## v2.0, 2014/07/29, Weitian LI
+##   `merge_all' deprecated, use `fluximage' if possible
 ###########################################################
 
 ## about, used in `usage' {{{
@@ -81,6 +83,8 @@ DFT_LOGFILE="expcorr_sbp_`date '+%Y%m%d'`.log"
 DFT_ASOLIS_PAT="acis*asol?.lis"
 # default `bad pixel filename pattern'
 DFT_BPIX_PAT="acis*repro*bpix?.fits"
+# default `msk file pattern'
+DFT_MSK_PAT="acis*msk?.fits"
 ## default parameters }}}
 
 ## functions {{{
@@ -233,11 +237,6 @@ if [ -z "${ASOLIS}" ]; then
     exit ${ERR_ASOL}
 fi
 printf "## use asolis: \`${ASOLIS}'\n"
-## XXX: `merge_all' needs `asol files' in working directory
-printf "link asol files into currect dir (\`merge_all' needed) ...\n"
-for f in `cat ${ASOLIS}`; do
-    ln -sv ${BASEDIR}/${f} .
-done
 # check badpixel file
 BPIX=`ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
 if [ -z "${BPIX}" ]; then
@@ -245,6 +244,13 @@ if [ -z "${BPIX}" ]; then
     exit ${ERR_BPIX}
 fi
 printf "## use badpixel: \`${BPIX}'\n" | ${TOLOG}
+# check msk file
+MSK=`ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
+if [ -z "${MSK}" ]; then
+    printf "ERROR: cannot find \"${DFT_MSK_PAT}\" in dir \`${BASEDIR}'\n"
+    exit ${ERR_MSK}
+fi
+printf "## use msk file: \`${MSK}'\n" | ${TOLOG}
 ## check files }}}
 
 ## determine ACIS type {{{
@@ -328,29 +334,46 @@ get_sky_limits image="${IMG_ORIG}"
 XYGRID=`pget get_sky_limits xygrid`
 printf "## get \`xygrid': \`${XYGRID}'\n" | ${TOLOG}
 
-## for simplicity, use `merge_all' to generating `exposure map' {{{
-## set `ardlib' again to make sure the matched bpix file specified
-printf "set \`ardlib' again for \`merge_all' ...\n"
-punlearn ardlib
-acis_set_ardlib badpixfile="${BPIX}"
-
-printf "use \`merge_all' to generate \`exposure map' ONLY ...\n"
 EXPMAP="expmap_${ROOTNAME}.fits"
-punlearn merge_all
-merge_all evtfile="${EVT_E}" asol="@${ASOLIS}" \
-    chip="${CCD}" xygrid="${XYGRID}" \
-    energy="${SPEC_WGT}" expmap="${EXPMAP}" \
-    dtffile="" refcoord="" merged="" expcorr="" \
-    clobber=yes
-## `merge_all' }}}
-
-## apply exposure correction
-printf "use \`dmimgcalc' to apply \`exposure correction' ...\n"
 IMG_EXPCORR="img_expcorr_${ROOTNAME}.fits"
-punlearn dmimgcalc
-dmimgcalc infile="${IMG_ORIG}" infile2="${EXPMAP}" \
-    outfile="${IMG_EXPCORR}" operation=div clobber=yes
 
+if `which merge_all >/dev/null 2>&1`; then
+    # merge_all available
+    printf "merge_all ...\n"
+    ## set `ardlib' again to make sure the matched bpix file specified
+    printf "set \`ardlib' again for \`merge_all' ...\n"
+    punlearn ardlib
+    acis_set_ardlib badpixfile="${BPIX}"
+    
+    ## XXX: `merge_all' needs `asol files' in working directory
+    printf "link asol files into currect dir (\`merge_all' needed) ...\n"
+    for f in `cat ${ASOLIS}`; do
+        ln -sv ${BASEDIR}/${f} .
+    done
+    
+    printf "use \`merge_all' to generate \`exposure map' ONLY ...\n"
+    punlearn merge_all
+    merge_all evtfile="${EVT_E}" asol="@${ASOLIS}" \
+        chip="${CCD}" xygrid="${XYGRID}" \
+        energy="${SPEC_WGT}" expmap="${EXPMAP}" \
+        dtffile="" refcoord="" merged="" expcorr="" \
+        clobber=yes
+    
+    ## apply exposure correction
+    printf "use \`dmimgcalc' to apply \`exposure correction' ...\n"
+    punlearn dmimgcalc
+    dmimgcalc infile="${IMG_ORIG}" infile2="${EXPMAP}" \
+        outfile="${IMG_EXPCORR}" operation=div clobber=yes
+else
+    # `merge_all' deprecated and not available
+    ## use 'fluximage' to generate `exposure map' and apply exposure correction
+    printf "fluximage ...\n"
+    punlearn fluximage
+    fluximage infile="${EVT_E}" outroot="${ROOTNAME}" \
+        binsize=1 bands="${SPEC_WGT}" xygrid="${XYGRID}" \
+        asol="@${ASOLIS}" badpixfile="${BPIX}" \
+        maskfile="${MSK}" clobber=yes verbose=2
+fi
 
 ## main }}}
 

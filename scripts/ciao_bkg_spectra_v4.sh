@@ -31,6 +31,8 @@ export LC_COLLATE=C
 #     (through cmdline which similar to CIAO,
 #     and default filename match patterns)
 #   add simple `logging' function
+# v4.1, 2014/07/29, Weitian LI
+#   fix 'pbkfile' parameters for CIAO-4.6
 ###########################################################
 
 ## about, used in `usage' {{{
@@ -307,11 +309,18 @@ for reg_i in ${REGLIST}; do
     # NO background response files
     # NO background spectrum (generate by self)
     # NO spectrum grouping (group by self using `grppha')
+    # 'pbkfile' parameter deprecated in CIAO-4.6
+    if `pget specextract pbkfile >/dev/null 2>&1`; then
+        P_PBKFILE="pbkfile='${PBK}'"
+    else
+        P_PBKFILE=""
+    fi
+    #
     printf "use \`specextract' to generate spectra and response ...\n"
     punlearn specextract
     specextract infile="${EVT}[sky=region(${REG_TMP})]" \
         outroot=${LBKG_PI%.pi} bkgfile="" asp="@${ASOLIS}" \
-        pbkfile="${PBK}" mskfile="${MSK}" badpixfile="${BPIX}" \
+        ${P_PBKFILE} mskfile="${MSK}" badpixfile="${BPIX}" \
         weight=yes correct=no bkgresp=no \
         energy="0.3:11.0:0.01" channel="1:1024:1" \
         combine=no binarfwmap=2 \
