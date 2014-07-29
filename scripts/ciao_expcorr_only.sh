@@ -365,14 +365,21 @@ if `which merge_all >/dev/null 2>&1`; then
     dmimgcalc infile="${IMG_ORIG}" infile2="${EXPMAP}" \
         outfile="${IMG_EXPCORR}" operation=div clobber=yes
 else
-    # `merge_all' deprecated and not available
+    ## `merge_all' deprecated and not available
     ## use 'fluximage' to generate `exposure map' and apply exposure correction
     printf "fluximage ...\n"
     punlearn fluximage
     fluximage infile="${EVT_E}" outroot="${ROOTNAME}" \
         binsize=1 bands="${SPEC_WGT}" xygrid="${XYGRID}" \
         asol="@${ASOLIS}" badpixfile="${BPIX}" \
-        maskfile="${MSK}" clobber=yes verbose=2
+        maskfile="${MSK}" clobber=yes
+    ## make symbolic links
+    # clipped counts image
+    ln -sv "${ROOTNAME}*band*thresh.img" "${IMG_ORIG%.fits}_thresh.fits"
+    # clipped exposure map
+    ln -sv "${ROOTNAME}*band*thresh.expmap" "${EXPMAP}"
+    # exposure-corrected image
+    ln -sv "${ROOTNAME}*band*flux.img" "${IMG_EXPCORR}"
 fi
 
 ## main }}}
