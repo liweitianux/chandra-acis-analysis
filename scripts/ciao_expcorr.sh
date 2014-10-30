@@ -306,7 +306,7 @@ printf "generate skyfov ...\n"
 SKYFOV="_skyfov.fits"
 [ -e "${SKYFOV}" ] && rm -fv ${SKYFOV}
 punlearn skyfov
-skyfov infile="${EVT}" outfile="${SKYFOV}" clobber=yes
+skyfov infile="${EVT}" outfile="${SKYFOV}" aspect="@${ASOLIS}" clobber=yes
 
 ## filter by energy band & make image
 printf "filter out events in energy band: \`${ENG_RANGE}' ...\n"
@@ -375,11 +375,11 @@ else
         maskfile="${MSK}" clobber=yes
     ## make symbolic links
     # clipped counts image
-    ln -sv "${ROOTNAME}*band*thresh.img" "${IMG_ORIG%.fits}_thresh.fits"
+    ln -svf ${ROOTNAME}*band*thresh.img ${IMG_ORIG%.fits}_thresh.fits
     # clipped exposure map
-    ln -sv "${ROOTNAME}*band*thresh.expmap" "${EXPMAP}"
+    ln -svf ${ROOTNAME}*band*thresh.expmap ${EXPMAP}
     # exposure-corrected image
-    ln -sv "${ROOTNAME}*band*flux.img" "${IMG_EXPCORR}"
+    ln -svf ${ROOTNAME}*band*flux.img ${IMG_EXPCORR}
 fi
 
 ## main }}}

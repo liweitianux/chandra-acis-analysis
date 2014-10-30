@@ -4,9 +4,12 @@ export LC_COLLATE=C
 
 #####################################################################
 ## make exposure map and exposure-corrected image
-## extract surface brightness profile (revoke 'ciao_sbp_v3.1.sh')
+## extract surface brightness profile (revoke 'ciao_sbp.sh')
 ##
 ## ChangeLogs:
+## v4.1, 2014/10/30, Weitian LI
+##   updated 'EXPCORR_SCRIPT' & 'EXTRACT_SBP_SCRIPT',
+##   removed version number in scripts filename.
 ## v4, 2013/10/12, LIweitiaNux
 ##   split out the 'generate regions' parts -> 'ciao_genreg_v1.sh'
 ## v3, 2013/05/03, LIweitiaNux
@@ -15,8 +18,8 @@ export LC_COLLATE=C
 
 SCRIPT_PATH=`readlink -f $0`
 SCRIPT_DIR=`dirname ${SCRIPT_PATH}`
-EXPCORR_SCRIPT="ciao_expcorr_only.sh"
-EXTRACT_SBP_SCRIPT="ciao_sbp_v3.1.sh"
+EXPCORR_SCRIPT="ciao_expcorr.sh"
+EXTRACT_SBP_SCRIPT="ciao_sbp.sh"
 
 ## about, used in `usage' {{{
 VERSION="v4"

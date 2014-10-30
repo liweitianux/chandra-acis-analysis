@@ -37,7 +37,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
  (1) $ chandra_repro indir=. outdir=repro verbose=2
  (2) $ cd repro; mkdir -p evt bkg img spc/profile mass;
  (3) $ cd evt; ln -s ../acis*evt2.fits .;
- (4) $ ciao_procevt2.sh
+ (4) $ ciao_procevt.sh
  (5) $ cd ../bkg; ln -s ../evt/evt2*_clean.fits .;
  (6) $ ciao_blanksky_v4.sh
  (7) ds9 open 'evt2*_clean.fits'; select edge region as the
@@ -54,7 +54,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 (12) cd ../img; ln -s ../evt/evt2*_clean.fits .;
 (13) ds9 open 'evt2*_clean.fits', select the center of cluster,
      save the region as 'center.reg'
-(14) $ ciao_genregs_v1.sh reg_in=center.reg
+(14) $ ciao_genregs_v1.sh reg_in=center.reg bkgd=<bkgd>
 (15) $ cd ../spc/profile;
      $ ln -s ../../evt/evt2*_clean.fits .;
      $ ln -s ../../bkg/bkgcorr_blanksky_lbkg.pi .; (maybe 'lbkg.pi')
@@ -87,7 +87,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      z          <redshift>
      temp       <avg_temp>
      abund      <avg_abund>
-(23) $ ciao_expcorr_sbp_v4.sh basedir=.. nh=<nh> z=<redshift> temp=<avg_temp> abund=<avg_abund>
+(23) $ ciao_expcorr_sbp.sh basedir=.. nh=<nh> z=<redshift> temp=<avg_temp> abund=<avg_abund>
 ## --------------------------------------------------------
 
 (24) $ cd ../mass; clean_massdir.sh;

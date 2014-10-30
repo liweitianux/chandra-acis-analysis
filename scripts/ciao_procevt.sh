@@ -19,6 +19,9 @@
 
 ###########################################################
 ## ChangeLogs:
+## v2.2, 2014/10/30, Weitian LI
+##  small fix to the generation of chips script:
+##  changed '>>' to '>'
 ## v2.1, 2012/08/16, LIweitiaNux
 ##   improve invoke `chips', run it in a separate terminal
 ###########################################################
@@ -160,7 +163,7 @@ dmextract infile="${EVT2_RMSRCS}[exclude sky=region(${LC_REG})][bin time=::200]"
 LC_SCRIPT="_${LC%.lc}.chips"
 LC_SCALE=1.2
 GTI="${LC%.lc}.gti"
-cat >> ${LC_SCRIPT} << _EOF_
+cat > ${LC_SCRIPT} << _EOF_
 from lightcurves import *
 lc_clean("${LC}")
 lc_clean("${LC}", scale=${LC_SCALE}, outfile="${GTI}")
