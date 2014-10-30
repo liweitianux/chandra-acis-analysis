@@ -19,17 +19,17 @@ export LC_COLLATE=C
 
 ###########################################################
 ## ChangeLogs:
-## v1.1, 2012-08-21, LIweitiaNux
-##   fix a bug with `sed'
-## v1.2, 2012-08-21, LIweitiaNux
-##   set `ardlib' before process `merge_all'
 ## v2.0, 2014/07/29, Weitian LI
 ##   `merge_all' deprecated, use `fluximage' if possible
+## v1.2, 2012-08-21, LIweitiaNux
+##   set `ardlib' before process `merge_all'
+## v1.1, 2012-08-21, LIweitiaNux
+##   fix a bug with `sed'
 ###########################################################
 
 ## about, used in `usage' {{{
-VERSION="v1.2"
-UPDATE="2012-08-21"
+VERSION="v2.0"
+UPDATE="2014-07-29"
 ## about }}}
 
 ## error code {{{

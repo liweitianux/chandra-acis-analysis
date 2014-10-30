@@ -14,10 +14,11 @@ export LC_COLLATE=C
 ###########################################################
 
 ###########################################################
-## Changes made by zzh: (2013-02-01)
-## removes the region in ccd gap of ACIS_I 
-## removes the region in the area of point source
-## need asol file to prevent offset 
+## Changes:
+## v3.1: 2013/02/01, Zhenghao ZHU
+##   removes the region in ccd gap of ACIS_I 
+##   removes the region in the area of point source
+##   need asol file to prevent offset 
 ###########################################################
 
 SCRIPT_PATH=`readlink -f $0`

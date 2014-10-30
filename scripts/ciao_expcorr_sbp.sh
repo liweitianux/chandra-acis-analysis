@@ -22,8 +22,8 @@ EXPCORR_SCRIPT="ciao_expcorr.sh"
 EXTRACT_SBP_SCRIPT="ciao_sbp.sh"
 
 ## about, used in `usage' {{{
-VERSION="v4"
-UPDATE="2013-10-12"
+VERSION="v4.1"
+UPDATE="2014-10-30"
 ## about }}}
 
 ## err code {{{
