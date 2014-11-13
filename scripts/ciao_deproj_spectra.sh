@@ -24,41 +24,48 @@ export LC_COLLATE=C
 
 ###########################################################
 ## ChangeLogs:
-## v5, 2012/08/05
-##   XFLT0005 not modified as pie end angle
-##   add `background renormalization'
-## v6, 2012/08/08, Gu Junhua
-##   Modified to using config file to pass parameters
-##   Use grppha to rebin the spectrum
+## v9.0, 2014/11/13, Weitian LI
+##   * replaced 'grppha' with 'dmgroup' to group spectra
+##     (dmgroup will add history to fits file, while grppha NOT)
+##   * re-arranged change logs
+## v8.3, 2014/11/08, Weitian LI
+##   fix problem with 'P_PBKFILE' about the single colon
+## v8.2, 2014/07/29, Weitian LI
+##   fix 'pbkfile' parameters for CIAO-4.6
+## v8.1, 2014/07/29, Weitian LI
+##   fix variable 'ABUND=grsa'
+## v8, 2012/08/14, LIweitiaNux
+##   use `cmdline' args instead of `cfg file'
+##   add `logging' function
 ## v7, 2012/08/10, LIweitiaNux
 ##   account blanksky, local bkg, specified bkg
 ##   change name to `ciao_deproj_spectra_v*.sh'
 ##   add `error status'
 ##   Imporve ${CFG_FILE}
 ##   Imporve comments
-## v8, 2012/08/14, LIweitiaNux
-##   use `cmdline' args instead of `cfg file'
-##   add `logging' function
-## v8.1, 2014/07/29, Weitian LI
-##   fix variable 'ABUND=grsa'
-## v8.2, 2014/07/29, Weitian LI
-##   fix 'pbkfile' parameters for CIAO-4.6
-## v8.3, 2014/11/08, Weitian LI
-##   fix problem with 'P_PBKFILE' about the single colon
+## v6, 2012/08/08, Gu Junhua
+##   Modified to using config file to pass parameters
+##   Use grppha to rebin the spectrum
+## v5, 2012/08/05
+##   XFLT0005 not modified as pie end angle
+##   add `background renormalization'
 ###########################################################
 
 ## about, used in `usage' {{{
-VERSION="v8.3"
-UPDATE="2014-11-08"
+VERSION="v9.0"
+UPDATE="2014-11-12"
 ## about }}}
 
 ## usage, help {{{
 case "$1" in
     -[hH]*|--[hH]*)
-        printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> reg=<radial_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> basedir=<base_dir> nh=<nH> z=<redshift> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
-        printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "Usage:\n"
+        printf "    `basename $0` evt=<evt2_clean> reg=<radial_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> basedir=<base_dir> nh=<nH> z=<redshift> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
+        printf "\nNotes:\n"
+        printf "    If grouptype=NUM_CTS, then grouptypeval required.\n"
+        printf "    If grouptype=BIN, then binspec required.\n"
+        printf "\nVersion:\n"
+        printf "    ${VERSION}, ${UPDATE}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -74,10 +81,11 @@ DFT_REG_IN="rspec.reg"
 # default dir which contains `asols, asol.lis, ...' files
 # DFT_BASEDIR=".."
 DFT_BASEDIR="_NOT_EXIST_"
-# default `group command' for `grppha'
-#DFT_GRP_CMD="group 1 128 2 129 256 4 257 512 8 513 1024 16"
-#DFT_GRP_CMD="group 1 128 4 129 256 8 257 512 16 513 1024 32"
-DFT_GRP_CMD="group min 20"
+# default parameters for 'dmgroup'
+DFT_GROUPTYPE="NUM_CTS"
+DFT_GROUPTYPEVAL="20"
+#DFT_GROUPTYPE="BIN"
+DFT_BINSPEC="1:128:2,129:256:4,257:512:8,513:1024:16"
 # default `log file'
 DFT_LOGFILE="deproj_spectra_`date '+%Y%m%d'`.log"
 
@@ -111,6 +119,7 @@ ERR_PBK=23
 ERR_MSK=24
 ERR_BKGTY=31
 ERR_SPEC=32
+ERR_GRPTYPE=41
 ## error code }}}
 
 ## functions {{{
@@ -299,13 +308,28 @@ fi
 # remove the trailing '/'
 BASEDIR=`echo ${BASEDIR} | sed 's/\/*$//'`
 printf "## use basedir: \`${BASEDIR}'\n" | ${TOLOG}
-# check given `grpcmd'
-if [ ! -z "${grpcmd}" ]; then
-    GRP_CMD="${grpcmd}"
+# check given dmgroup parameters: grouptype, grouptypeval, binspec
+if [ -z "${grouptype}" ]; then
+    GROUPTYPE="${DFT_GROUPTYPE}"
+elif [ "x${grouptype}" = "xNUM_CTS" ] || [ "x${grouptype}" = "xBIN" ]; then
+    GROUPTYPE="${grouptype}"
 else
-    GRP_CMD="${DFT_GRP_CMD}"
+    printf "ERROR: given grouptype \`${grouptype}' invalid.\n"
+    exit ${ERR_GRPTYPE}
 fi
-printf "## use grppha cmd: \`${GRP_CMD}'\n" | ${TOLOG}
+printf "## use grouptype: \`${GROUPTYPE}'\n" | ${TOLOG}
+if [ ! -z "${grouptypeval}" ]; then
+    GROUPTYPEVAL="${grouptypeval}"
+else
+    GROUPTYPEVAL="${DFT_GROUPTYPEVAL}"
+fi
+printf "## use grouptypeval: \`${GROUPTYPEVAL}'\n" | ${TOLOG}
+if [ ! -z "${binspec}" ]; then
+    BINSPEC="${binspec}"
+else
+    BINSPEC="${DFT_BINSPEC}"
+fi
+printf "## use binspec: \`${BINSPEC}'\n" | ${TOLOG}
 # rootname for output files
 [ "x${ROOTNAME}" = "x" ] && ROOTNAME="${REG_IN%.reg}"
 printf "## use rootname: \`${ROOTNAME}'\n" | ${TOLOG}
@@ -424,7 +448,7 @@ for i in `seq ${LINES}`; do
     # I have tested that this bin factor has little impact on the results.
     # NO background response files
     # NO background spectrum (generate by self)
-    # NO spectrum grouping (group by self using `grppha')
+    # NO spectrum grouping (group by self using `dmgroup')
     # 'pbkfile' parameter deprecated in CIAO-4.6
     if `pget specextract pbkfile >/dev/null 2>&1`; then
         P_PBKFILE="pbkfile=${PBK}"
@@ -465,10 +489,13 @@ for i in `seq ${LINES}`; do
     ## bkg renorm }}}
 
     ## group spectrum {{{
-    printf "group spectrum \`${RSPEC_PI}' using \`grppha'\n"
+    printf "group spectrum \`${RSPEC_PI}' using \`dmgroup'\n"
     RSPEC_GRP_PI="${RSPEC_PI%.pi}_grp.pi"
-    grppha infile="${RSPEC_PI}" outfile="${RSPEC_GRP_PI}" \
-        comm="${GRP_CMD} & exit" clobber=yes > /dev/null
+    punlearn dmgroup
+    dmgroup infile="${RSPEC_PI}" outfile="${RSPEC_GRP_PI}" \
+        grouptype="${GROUPTYPE}" grouptypeval=${GROUPTYPEVAL} \
+        binspec="${BINSPEC}" xcolumn="CHANNEL" ycolumn="COUNTS" \
+        clobber=yes
     ## group }}}
 
     ## `XFLT####' keywords for XSPEC model `projct' {{{
