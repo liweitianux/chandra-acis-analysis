@@ -10,6 +10,10 @@
 # Weitian LI <liweitianux@gmail.com>
 # 2014/06/24
 #
+# ChangeLog:
+# v1.1, 2014/12/05, Weitian LI
+#   regex '\s+' not supported by old grep version, change to use '[[:space:]]+'
+#
 
 ## usage, help {{{
 case "$1" in
@@ -132,8 +136,8 @@ SPC_CFG=`readlink -f ${IMG_DIR}/spc_fit.cfg`
 punlearn dmkeypar
 OBSID=`dmkeypar "${EVT2_CLEAN}" OBS_ID echo=yes`
 NAME=`dmkeypar "${EVT2_CLEAN}" OBJECT echo=yes`
-Z=`grep -E '^z\s+' ${MASS_SBP_CFG} | awk '{ print $2 }'`
-NH=`grep -E '^nh\s+' ${SPC_CFG} | awk '{ print $2 }'`
+Z=`grep -E '^z[[:space:]]+' ${MASS_SBP_CFG} | awk '{ print $2 }'`
+NH=`grep -E '^nh[[:space:]]+' ${SPC_CFG} | awk '{ print $2 }'`
 R500=`grep -E '^r500=' ${MASS_RES} | awk '{ print $2 }'`
 
 # generate info json file
