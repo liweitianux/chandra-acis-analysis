@@ -6,6 +6,10 @@
 ##                                                       ##
 ## Weitian LI                                            ##
 ## 2014/06/18                                            ##
+##                                                       ##
+## ChangeLog:                                            ##
+## 1.1, 2014/12/11, Weitian LI                           ##
+##   test ${CT_RES} before read                          ##
 ###########################################################
 
 BASE_PATH=`dirname $0`
@@ -27,8 +31,13 @@ CT_RES="cooling_results.txt"
 CSB_RES="csb_results.txt"
 
 # cooling time
-TITLE_CT=`grep -E '^#\s*[A-Z]+' ${CT_RES} | awk -F',' '{ print $3 }'`
-DATA_CT=`grep -E '^#\s*[0-9]+' ${CT_RES} | awk -F',' '{ print $3 }'`
+if [ -r "${CT_RES}" ]; then
+    TITLE_CT=`grep -E '^#\s*[A-Z]+' ${CT_RES} | awk -F',' '{ print $3 }'`
+    DATA_CT=`grep -E '^#\s*[0-9]+' ${CT_RES} | awk -F',' '{ print $3 }'`
+else
+    TITLE_CT=""
+    DATA_CT=""
+fi
 
 # Csb
 TITLE_CSB=`grep -E '^#\s*[A-Z]+' ${CSB_RES}`
