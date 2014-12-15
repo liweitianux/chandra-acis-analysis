@@ -7,7 +7,9 @@
 # modified by: Weitian LI
 #
 # ChangeLog:
-#   2014/06/18: added answer for WR (warn region)
+# 2014/12/15: (1) prompt and record the modification to csb region;
+#             (2) added 'm' answer for WR: modified.
+# 2014/06/18: added answer for WR (warn region)
 #
 
 ## error code {{{
@@ -198,11 +200,17 @@ pie(${X},${Y},0,${R2},0,360)
 _EOF_
 
 printf "CHECK the regions (R1=${R1}, R2=${R2}) ...\n"
+printf "modify if necessary and save with the same name: \`${TMP_REG}'\n"
+cp -fv ${TMP_REG} ${TMP_REG%.reg}_orig.reg
 ds9 ${EVT_E} -regions ${TMP_REG} -cmap sls -bin factor 4
-read -p "> Whether the region exceeds ccd edge?(y/N) " F_WR
-case "${F_WR}" in
+read -p "> Whether the region exceeds ccd edge?(No/yes/modified) " WR_ANS
+case "${WR_ANS}" in
     [yY]*)
+        F_WR=true
         WR="WR"
+        ;;
+    [mM]*)
+        WR="Modified"
         ;;
     *)
         WR=""
@@ -228,6 +236,7 @@ printf "S1=${S1}, S2=${S2} (sur_flux)\n" | tee -a ${CSB_RES}
 printf "C_sb: ${CSB}\n" | tee -a ${CSB_RES}
 [ "x${F_WZ}" = "xtrue" ] && printf "${WZ}\n" | tee -a ${CSB_RES}
 [ "x${F_WC}" = "xtrue" ] && printf "${WC}\n" | tee -a ${CSB_RES}
+[ "x${F_WR}" = "xtrue" ] && printf "${WR}\n" | tee -a ${CSB_RES}
 printf "# OBS_ID,OBJ_NAME,Z,R500,RC_PIX,CNT_RC,R1_PIX,R2_PIX,S1,S2,CSB,WZ,WC,WR\n" | tee -a ${CSB_RES}
 printf "# $OBS_ID,$OBJ_NAME,$Z,$R500,$RC_PIX,$CNT_RC,$R1,$R2,$S1,$S2,$CSB,$WZ,$WC,$WR\n\n" | tee -a ${CSB_RES}
 ## main }}}
