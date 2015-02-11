@@ -311,7 +311,7 @@ for reg_i in ${REGLIST}; do
     # NO spectrum grouping (group by self using `grppha')
     # 'pbkfile' parameter deprecated in CIAO-4.6
     if `pget specextract pbkfile >/dev/null 2>&1`; then
-        P_PBKFILE="pbkfile='${PBK}'"
+        P_PBKFILE="pbkfile=${PBK}"
     else
         P_PBKFILE=""
     fi

@@ -39,12 +39,12 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
  (3) $ cd evt; ln -s ../acis*evt2.fits .;
  (4) $ ciao_procevt.sh
  (5) $ cd ../bkg; ln -s ../evt/evt2*_clean.fits .;
- (6) $ ciao_blanksky_v4.sh
+ (6) $ ciao_blanksky.sh
  (7) ds9 open 'evt2*_clean.fits'; select edge region as the
      *local background*, save as 'lbkg.reg';
      and estimate the phonton counts:
  (8) $ dmlist "evt2_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" blocks
- (9) $ ciao_bkg_spectra_v4.sh reg="lbkg.reg" basedir=.. nh=<nh> z=<z>
+ (9) $ ciao_bkg_spectra.sh reg="lbkg.reg" basedir=.. nh=<nh> z=<z>
 (10) $ xspec
 (11) xspec> @xspec_lbkg_model.xcm
      xspec> fit
@@ -54,7 +54,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 (12) cd ../img; ln -s ../evt/evt2*_clean.fits .;
 (13) ds9 open 'evt2*_clean.fits', select the center of cluster,
      save the region as 'center.reg'
-(14) $ ciao_genregs_v1.sh reg_in=center.reg bkgd=<bkgd>
+(14) $ ciao_genregs.sh reg_in=center.reg bkgd=<bkgd>
 (15) $ cd ../spc/profile;
      $ ln -s ../../evt/evt2*_clean.fits .;
      $ ln -s ../../bkg/bkgcorr_blanksky_lbkg.pi .; (maybe 'lbkg.pi')
@@ -67,7 +67,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      bkgd       bkgcorr_blanksky_lbkg.pi | lbkg.pi
      nh         <nh>
      z          <redshift>
-(18) $ ciao_deproj_spectra_v8.sh reg="rspec.reg" bkgd=<bkgd> basedir="../.." nh=<nh> z=<z>
+(18) $ ciao_deproj_spectra.sh reg="rspec.reg" bkgd=<bkgd> basedir="../.." nh=<nh> z=<z>
 (19) $ xspec
      xspec> @xspec_deproj.xcm
      xspec> fit
