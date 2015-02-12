@@ -1,60 +1,84 @@
 #!/bin/sh
-#
-trap date INT
-unalias -a
-export GREP_OPTIONS=""
-export LC_COLLATE=C
-#
-###########################################################
-## generate `src' and `bkg' spectra as well as           ##
-## RMF/ARFs using `specextract'                          ##
-## for radial spectra analysis                           ##
-## to get temperature/abundance profile                  ##
-## XSPEC model `projct' for deprojection analysis        ##
-##                                                       ##
-## Ref: Chandra spectrum analysis                        ##
-## http://cxc.harvard.edu/ciao/threads/extended/         ##
-## Ref: specextract                                      ##
-## http://cxc.harvard.edu/ciao/ahelp/specextract.html    ##
-## Ref: CIAO v4.4 region bugs                            ##
-## http://cxc.harvard.edu/ciao/bugs/regions.html#bug-12187
-##                                                       ##
-## LIweitiaNux, July 24, 2012                            ##
-###########################################################
-
-###########################################################
+##
+## This script generate a series of source and background spectra
+## for radial spectra profile analysis, and generate two XSPEC
+## xcm scripts for ease of use:
+## * 'xspec_deproj.xcm': uses 'projct*wabs*apec' model for deprojection
+##   spectra analysis to acquire the 3D temperature/abundance profiles.
+## * 'xspec_projected.xcm': uses 'wabs*apec' model for projected
+##   spectra analysis.
+## The input regions may be a series of 'annulus' or 'pie'.
+##
+## This script invokes 'specextract' to extract the spectra and
+## to generate the RMFs and ARFs.
+## Also the 'dmgroup' is used to group the spectra.
+##
+## Background:
+## Now 3 types of background format supported:
+## * blanksky.fits: will extract the background spectrum from the
+##   blanksky.fits of the same region as the source spectrum;
+## * lbkg.reg: will use this region file to extract the background from
+##   the source evt2 fits file (local background);
+## * bkg.pi: will directoryly use the provided spectrum PI file. Just
+##   make a copy of this spectrum for each source spectrum, and adjust
+##   its 'BACKSCAL' to match the corresponding source spectrum.
+## NOTE: the 'BACKSCAL' of the background spectrum will be adjusted for
+##       all above 3 conditions.
+##
+## Reference:
+## [1] Chandra spectrum analysis
+##     http://cxc.harvard.edu/ciao/threads/extended/
+## [2] Ahelp: specextract
+##     http://cxc.harvard.edu/ciao/ahelp/specextract.html
+## [3] CIAO v4.4 region bugs
+##     http://cxc.harvard.edu/ciao/bugs/regions.html#bug-12187
+## [4] CIAO 4.6 Release Notes
+##     http://cxc.cfa.harvard.edu/ciao/releasenotes/ciao_4.6_release.html
+##
+AUTHOR="Weitian LI <liweitianux@gmail.com>"
+CREATED="2012/07/24"
+UPDATED="2015/02/12"
+VERSION="v9.0"
+##
 ## ChangeLogs:
-## v9.0, 2014/11/13, Weitian LI
+## v9.0, 2015/02/12, Weitian LI
+##   * updated parameter settings for 'specextract' to match
+##     specextract revision 2013-12.
+##   * updated xcm script generation to use either '.wrmf & .warf'
+##     or '.rmf & .arf' extensions. (specextract only use .rmf & .arf
+##     extensions for response files since revision 2014-12)
+##   * removed 'trap date INT'
+##   * removed 'export GREP_OPTIONS=""' and replaced 'grep' with '\grep'
+##   * re-arranged descriptions & change logs
+## v8.4, 2014/11/13, Weitian LI
 ##   * replaced 'grppha' with 'dmgroup' to group spectra
 ##     (dmgroup will add history to fits file, while grppha NOT)
 ##   * re-arranged change logs
 ## v8.3, 2014/11/08, Weitian LI
-##   fix problem with 'P_PBKFILE' about the single colon
+##   * fix problem with 'P_PBKFILE' about the single colon
 ## v8.2, 2014/07/29, Weitian LI
-##   fix 'pbkfile' parameters for CIAO-4.6
+##   * fix 'pbkfile' parameters for CIAO-4.6
 ## v8.1, 2014/07/29, Weitian LI
-##   fix variable 'ABUND=grsa'
-## v8, 2012/08/14, LIweitiaNux
-##   use `cmdline' args instead of `cfg file'
-##   add `logging' function
-## v7, 2012/08/10, LIweitiaNux
-##   account blanksky, local bkg, specified bkg
-##   change name to `ciao_deproj_spectra_v*.sh'
-##   add `error status'
-##   Imporve ${CFG_FILE}
-##   Imporve comments
-## v6, 2012/08/08, Gu Junhua
-##   Modified to using config file to pass parameters
-##   Use grppha to rebin the spectrum
+##   * fix variable 'ABUND=grsa'
+## v8, 2012/08/14, Weitian LI
+##   * use `cmdline' args instead of `cfg file'
+##   * add `logging' function
+## v7, 2012/08/10, Weitian LI
+##   * account blanksky, local bkg, specified bkg
+##   * change name to `ciao_deproj_spectra_v*.sh'
+##   * add `error status'
+##   * Imporve ${CFG_FILE}
+##   * Imporve comments
+## v6, 2012/08/08, Junhua GU
+##   * Modified to using config file to pass parameters
+##   * Use grppha to rebin the spectrum
 ## v5, 2012/08/05
-##   XFLT0005 not modified as pie end angle
-##   add `background renormalization'
-###########################################################
+##   * XFLT0005 not modified as pie end angle
+##   * added `background renormalization'
+##
 
-## about, used in `usage' {{{
-VERSION="v9.0"
-UPDATE="2014-11-12"
-## about }}}
+unalias -a
+export LC_COLLATE=C
 
 ## usage, help {{{
 case "$1" in
@@ -65,7 +89,7 @@ case "$1" in
         printf "    If grouptype=NUM_CTS, then grouptypeval required.\n"
         printf "    If grouptype=BIN, then binspec required.\n"
         printf "\nVersion:\n"
-        printf "    ${VERSION}, ${UPDATE}\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -144,7 +168,7 @@ CH_LOW=651
 CH_HI=822
 pb_flux() {
     punlearn dmstat
-    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | grep -i 'sum:' | awk '{ print $2 }'`
+    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | \grep -i 'sum:' | awk '{ print $2 }'`
     punlearn dmkeypar
     EXPTIME=`dmkeypar $1 EXPOSURE echo=yes`
     BACK=`dmkeypar $1 BACKSCAL echo=yes`
@@ -229,7 +253,7 @@ printf "## use bkgd: \`${BKGD}'\n" | ${TOLOG}
 # determine bkg type: blanksky, lbkg_reg, bkg_spec ?
 # according to file type first: text / FITS
 # if FITS, then get values of `HDUCLAS1' and `OBJECT'
-if file -bL ${BKGD} | grep -qi 'text'; then
+if file -bL ${BKGD} | \grep -qi 'text'; then
     printf "## given \`${BKGD}' is a \`text file'\n"
     printf "##   use it as local bkg region file\n"
     printf "##   use *LOCAL BKG SPEC*\n" | ${TOLOG}
@@ -237,7 +261,7 @@ if file -bL ${BKGD} | grep -qi 'text'; then
     USE_LBKG_REG=YES
     USE_BLANKSKY=NO
     USE_BKG_SPEC=NO
-elif file -bL ${BKGD} | grep -qi 'FITS'; then
+elif file -bL ${BKGD} | \grep -qi 'FITS'; then
     printf "## given \`${BKGD}' is a \`FITS file'\n"
     # get FITS header keyword
     HDUCLAS1=`dmkeypar ${BKGD} HDUCLAS1 echo=yes`
@@ -338,7 +362,7 @@ printf "## use rootname: \`${ROOTNAME}'\n" | ${TOLOG}
 ## check needed files {{{
 # check the validity of *pie* regions
 printf "check pie reg validity ...\n"
-INVALID=`cat ${REG_IN} | grep -i 'pie' | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
+INVALID=`cat ${REG_IN} | \grep -i 'pie' | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
 if [ "x${INVALID}" != "x" ]; then
     printf "WARNING: some pie region's END_ANGLE > 360\n" | ${TOLOG}
     printf "    CIAO v4.4 tools may run into trouble\n"
@@ -384,7 +408,7 @@ if [ "${USE_LBKG_REG}" = "YES" ]; then
     cp -fv ${LBKG_REG} ${LBKG_REG_CIAO}
     ## check background region (CIAO v4.4 bug) {{{
     printf "check background region ...\n"
-    INVALID=`grep -i 'pie' ${LBKG_REG_CIAO} | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
+    INVALID=`\grep -i 'pie' ${LBKG_REG_CIAO} | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
     if [ "x${INVALID}" != "x" ]; then
         printf "WARNING: fix for pie region:\n"
         cat ${LBKG_REG_CIAO}
@@ -414,7 +438,7 @@ REG_NEW="_new.reg"
 REG_TMP="_tmp.reg"
 [ -f ${REG_NEW} ] && rm -fv ${REG_NEW}
 [ -f ${REG_TMP} ] && rm -fv ${REG_TMP}
-cat ${REG_IN} | sed 's/#.*$//' | grep -Ev '^\s*$' > ${REG_NEW}
+cat ${REG_IN} | sed 's/#.*$//' | \grep -Ev '^\s*$' > ${REG_NEW}
 ## REG_IN }}}
 
 ## `specextract' to extract spectrum {{{
@@ -431,7 +455,7 @@ for i in `seq ${LINES}`; do
     REG_CIAO="${REG_TMP%.reg}_ciao.reg"
     cp -fv ${REG_TMP} ${REG_CIAO}
     ## check the validity of *pie* regions {{{
-    INVALID=`grep -i 'pie' ${REG_TMP} | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
+    INVALID=`\grep -i 'pie' ${REG_TMP} | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
     if [ "x${INVALID}" != "x" ]; then
         printf "WARNING: fix for pie region:\n"
         cat ${REG_CIAO}
@@ -449,20 +473,41 @@ for i in `seq ${LINES}`; do
     # NO background response files
     # NO background spectrum (generate by self)
     # NO spectrum grouping (group by self using `dmgroup')
+    # Determine parameters for different versions of specextract {{{
     # 'pbkfile' parameter deprecated in CIAO-4.6
     if `pget specextract pbkfile >/dev/null 2>&1`; then
         P_PBKFILE="pbkfile=${PBK}"
     else
         P_PBKFILE=""
     fi
-    #
+    # specextract: revision 2013-06:
+    # 'correct' parameter renamed to 'correctpsf'
+    if `pget specextract correct >/dev/null 2>&1`; then
+        P_CORRECT="correct=no"
+    else
+        P_CORRECT="correctpsf=no"
+    fi
+    # specextract: revision 2013-12:
+    # 'weight' parameter controls whether ONLY ARFs are weighted.
+    # 'weight_rmf' added to control whether RMFs are weighted.
+    # NOTE: 
+    #   (1) only when 'weight=yes' will the 'weight_rmf' parameter be used.
+    #   (2) no longer distingush between unweighted and weighted reponses
+    #       in file extension; only .arf & .rmf are now used.
+    if `pget specextract weight_rmf >/dev/null 2>&1`; then
+        P_WEIGHTRMF="weight_rmf=yes"
+    else
+        P_WEIGHTRMF=""
+    fi
+    # }}}
     punlearn specextract
     specextract infile="${EVT}[sky=region(${REG_CIAO})]" \
         outroot="r${i}_${ROOTNAME}" bkgfile="" asp="@${ASOLIS}" \
-        ${P_PBKFILE} mskfile="${MSK}" badpixfile="${BPIX}" \
-        weight=yes correct=no bkgresp=no \
+        mskfile="${MSK}" badpixfile="${BPIX}" \
+        ${P_PBKFILE} ${P_CORRECT} \
+        weight=yes ${P_WEIGHTRMF} \
         energy="0.3:11.0:0.01" channel="1:1024:1" \
-        combine=no binarfwmap=2 \
+        bkgresp=no combine=no binarfwmap=2 \
         grouptype=NONE binspec=NONE \
         clobber=yes verbose=2
     ## specextract }}}
@@ -489,6 +534,8 @@ for i in `seq ${LINES}`; do
     ## bkg renorm }}}
 
     ## group spectrum {{{
+    # use 'dmgroup' instead of 'grppha', because 'dmgroup' will add
+    # command history to FITS header (maybe useful for later reference).
     printf "group spectrum \`${RSPEC_PI}' using \`dmgroup'\n"
     RSPEC_GRP_PI="${RSPEC_PI%.pi}_grp.pi"
     punlearn dmgroup
@@ -501,7 +548,7 @@ for i in `seq ${LINES}`; do
     ## `XFLT####' keywords for XSPEC model `projct' {{{
     printf "update file headers ...\n"
     punlearn dmhedit
-    if grep -qi 'pie' ${REG_TMP}; then
+    if \grep -qi 'pie' ${REG_TMP}; then
         R_OUT="`awk -F',' '{ print $4 }' ${REG_TMP} | tr -d ')'`"
         A_BEGIN="`awk -F',' '{ print $5 }' ${REG_TMP} | tr -d ')'`"
         A_END="`awk -F',' '{ print $6 }' ${REG_TMP} | tr -d ')'`"
@@ -527,7 +574,7 @@ for i in `seq ${LINES}`; do
             key="XFLT0004" value=${A_BEGIN}
         dmhedit infile=${RSPEC_GRP_PI} filelist=NONE operation=add \
             key="XFLT0005" value=${A_END}
-    elif grep -qi 'annulus' ${REG_TMP}; then
+    elif \grep -qi 'annulus' ${REG_TMP}; then
         R_OUT="`awk -F',' '{ print $4 }' ${REG_TMP} | tr -d ')'`"
         # RSPEC_PI
         dmhedit infile=${RSPEC_PI} filelist=NONE operation=add \
@@ -580,10 +627,12 @@ _EOF_
 
 for i in `seq ${LINES}`; do
     RSPEC="r${i}_${ROOTNAME}"
+    [ -r "${RSPEC}.wrmf" ] && RMF="${RSPEC}.wrmf" || RMF="${RSPEC}.rmf"
+    [ -r "${RSPEC}.warf" ] && ARF="${RSPEC}.warf" || ARF="${RSPEC}.arf"
     cat >> ${XSPEC_DEPROJ} << _EOF_
 data ${i}:${i} ${RSPEC}_grp.pi
-response 1:${i} ${RSPEC}.wrmf
-arf 1:${i} ${RSPEC}.warf
+response 1:${i} ${RMF}
+arf 1:${i} ${ARF}
 backgrnd ${i} ${RSPEC}_bkg.pi
 
 _EOF_
@@ -656,10 +705,12 @@ _EOF_
 
 for i in `seq ${LINES}`; do
     RSPEC="r${i}_${ROOTNAME}"
+    [ -r "${RSPEC}.wrmf" ] && RMF="${RSPEC}.wrmf" || RMF="${RSPEC}.rmf"
+    [ -r "${RSPEC}.warf" ] && ARF="${RSPEC}.warf" || ARF="${RSPEC}.arf"
     cat >> ${XSPEC_PROJTD} << _EOF_
 data ${i}:${i} ${RSPEC}_grp.pi
-response 1:${i} ${RSPEC}.wrmf
-arf 1:${i} ${RSPEC}.warf
+response 1:${i} ${RMF}
+arf 1:${i} ${ARF}
 backgrnd ${i} ${RSPEC}_bkg.pi
 
 _EOF_
