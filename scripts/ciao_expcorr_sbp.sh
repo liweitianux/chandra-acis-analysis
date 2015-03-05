@@ -1,30 +1,31 @@
 #!/bin/sh
-unalias -a
-export LC_COLLATE=C
-
-#####################################################################
-## make exposure map and exposure-corrected image
-## extract surface brightness profile (revoke 'ciao_sbp.sh')
+##
+## Make exposure map and exposure-corrected image (revoke 'ciao_expcorr.sh'),
+## and extract surface brightness profile (revoke 'ciao_sbp.sh').
 ##
 ## ChangeLogs:
+## v4.2, 2015/03/05, Weitian LI
+##   * Added exit code check for the 'EXPCORR_SCRIPT' and 'EXTRACT_SBP_SCRIPT'
+##   * Removed the code of 'spc_fit.cfg' generation
+##   * Removed the code to make links of sbp2.dat, sbp3.dat and radius.dat
 ## v4.1, 2014/10/30, Weitian LI
-##   updated 'EXPCORR_SCRIPT' & 'EXTRACT_SBP_SCRIPT',
-##   removed version number in scripts filename.
+##   * updated 'EXPCORR_SCRIPT' & 'EXTRACT_SBP_SCRIPT',
+##   * removed version number in scripts filename.
 ## v4, 2013/10/12, LIweitiaNux
-##   split out the 'generate regions' parts -> 'ciao_genreg_v1.sh'
+##   * split out the 'generate regions' parts -> 'ciao_genreg_v1.sh'
 ## v3, 2013/05/03, LIweitiaNux
-##   add parameter 'ds9' to check the centroid and regions
-#####################################################################
+##   * add parameter 'ds9' to check the centroid and regions
+##
+
+UPDATED="2015/03/05"
+
+unalias -a
+export LC_COLLATE=C
 
 SCRIPT_PATH=`readlink -f $0`
 SCRIPT_DIR=`dirname ${SCRIPT_PATH}`
 EXPCORR_SCRIPT="ciao_expcorr.sh"
 EXTRACT_SBP_SCRIPT="ciao_sbp.sh"
-
-## about, used in `usage' {{{
-VERSION="v4.1"
-UPDATE="2014-10-30"
-## about }}}
 
 ## err code {{{
 ERR_USG=1
@@ -48,8 +49,7 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt=<evt2_clean> sbp_reg=<sbprofile.reg> nh=<nh> z=<redshift> temp=<avg_temp> abund=<avg_abund> cellreg=<celld_reg> expcorr=<yes|no>\n"
-        printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "\nVersion: ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -206,6 +206,12 @@ else
     CMD="${SCRIPT_DIR}/${EXPCORR_SCRIPT} evt=${EVT} basedir=${BASEDIR} nh=${N_H} z=${REDSHIFT} temp=${TEMP} abund=${ABUND}"
     printf "CMD: ${CMD}\n"
     ${SCRIPT_DIR}/${EXPCORR_SCRIPT} evt=${EVT} basedir=${BASEDIR} nh=${N_H} z=${REDSHIFT} temp=${TEMP} abund=${ABUND}
+    EXIT_CODE=$?
+    if [ ${EXIT_CODE} -ne 0 ]; then
+        printf "Following command failed with code: ${EXIT_CODE}\n"
+        printf "    '${CMD}'\n"
+        exit ${EXIT_CODE}
+    fi
     printf "======== EXPOSURE CORRECTION FINISHED =======\n\n"
 fi
 
@@ -216,21 +222,13 @@ printf "======== EXTRACT SBP =======\n"
 CMD="${SCRIPT_DIR}/${EXTRACT_SBP_SCRIPT} evt_e=${EVT_E} reg=${SBP_REG} expmap=${EXPMAP} cellreg=${CELL_REG}"
 printf "CMD: ${CMD}\n"
 ${SCRIPT_DIR}/${EXTRACT_SBP_SCRIPT} evt_e=${EVT_E} reg=${SBP_REG} expmap=${EXPMAP} cellreg=${CELL_REG}
+EXIT_CODE=$?
+if [ ${EXIT_CODE} -ne 0 ]; then
+    printf "Following command failed with code: ${EXIT_CODE}\n"
+    printf "    '${CMD}'\n"
+    exit ${EXIT_CODE}
+fi
 printf "======== EXTRACT SBP FINISHED =======\n\n"
-
-#generate a cfg file for specextract
-[ -e "spc_fit.cfg" ] && mv -fv spc_fit.cfg spc_fit.cfg_bak
-cat > spc_fit.cfg << _EOF_
-nh     ${N_H}
-z      ${REDSHIFT}
-basedir ../..
-bkgd ../${BKGD}
-_EOF_
-
-#link for sbp2.dat radius.dat sbp3.dat
-ln -svf radius_sbp.txt radius.dat
-ln -svf flux_sbp.txt sbp2.dat
-ln -svf sbprofile.txt sbp3.dat
 
 exit 0
 
