@@ -1,18 +1,40 @@
 #!/bin/sh
-#
-# v2.0, 2013/03/06, LIweitiaNux
-#   add param `-t' to test STN
-#
-###########################################################
+##
+## This script generate a series of regions for the extraction of
+## radial surface brightness profile (SBP).
+##
+## Regions geneartion algorithm:
+## (1) innermost 10 regions, we require a mininal of 5 pixel as well
+##     as 50 counts within the 0.7-7.0 keV range.
+## (2) following regions: R_out = R_in * 1.2, and require STN > 1.5.
+##
+## Reference:
+## [1] region generate algorithm ??? (TODO)
+##
+## Author: Zhenghao ZHU
+## Created: ??? (TODO)
+##
+## ChangeLogs:
+## v2.1, 2015/02/13, Weitian LI
+##   * added '1' to denominators when calculate STN to avoid division by zero
+##   * added script description
+## v2.0, 2013/03/06, Weitian LI
+##   * added the parameter `-t' to print STN results for testing
+##
+
+UPDATED="2015/02/13"
 
 # minimal counts
 CNT_MIN=50
+
 # energy: 700-7000eV -- channel 49:479
 CH_LOW=49
 CH_HI=479
+
 # energy 9.5-12keV -- channel 651:822
 CH_BKG_LOW=651
 CH_BKG_HI=822
+
 
 if [ $# -lt 6 ]; then
     printf "usage:\n"
@@ -57,6 +79,7 @@ X=$3
 Y=$4
 BKGSPC=$5
 REG_OUT=$6
+
 [ -f "${REG_OUT}" ] && mv -fv ${REG_OUT} ${REG_OUT}_bak
 echo "EVT:      ${EVT}"
 echo "EVT_E:    ${EVT_E}"
@@ -117,10 +140,11 @@ while [ `echo "${STN} > 1.5" | bc -l` -eq 1 ]; do
     COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
     COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
 
-    # echo "CNT_SRC: ${COUNT_SRC}, IDX_SRC: ${INDEX_SRC}, CNT_BKG: ${COUNT_BKG}, IDX_BKG: ${INDEX_BKG}"
-    # exit
+    #echo "CNT_SRC: ${COUNT_SRC}, IDX_SRC: ${INDEX_SRC}, CNT_BKG: ${COUNT_BKG}, IDX_BKG: ${INDEX_BKG}"
+    #exit 99
 
-    STN=`echo ${COUNT_SRC} ${INDEX_SRC} ${COUNT_BKG} ${INDEX_BKG} | awk '{ printf("%f",$1/$2/$3*$4) }'`
+    # Add '1' to the denominators to avoid division by zero.
+    STN=`echo ${COUNT_SRC} ${INDEX_SRC} ${COUNT_BKG} ${INDEX_BKG} | awk '{ printf("%f", ($1 / ($2 + 1)) / ($3 / ($4 + 1))) }'`
     CNT=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{ print $8 }'`
     echo "CNT: ${CNT}"
     echo "CNT_MIN: ${CNT_MIN}"

@@ -14,6 +14,8 @@ export PATH="/usr/bin:$PATH"
 ##  2014/06/18: use env variable 'MASS_PROFILE_DIR'      ##
 ###########################################################
 
+UPDATED="2014/06/18"
+
 ## usage, `path_conffile' is the configuration file
 ## which contains the `path' to each `repro/mass' directory
 if [ $# -ne 1 ]; then
@@ -21,6 +23,7 @@ if [ $# -ne 1 ]; then
     printf "    `basename $0` <mass_dir>\n"
     printf "\nNOTE:\n"
     printf "   script cannot handle \`~' in path\n"
+    printf "\nVersion: ${UPDATED}\n"
     exit 1
 fi
 
