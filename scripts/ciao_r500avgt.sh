@@ -32,11 +32,14 @@ export LC_COLLATE=C
 ##   change `DFT_GRP_CMD' to `group 1 128 4 ...'
 ## v3.0, 2013/02/09, LIweitiaNux
 ##   modify for new process
+## v3.1, 2015/05/27, Weitian LI
+##   update 'DFT_ARF' & 'DFT_RMF' to find '*.arf' & '*.rmf' files
+##   (specextract only use .arf & .rmf extensions since revision 2014-12)
 ###########################################################
 
 ## about, used in `usage' {{{
-VERSION="v3.0"
-UPDATE="2013-02-09"
+VERSION="v3.1"
+UPDATE="2015-05-27"
 ## about }}}
 
 ## error code {{{
@@ -61,7 +64,7 @@ ERR_UNI=61
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> r500=<r500_kpc> basedir=<basedir> info=<info_json> inner=<inner_val> outer=<outer_val> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt|lbkg_reg|bkg_spec> nh=<nH> z=<redshift> arf=<warf_file> rmf=<wrmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
+        printf "    `basename $0` evt=<evt2_clean> r500=<r500_kpc> basedir=<basedir> info=<info_json> inner=<inner_val> outer=<outer_val> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt|lbkg_reg|bkg_spec> nh=<nH> z=<redshift> arf=<arf_file> rmf=<rmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
         printf "\nversion:\n"
         printf "${VERSION}, ${UPDATE}\n"
         exit ${ERR_USG}
@@ -97,8 +100,8 @@ DFT_REG_IN="rspec.reg"
 DFT_INNER="0.1"
 DFT_OUTER="0.5"
 # default ARF/RMF, the one of the outmost region
-DFT_ARF="`ls -1 r?_*.warf 2> /dev/null | tail -n 1`"
-DFT_RMF="`ls -1 r?_*.wrmf 2> /dev/null | tail -n 1`"
+DFT_ARF="`ls -1 r?_*.warf r?_*.arf 2> /dev/null | tail -n 1`"
+DFT_RMF="`ls -1 r?_*.wrmf r?_*.rmf 2> /dev/null | tail -n 1`"
 
 # default `group command' for `grppha'
 DFT_GRP_CMD="group min 25"

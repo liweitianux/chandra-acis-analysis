@@ -1,34 +1,33 @@
 #!/bin/sh
-#
-unalias -a
-export LC_COLLATE=C
-###########################################################
-## extract `surface brighness profile'                   ##
-##                                                       ##
-## NOTES:                                                ##
-## only ACIS-I (chip: 0-3) and ACIS-S (chip: 7) supported##
-## `merge_all' conflict with Heasoft's `pget' etc. tools ##
-##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## August 16, 2012                                       ##
-###########################################################
-
-###########################################################
-## Changes:
+##
+## Extract `surface brighness profile'
+##
+## NOTES:
+## * Only ACIS-I (chip: 0-3) and ACIS-S (chip: 7) supported
+##
+## Weitian LI <liweitianux@gmail.com>
+## Created: 2012/08/16
+UPDATED="2015/03/29"
+##
+## ChangeLogs:
+## 2015/03/29, Weitian LI
+##   * Skip skyfov generation if it already exists.
+##   * Rename parameter 'aspec' to 'aspect' to match with 'skyfov'
+## 2015/03/06, Weitian LI
+##   * Updated this document of the script.
+##   * Added 'SKIP SINGLE' to the generated QDP of SBP file.
 ## v3.1: 2013/02/01, Zhenghao ZHU
 ##   removes the region in ccd gap of ACIS_I 
 ##   removes the region in the area of point source
 ##   need asol file to prevent offset 
-###########################################################
+##
+
+unalias -a
+export LC_COLLATE=C
 
 SCRIPT_PATH=`readlink -f $0`
 SCRIPT_DIR=`dirname ${SCRIPT_PATH}`
 CCDGAP_SCRIPT="chandra_ccdgap_rect.py"
-
-## about, used in `usage' {{{
-VERSION="v3.1"
-UPDATE="2013-02-01"
-## about }}}
 
 ## error code {{{
 ERR_USG=1
@@ -52,9 +51,9 @@ ERR_CIAO=100
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt_e=<evt_e_file> reg=<sbp_reg> expmap=<exp_map> cellreg=<cell_reg> aspec=<asol_file> [bkg=<bkg> log=<logfile> ]\n"
-        printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "    `basename $0` evt_e=<evt_e_file> reg=<sbp_reg> expmap=<exp_map> cellreg=<cell_reg> aspect=<asol_file> [bkg=<bkg> log=<logfile> ]\n"
+        printf "\nupdated:\n"
+        printf "${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -76,7 +75,7 @@ DFT_SBP_REG="sbprofile.reg"
 # defalut pointsource region file 
 DFT_CELL_REG="`ls celld*.reg 2> /dev/null`"
 # defalut asol file
-DFT_ASOL_FILE="`ls pcad*asol*fits 2> /dev/null`"
+DFT_ASOL_FILE="`ls -1 pcad*asol*fits 2> /dev/null`"
 
 # default `log file'
 DFT_LOGFILE="sbp_`date '+%Y%m%d'`.log"
@@ -193,8 +192,8 @@ else
 fi
 printf "## use cell reg file(s): \`${CELL_REG}'\n" | ${TOLOG}
 # check asol file
-if [ -r "${aspec}" ]; then
-    ASOL_FILE="${aspec}"
+if [ -r "${aspect}" ]; then
+    ASOL_FILE="${aspect}"
 elif [ -r "${DFT_ASOL_FILE}" ] ; then
     ASOL_FILE="${DFT_ASOL_FILE}"
 else
@@ -249,12 +248,12 @@ fi
 ## main process {{{
 
 ## generate `skyfov'
-# XXX: omit `aspec', NOT provide `asol' file
-# otherwise the size of evt_img NOT match the `expmap'
-printf "generate skyfov ...\n"
-SKYFOV="_skyfov.fits"
-punlearn skyfov
-skyfov infile="${EVT_E}" outfile="${SKYFOV}" aspec="${ASOL_FILE}" clobber=yes
+SKYFOV="skyfov.fits"
+if [ ! -r "${SKYFOV}" ]; then
+    printf "generate skyfov ...\n"
+    punlearn skyfov
+    skyfov infile="${EVT_E}" outfile="${SKYFOV}" aspect="${ASOL_FILE}" clobber=yes
+fi
 
 ## get CCD fov regions {{{
 printf "make regions for CCD ...\n"
@@ -497,6 +496,8 @@ cp -fv ${SBP_TXT} ${SBP_QDP}
 # change comment sign
 sed -i'' 's/#/!/g' ${SBP_QDP}
 # add QDP commands
+sed -i'' '1 i\
+SKIP SINGLE' ${SBP_QDP}
 sed -i'' '1 i\
 READ SERR 1 2' ${SBP_QDP}
 sed -i'' '2 i\

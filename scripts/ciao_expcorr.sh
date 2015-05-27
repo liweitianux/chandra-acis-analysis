@@ -1,36 +1,32 @@
 #!/bin/sh
-#
-unalias -a
-export LC_COLLATE=C
-###########################################################
-## make `image' from `evt file'                          ##
-## make `spectral weight' using `make_instmap_weights'   ##
-## use `fluximage' to generating `exposure map'          ##
-## make `exposure-corrected' image                       ##
-## and extract `surface brighness profile'               ##
-##                                                       ##
-## NOTES:                                                ##
-## only ACIS-I (chip: 0-3) and ACIS-S (chip: 7) supported##
-## `merge_all' conflict with Heasoft's `pget' etc. tools ##
-##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## August 16, 2012                                       ##
-###########################################################
-
-###########################################################
+##
+## make `image' from `evt file'
+## make `spectral weight' using `make_instmap_weights'
+## use `fluximage' to generating `exposure map'
+## make `exposure-corrected' image
+## and extract `surface brighness profile'
+##
+## NOTES:
+## only ACIS-I (chip: 0-3) and ACIS-S (chip: 7) supported
+## `merge_all' conflict with Heasoft's `pget' etc. tools
+##
+## Weitian LI
+## 2012/08/16
+UPDATED="2014/10/30"
+##
 ## ChangeLogs:
+## v2.1, 2014/10/30, Weitian LI
+##   Add 'aspect' parameter for 'skyfov' to fix the 'FoV shift bug'
 ## v2.0, 2014/07/29, Weitian LI
 ##   `merge_all' deprecated, use `fluximage' if possible
 ## v1.2, 2012-08-21, LIweitiaNux
 ##   set `ardlib' before process `merge_all'
 ## v1.1, 2012-08-21, LIweitiaNux
 ##   fix a bug with `sed'
-###########################################################
+##
 
-## about, used in `usage' {{{
-VERSION="v2.0"
-UPDATE="2014-07-29"
-## about }}}
+unalias -a
+export LC_COLLATE=C
 
 ## error code {{{
 ERR_USG=1
@@ -54,8 +50,8 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt=<evt_file> energy=<e_start:e_end:e_width> basedir=<base_dir> nh=<nH> z=<redshift> temp=<avg_temperature> abund=<avg_abund> [ logfile=<log_file> ]\n"
-        printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "\nupdated:\n"
+        printf "${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -300,11 +296,8 @@ make_instmap_weights outfile="${SPEC_WGT}" \
 ## spectral weights }}}
 
 ## generate `skyfov'
-# XXX: omit `aspec', NOT provide `asol' file
-# otherwise the size of evt_img NOT match the `expmap'
 printf "generate skyfov ...\n"
-SKYFOV="_skyfov.fits"
-[ -e "${SKYFOV}" ] && rm -fv ${SKYFOV}
+SKYFOV="skyfov.fits"
 punlearn skyfov
 skyfov infile="${EVT}" outfile="${SKYFOV}" aspect="@${ASOLIS}" clobber=yes
 
@@ -348,7 +341,8 @@ if `which merge_all >/dev/null 2>&1`; then
     ## XXX: `merge_all' needs `asol files' in working directory
     printf "link asol files into currect dir (\`merge_all' needed) ...\n"
     for f in `cat ${ASOLIS}`; do
-        ln -sv ${BASEDIR}/${f} .
+        asol=`basename ${f}`
+        ln -svf ${BASEDIR}/${asol} .
     done
     
     printf "use \`merge_all' to generate \`exposure map' ONLY ...\n"

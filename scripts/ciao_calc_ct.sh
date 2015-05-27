@@ -16,12 +16,16 @@ export LC_COLLATE=C
 
 ###########################################################
 ## ChangeLogs
-##   2014/06/18: 'cooling_time2.sh' -> 'ciao_calc_ct.sh'
+## v1.1, 2014/06/18
+##   'cooling_time2.sh' -> 'ciao_calc_ct.sh'
+## v1.2, 2015/05/27, Weitian LI
+##   update 'DFT_ARF' & 'DFT_RMF' to find '*.arf' & '*.rmf' files
+##   (specextract only use .arf & .rmf extensions since revision 2014-12)
 ###########################################################
 
 ## about, used in `usage' {{{
-VERSION="v1.1"
-UPDATE="2012-08-26"
+VERSION="v1.2"
+UPDATE="2015-05-27"
 ## about }}}
 
 ## error code {{{
@@ -45,7 +49,7 @@ ERR_UNI=61
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` basedir=<repro_dir> evt=<evt2_clean> r500=<r500_kpc> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> nh=<nH> z=<redshift> arf=<warf_file> rmf=<wrmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
+        printf "    `basename $0` basedir=<repro_dir> evt=<evt2_clean> r500=<r500_kpc> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> nh=<nH> z=<redshift> arf=<arf_file> rmf=<rmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
         printf "\nversion:\n"
         printf "${VERSION}, ${UPDATE}\n"
         exit ${ERR_USG}
@@ -81,8 +85,8 @@ DFT_REG_IN="rspec.reg"
 # default output region file (0.1-0.5 r500 region)
 DFT_REG_OUT="cooling.reg"
 # default ARF/RMF, the one of the outmost region
-DFT_ARF="`ls r1_*.warf 2> /dev/null`"
-DFT_RMF="`ls r1_*.wrmf 2> /dev/null`"
+DFT_ARF="`ls r1_*.warf r1_*.arf 2> /dev/null`"
+DFT_RMF="`ls r1_*.wrmf r1_*.rmf 2> /dev/null`"
 
 # default `group command' for `grppha'
 #DFT_GRP_CMD="group 1 128 2 129 256 4 257 512 8 513 1024 16"
