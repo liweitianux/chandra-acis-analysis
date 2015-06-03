@@ -2,25 +2,24 @@
 #
 unalias -a
 export LC_COLLATE=C
-###########################################################
-## based on `ciao_expcorr_sbp.sh'                        ##
-## get `xcentroid' from region `sbprofile.reg'           ##
-## convert from physical coords to WCS corrds            ##
-## add/update xcentroid WCS to info.json                 ##
-##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## 2013/05/29                                            ##
-###########################################################
-
-###########################################################
+##
+## based on `ciao_expcorr_sbp.sh'
+## get `xcentroid' from region `sbprofile.reg'
+## convert from physical coords to WCS corrds
+## add/update xcentroid WCS to info.json
+##
+## Weitian LI <liweitianux@gmail.com>
+## 2013/05/29
+##
+VERSION="v2.0"
+UPDATED="2015/06/03"
+##
 ## ChangeLogs:
-## v1.0, 2013/05/29, LIweitiaNux
-###########################################################
-
-## about, used in `usage' {{{
-VERSION="v1.0"
-UPDATE="2013-05-29"
-## about }}}
+## v2.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replace 'grep' with '\grep', 'ls' with '\ls'
+##
 
 ## error code {{{
 ERR_USG=1
@@ -46,7 +45,7 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` evt=<evt_file> reg=<sbp_reg> basedir=<base_dir> info=<INFO.json> update=<yes|no>\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -55,7 +54,7 @@ esac
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits 2> /dev/null`"
+DFT_EVT="`\ls evt2*_clean.fits 2> /dev/null`"
 # default dir which contains `asols, asol.lis, ...' files
 # DFT_BASEDIR="_NOT_EXIST_"
 DFT_BASEDIR=".."
@@ -146,8 +145,8 @@ printf "## use basedir: \`${BASEDIR}'\n" | ${TOLOG}
 # check INFO.json file
 if [ ! -z "${info}" ] && [ -r "${BASEDIR}/${info}" ]; then
     INFO_JSON="${info}"
-elif [ "`ls ${BASEDIR}/${DFT_INFO_PAT} | wc -l`" -eq 1 ]; then
-    INFO_JSON=`( cd ${BASEDIR} && ls ${DFT_INFO_PAT} )`
+elif [ "`\ls ${BASEDIR}/${DFT_INFO_PAT} | wc -l`" -eq 1 ]; then
+    INFO_JSON=`( cd ${BASEDIR} && \ls ${DFT_INFO_PAT} )`
 else
     read -p "> info json file: " INFO_JSON
     if ! [ -r "${BASEDIR}/${INFO_JSON}" ]; then
@@ -172,14 +171,27 @@ else
 fi
 ## parameters }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmcoords"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 ## main process {{{
 # asolis
-ASOLIS=`( cd ${BASEDIR} && ls ${DFT_ASOLIS_PAT} 2> /dev/null )`
+ASOLIS=`( cd ${BASEDIR} && \ls ${DFT_ASOLIS_PAT} 2> /dev/null )`
 
 # get (x,y) from sbp region
 printf "get (x,y) from ${SBP_REG}\n"
-X=`grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $1 }' | tr -d 'a-zA-Z() '`
-Y=`grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $2 }' | tr -d 'a-zA-Z() '`
+X=`\grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $1 }' | tr -d 'a-zA-Z() '`
+Y=`\grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $2 }' | tr -d 'a-zA-Z() '`
 
 # dmcoords to convert (x,y) to (ra,dec)
 printf "\`dmcoords' to convert (x,y) to (ra,dec) ...\n"
@@ -194,7 +206,7 @@ printf "## (ra,dec): ($RA,$DEC)\n"
 if [ "${F_UPDATE}" = "YES" ]; then
     cp -f ${INFO_JSON} ${INFO_JSON}_bak
     printf "update xcentroid for info.json ...\n"
-    if grep -qE 'XCNTRD_(RA|DEC)' ${INFO_JSON}; then
+    if \grep -qE 'XCNTRD_(RA|DEC)' ${INFO_JSON}; then
         printf "update ...\n"
         sed -i'' "s/XCNTRD_RA.*$/XCNTRD_RA\":\ \"${RA}\",/" ${INFO_JSON}
         sed -i'' "s/XCNTRD_DEC.*$/XCNTRD_DEC\":\ \"${DEC}\",/" ${INFO_JSON}

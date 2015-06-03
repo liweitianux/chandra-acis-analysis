@@ -12,25 +12,27 @@
 ## if `DETNAM' has `0123', then `ACIS-I'                 ##
 ## if `DETNAM' has `7', then `ACIS-S'                    ##
 ##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## November 8, 2012                                      ##
+## Weitian LI <liweitianux@gmail.com>                    ##
+## 2012/11/08                                            ##
 ###########################################################
-
-###########################################################
+##
+VERSION="v3.0"
+UPDATED="2015/06/03"
+##
 ## ChangeLogs:
-## v2.1, 2013/10/12, LIweitiaNux
+## v3.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replace 'grep' with '\grep', 'ls' with '\ls'
+##   * Removed section of 'dmstat.par' deletion
+## v2.1, 2013/10/12, Weitian LI
 ##   add support for extract center coordinates from 'point' and 'circle' regs
-## v2.0, 2013/01/22, LIweitiaNux
+## v2.0, 2013/01/22, Weitian LI
 ##   aconvolve switch
-##   add iterations for better confidence
-## v1.1, 2012/11/08, LIweitiaNux
+##   add iterations for better accuracy
+## v1.1, 2012/11/08, Weitian LI
 ##   get x-ray peak coord from given region file
-###########################################################
-
-## about, used in `usage' {{{
-VERSION="v2.1"
-UPDATE="2013-10-12"
-## about }}}
+##
 
 ## error code {{{
 ERR_USG=1
@@ -53,7 +55,7 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` evt=<evt_cl> reg=<reg> [ asol=<asol> chip=<chip> ] [ conv=yes|No ]\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -78,11 +80,11 @@ OFFSET_CRIC=10
 # energy range: 700-2000 eV
 E_RANGE="700:2000"
 # default `evt clean file'
-DFT_EVT="`ls evt*clean.fits *clean*evt*.fits 2> /dev/null | head -n 1`"
+DFT_EVT="`\ls evt*clean.fits *clean*evt*.fits 2> /dev/null | head -n 1`"
 # default `asol file'
-DFT_ASOL="`ls pcadf*_asol1.fits 2> /dev/null | head -n 1`"
+DFT_ASOL="`\ls pcadf*_asol1.fits 2> /dev/null | head -n 1`"
 # default region file
-DFT_REG="`ls sbprofile.reg rspec.reg 2> /dev/null | head -n 1`"
+DFT_REG="`\ls sbprofile.reg rspec.reg 2> /dev/null | head -n 1`"
 # iteration step, ~150 arcsec, ~50 arcsec
 R_STP1=300
 R_STP2=100
@@ -153,8 +155,8 @@ else
 fi
 printf "## use reg file: \`${REG}'\n"
 # get centroid from the regionnn file
-CNTRD_X2=`grep -iE '(point|circle|pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $1 }'`
-CNTRD_Y2=`grep -iE '(point|circle|pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $2 }'`
+CNTRD_X2=`\grep -iE '(point|circle|pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $1 }'`
+CNTRD_Y2=`\grep -iE '(point|circle|pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $2 }'`
 printf "## center from given regfile: (${CNTRD_X2},${CNTRD_Y2})\n"
 
 
@@ -181,12 +183,12 @@ else
     # determine chip by ACIS type
     punlearn dmkeypar
     DETNAM=`dmkeypar ${EVT} DETNAM echo=yes`
-    if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+    if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
         printf "## \`DETNAM' (${DETNAM}) has chips 0123\n"
         printf "## ACIS-I\n"
         ACIS_TYPE="ACIS-I"
         CHIP="0:3"
-    elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+    elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
         printf "## \`DETNAM' (${DETNAM}) has chip 7\n"
         printf "## ACIS-S\n"
         ACIS_TYPE="ACIS-S"
@@ -198,13 +200,18 @@ else
 fi
 ## parameters }}}
 
-## dmstat.par {{{
-## 2013/02/07, LIweitiaNux
-## for some unknown reason, the wrong parameter file will cause dmstat failed to run
-printf "remove \`dmstat.par' ...\n"
-DMSTAT_PAR="$HOME/cxcds_param4/dmstat.par"
-[ -f "${DMSTAT_PAR}" ] && rm -fv ${DMSTAT_PAR}
-## dmstat.par }}}
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar dmcopy dmstat dmcoords skyfov aconvolve"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
 
 ## main part {{{
 # generate `skyfov'
@@ -244,7 +251,6 @@ printf "  region size ${R_STP1}pix: "
 for i in `seq 1 5`; do
     printf "#$i ... "
     punlearn dmstat
-    # dmstat infile="${IMG_ACONV}[sky=region(${TMP_REG})]" centroid=yes verbose=1
     dmstat infile="${IMG_ACONV}[sky=region(${TMP_REG})]" centroid=yes verbose=0
     CNTRD_X=`pget dmstat out_cntrd_phys | cut -d',' -f1`
     CNTRD_Y=`pget dmstat out_cntrd_phys | cut -d',' -f2`

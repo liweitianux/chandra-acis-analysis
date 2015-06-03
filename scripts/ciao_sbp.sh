@@ -1,25 +1,31 @@
 #!/bin/sh
 ##
-## Extract `surface brighness profile'
+## Extract `surface brighness profile' after exposure correction finished.
 ##
 ## NOTES:
 ## * Only ACIS-I (chip: 0-3) and ACIS-S (chip: 7) supported
 ##
 ## Weitian LI <liweitianux@gmail.com>
 ## Created: 2012/08/16
-UPDATED="2015/03/29"
+##
+VERSION="v4.0"
+UPDATED="2015/06/03"
 ##
 ## ChangeLogs:
-## 2015/03/29, Weitian LI
+## v4.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+## v3.3, 2015/03/29, Weitian LI
 ##   * Skip skyfov generation if it already exists.
 ##   * Rename parameter 'aspec' to 'aspect' to match with 'skyfov'
-## 2015/03/06, Weitian LI
+## v3.2, 2015/03/06, Weitian LI
 ##   * Updated this document of the script.
 ##   * Added 'SKIP SINGLE' to the generated QDP of SBP file.
-## v3.1: 2013/02/01, Zhenghao ZHU
-##   removes the region in ccd gap of ACIS_I 
-##   removes the region in the area of point source
-##   need asol file to prevent offset 
+## v3.1, 2013/02/01, Zhenghao ZHU
+##   * removes the region in ccd gap of ACIS_I 
+##   * removes the region in the area of point source
+##   * provide asol file to correct offset 
 ##
 
 unalias -a
@@ -52,8 +58,8 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt_e=<evt_e_file> reg=<sbp_reg> expmap=<exp_map> cellreg=<cell_reg> aspect=<asol_file> [bkg=<bkg> log=<logfile> ]\n"
-        printf "\nupdated:\n"
-        printf "${UPDATED}\n"
+        printf "\nversion:\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -66,16 +72,16 @@ E_RANGE="700:7000"
 DFT_CCD_EDGECUT=25
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT_E="`ls evt2_*_e*.fits 2> /dev/null`"
+DFT_EVT_E="`\ls evt2_*_e*.fits 2> /dev/null`"
 # default expmap
-DFT_EXPMAP="`ls expmap*.fits 2> /dev/null | head -n 1`"
+DFT_EXPMAP="`\ls expmap*.fits 2> /dev/null | head -n 1`"
 # default `radial region file' to extract surface brightness
 #DFT_SBP_REG="_NOT_EXIST_"
 DFT_SBP_REG="sbprofile.reg"
 # defalut pointsource region file 
-DFT_CELL_REG="`ls celld*.reg 2> /dev/null`"
+DFT_CELL_REG="`\ls celld*.reg 2> /dev/null`"
 # defalut asol file
-DFT_ASOL_FILE="`ls -1 pcad*asol*fits 2> /dev/null`"
+DFT_ASOL_FILE="`\ls -1 pcad*asol*fits 2> /dev/null`"
 
 # default `log file'
 DFT_LOGFILE="sbp_`date '+%Y%m%d'`.log"
@@ -206,15 +212,28 @@ fi
 printf "## use asol file(s) : \`${ASOL_FILE}'\n" | ${TOLOG}
 ## parameters }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar dmlist dmextract dmtcalc skyfov"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 ## determine ACIS type {{{
 # consistent with `ciao_procevt'
 punlearn dmkeypar
 DETNAM=`dmkeypar ${EVT_E} DETNAM echo=yes`
-if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
     printf "## \`DETNAM' (${DETNAM}) has chips 0123 -> ACIS-I\n"
     ACIS_TYPE="I"
     CCD="0:3"
-elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
     printf "## \`DETNAM' (${DETNAM}) has chip 7 -> ACIS-S\n"
     ACIS_TYPE="S"
     CCD="7"
@@ -225,7 +244,7 @@ fi
 ## ACIS type }}}
 
 ## check validity of pie region {{{
-INVALID=`grep -i 'pie' ${SBP_REG} | awk -F'[,()]' '$7 > 360'`
+INVALID=`\grep -i 'pie' ${SBP_REG} | awk -F'[,()]' '$7 > 360'`
 SBP_REG_FIX="_${SBP_REG%.reg}_fix.reg"
 if [ "x${INVALID}" != "x" ]; then
     printf "*** WARNING: some pie regions' END_ANGLE > 360\n" | ${TOLOG}
@@ -436,12 +455,12 @@ echo "${REG_CCD_RAW}" >_ccd_raw.reg
 SBP_REG_INCCD="_${SBP_REG%.reg}_inccd.reg"
 [ -e "${SBP_REG_INCCD}" ] && mv -fv ${SBP_REG_INCCD} ${SBP_REG_INCCD}_bak
 
-echo "CMD: cat ${CELL_REG} | grep \( | sed -e ':a;N;s/\n/-/;ta'"
-CELL_REG_USE=`cat ${CELL_REG} | grep \( | sed -e ':a;N;s/\n/-/;ta'`
+echo "CMD: cat ${CELL_REG} | \grep \( | sed -e ':a;N;s/\n/-/;ta'"
+CELL_REG_USE=`cat ${CELL_REG} | \grep \( | sed -e ':a;N;s/\n/-/;ta'`
 # exit 233
 
 if [ "${ACIS_TYPE}" = "S" ]; then
-    grep -iE '^(pie|annulus)' ${SBP_REG_FIX} | sed "s/$/\ \&\ `cat ${REG_FILE_CCD}`/" | sed "s/$/\ \-\ ${CELL_REG_USE}/" > ${SBP_REG_INCCD}
+    \grep -iE '^(pie|annulus)' ${SBP_REG_FIX} | sed "s/$/\ \&\ `cat ${REG_FILE_CCD}`/" | sed "s/$/\ \-\ ${CELL_REG_USE}/" > ${SBP_REG_INCCD}
     else 
     L=`cat ${SBP_REG_FIX} | wc -l `
 
@@ -457,6 +476,7 @@ printf "extract surface brightness profile ...\n"
 SBP_DAT="${SBP_REG%.reg}.fits"
 [ -e "${SBP_DAT}" ] && mv -fv ${SBP_DAT} ${SBP_DAT}_bak
 if [ -r "${BKG}" ]; then
+    punlearn dmkeypar
     EXPO_EVT=`dmkeypar ${EVT_E} EXPOSURE echo=yes`
     EXPO_BKG=`dmkeypar ${BKG} EXPOSURE echo=yes`
     BKG_NORM=`echo "${EXPO_EVT} ${EXPO_BKG}" | awk '{ printf("%g", $1/$2) }'`

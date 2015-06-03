@@ -1,16 +1,16 @@
 #!/bin/sh
-#
-###########################################################
-## Invoke 'ciao_calc_ct.sh' and 'ciao_calc_csb.sh'       ##
-## to calculate cooling time and Csb value.              ##
-##                                                       ##
-## Weitian LI                                            ##
-## 2014/06/18                                            ##
-##                                                       ##
-## ChangeLog:                                            ##
-## 1.1, 2014/12/11, Weitian LI                           ##
-##   test ${CT_RES} before read                          ##
-###########################################################
+##
+##
+## Invoke 'ciao_calc_ct.sh' and 'ciao_calc_csb.sh'
+## to calculate cooling time and Csb value.
+##
+## Weitian LI
+## 2014/06/18
+##
+## Changelogs:
+## v1.1, 2014/12/11, Weitian LI
+##   * test ${CT_RES} before read
+##
 
 BASE_PATH=`dirname $0`
 SCRIPT_CT="${BASE_PATH}/ciao_calc_ct.sh"

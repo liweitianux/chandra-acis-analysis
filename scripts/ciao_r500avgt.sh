@@ -15,11 +15,10 @@ export LC_COLLATE=C
 ## 3) ARF/RMF files either provided or use the ARF/RMF   ##
 ## of the outmost region                                 ##
 ##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## August 22, 2012                                       ##
+## Weitian LI <liweitianux@gmail.com>                    ##
+## 2012/08/22                                            ##
 ###########################################################
-
-###########################################################
+##
 ## ChangeLogs
 ## v1.1, 2012/08/26, LIweitiaNux
 ##   modify `KPC_PER_PIX', able to use the newest version `calc_distance'
@@ -32,15 +31,20 @@ export LC_COLLATE=C
 ##   change `DFT_GRP_CMD' to `group 1 128 4 ...'
 ## v3.0, 2013/02/09, LIweitiaNux
 ##   modify for new process
-## v3.1, 2015/05/27, Weitian LI
+## v3.1, 2015/05/27, Aaron LI
 ##   update 'DFT_ARF' & 'DFT_RMF' to find '*.arf' & '*.rmf' files
 ##   (specextract only use .arf & .rmf extensions since revision 2014-12)
-###########################################################
-
-## about, used in `usage' {{{
-VERSION="v3.1"
-UPDATE="2015-05-27"
-## about }}}
+## v3.2, 2015/05/30, Aaron LI
+##   Added options '-cmap he -bin factor 4' to ds9 command
+## v4.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replace 'grep' with '\grep', 'ls' with '\ls'
+##   * replaced 'grppha' with 'dmgroup' to group spectra
+##     (dmgroup will add history to fits file, while grppha NOT)
+##
+VERSION="v4.1"
+UPDATED="2015/06/03"
 
 ## error code {{{
 ERR_USG=1
@@ -64,9 +68,9 @@ ERR_UNI=61
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> r500=<r500_kpc> basedir=<basedir> info=<info_json> inner=<inner_val> outer=<outer_val> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt|lbkg_reg|bkg_spec> nh=<nH> z=<redshift> arf=<arf_file> rmf=<rmf_file> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
+        printf "    `basename $0` evt=<evt2_clean> r500=<r500_kpc> basedir=<basedir> info=<info_json> inner=<inner_val> outer=<outer_val> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt|lbkg_reg|bkg_spec> nh=<nH> z=<redshift> arf=<arf_file> rmf=<rmf_file> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -88,9 +92,9 @@ fi
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits 2> /dev/null`"
+DFT_EVT="`\ls evt2*_clean.fits 2> /dev/null`"
 # default `bkgd', use `bkgcorr_blanksky*' corrected bkg spectrum
-DFT_BKGD="`ls bkgcorr_blanksky_*.pi 2> /dev/null`"
+DFT_BKGD="`\ls bkgcorr_blanksky_*.pi 2> /dev/null`"
 # default basedir
 DFT_BASEDIR="../.."
 # default `radial region file'
@@ -100,18 +104,20 @@ DFT_REG_IN="rspec.reg"
 DFT_INNER="0.1"
 DFT_OUTER="0.5"
 # default ARF/RMF, the one of the outmost region
-DFT_ARF="`ls -1 r?_*.warf r?_*.arf 2> /dev/null | tail -n 1`"
-DFT_RMF="`ls -1 r?_*.wrmf r?_*.rmf 2> /dev/null | tail -n 1`"
+DFT_ARF="`\ls -1 r?_*.warf r?_*.arf 2> /dev/null | tail -n 1`"
+DFT_RMF="`\ls -1 r?_*.wrmf r?_*.rmf 2> /dev/null | tail -n 1`"
 
-# default `group command' for `grppha'
-DFT_GRP_CMD="group min 25"
-#DFT_GRP_CMD="group 1 128 2 129 256 4 257 512 8 513 1024 16"
-#DFT_GRP_CMD="group 1 128 4 129 256 8 257 512 16 513 1024 32"
-# default `log file'
-DFT_LOGFILE="r500avgt_`date '+%Y%m%d%H'`.log"
+# default parameters for 'dmgroup'
+DFT_GROUPTYPE="NUM_CTS"
+DFT_GROUPTYPEVAL="25"
+#DFT_GROUPTYPE="BIN"
+DFT_BINSPEC="1:128:2,129:256:4,257:512:8,513:1024:16"
 
 # default JSON pattern
 DFT_JSON_PAT="*_INFO.json"
+
+# default `log file'
+DFT_LOGFILE="r500avgt_`date '+%Y%m%d%H'`.log"
 ## default parameters }}}
 
 ## functions {{{
@@ -136,7 +142,7 @@ CH_LOW=651
 CH_HI=822
 pb_flux() {
     punlearn dmstat
-    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | grep -i 'sum:' | awk '{ print $2 }'`
+    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | \grep -i 'sum:' | awk '{ print $2 }'`
     punlearn dmkeypar
     EXPTIME=`dmkeypar $1 EXPOSURE echo=yes`
     BACK=`dmkeypar $1 BACKSCAL echo=yes`
@@ -151,6 +157,7 @@ bkg_renorm() {
     # $1: src spectrum, $2: back spectrum
     PBFLUX_SRC=`pb_flux $1`
     PBFLUX_BKG=`pb_flux $2`
+    punlearn dmkeypar
     BACK_OLD=`dmkeypar $2 BACKSCAL echo=yes`
     BACK_OLD_B=`echo "( ${BACK_OLD} )" | sed 's/[eE]/\*10\^/' | sed 's/+//'`
     BACK_NEW=`echo "scale = 16; ${BACK_OLD_B} * ${PBFLUX_BKG} / ${PBFLUX_SRC}" | bc -l`
@@ -189,7 +196,7 @@ fi
 if [ ! -z "${json}" ] && [ -r "${BASEDIR}/${json}" ]; then
     JSON_FILE="${BASEDIR}/${json}"
 elif ls ${BASEDIR}/${DFT_JSON_PAT} > /dev/null 2>&1; then
-    JSON_FILE=`ls ${BASEDIR}/${DFT_JSON_PAT}`
+    JSON_FILE=`\ls ${BASEDIR}/${DFT_JSON_PAT}`
 else
     read -p "> JSON_file: " JSON_FILE
     if [ ! -r "${JSON_FILE}" ]; then
@@ -200,8 +207,8 @@ fi
 printf "## use json_file: \`${JSON_FILE}'\n" | ${TOLOG}
 
 # process `nh' and `redshift' {{{
-NH_JSON=`grep '"nH' ${JSON_FILE} | sed 's/.*"nH.*":\ //' | sed 's/\ *,$//'`
-Z_JSON=`grep '"redshift' ${JSON_FILE} | sed 's/.*"redshift.*":\ //' | sed 's/\ *,$//'`
+NH_JSON=`\grep '"nH' ${JSON_FILE} | sed 's/.*"nH.*":\ //' | sed 's/\ *,$//'`
+Z_JSON=`\grep '"redshift' ${JSON_FILE} | sed 's/.*"redshift.*":\ //' | sed 's/\ *,$//'`
 printf "## get nh: \`${NH_JSON}' (from \`${JSON_FILE}')\n" | ${TOLOG}
 printf "## get redshift: \`${Z_JSON}' (from \`${JSON_FILE}')\n" | ${TOLOG}
 ## if `nh' and `redshift' supplied in cmdline, then use them
@@ -235,7 +242,7 @@ printf "## region range: (${INNER} - ${OUTER} R500)\n" | ${TOLOG}
 # range }}}
 
 # process `r500' {{{
-R500_RAW=`grep '"R500.*kpc' ${JSON_FILE} | sed 's/.*"R500.*":\ //' | sed 's/\ *,$//'`
+R500_RAW=`\grep '"R500.*kpc' ${JSON_FILE} | sed 's/.*"R500.*":\ //' | sed 's/\ *,$//'`
 if [ ! -z "${r500}" ]; then
     R500_RAW=${r500}
 fi
@@ -255,7 +262,7 @@ case "${R500_UNI}" in
         ;;
     *)
         printf "## units in \`kpc', convert to \`Chandra pixel'\n" | ${TOLOG}
-        KPC_PER_PIX=`${COSCALC} ${REDSHIFT} | grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+        KPC_PER_PIX=`${COSCALC} ${REDSHIFT} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
         # convert scientific notation for `bc'
         KPC_PER_PIX_B=`echo ${KPC_PER_PIX} | sed 's/[eE]/\*10\^/' | sed 's/+//'`
         printf "## calculated \`kpc/pixel': ${KPC_PER_PIX_B}\n"
@@ -307,7 +314,7 @@ printf "## set output regfile: \`${REG_OUT}'\n" | ${TOLOG}
 
 # get center position from `regin'
 # only consider `pie' or `annulus'-shaped region
-TMP_REG=`grep -iE '(pie|annulus)' ${REG_IN} | head -n 1`
+TMP_REG=`\grep -iE '(pie|annulus)' ${REG_IN} | head -n 1`
 XC=`echo ${TMP_REG} | tr -d 'a-zA-Z() ' | awk -F',' '{ print $1 }'`
 YC=`echo ${TMP_REG} | tr -d 'a-zA-Z() ' | awk -F',' '{ print $2 }'`
 printf "## get center coord: (${XC},${YC})\n" | ${TOLOG}
@@ -329,7 +336,7 @@ printf "## use bkgd: \`${BKGD}'\n" | ${TOLOG}
 # determine bkg type: blanksky, lbkg_reg, bkg_spec ?
 # according to file type first: text / FITS
 # if FITS, then get values of `HDUCLAS1' and `OBJECT'
-if file -bL ${BKGD} | grep -qi 'text'; then
+if file -bL ${BKGD} | \grep -qi 'text'; then
     printf "## given \`${BKGD}' is a \`text file'\n"
     printf "##   use it as local bkg region file\n"
     printf "##   use *LOCAL BKG SPEC*\n" | ${TOLOG}
@@ -337,9 +344,10 @@ if file -bL ${BKGD} | grep -qi 'text'; then
     USE_LBKG_REG=YES
     USE_BLANKSKY=NO
     USE_BKG_SPEC=NO
-elif file -bL ${BKGD} | grep -qi 'FITS'; then
+elif file -bL ${BKGD} | \grep -qi 'FITS'; then
     printf "## given \`${BKGD}' is a \`FITS file'\n"
     # get FITS header keyword
+    punlearn dmkeypar
     HDUCLAS1=`dmkeypar ${BKGD} HDUCLAS1 echo=yes`
     if [ "${HDUCLAS1}" = "EVENTS" ]; then
         # event file
@@ -408,17 +416,45 @@ fi
 printf "## use RMF: \`${RMF}'\n" | ${TOLOG}
 # arf & rmf }}}
 
-# check given `grpcmd'
-if [ ! -z "${grpcmd}" ]; then
-    GRP_CMD="${grpcmd}"
+# check given dmgroup parameters: grouptype, grouptypeval, binspec
+if [ -z "${grouptype}" ]; then
+    GROUPTYPE="${DFT_GROUPTYPE}"
+elif [ "x${grouptype}" = "xNUM_CTS" ] || [ "x${grouptype}" = "xBIN" ]; then
+    GROUPTYPE="${grouptype}"
 else
-    GRP_CMD="${DFT_GRP_CMD}"
+    printf "ERROR: given grouptype \`${grouptype}' invalid.\n"
+    exit ${ERR_GRPTYPE}
 fi
-printf "## use grppha cmd: \`${GRP_CMD}'\n" | ${TOLOG}
+printf "## use grouptype: \`${GROUPTYPE}'\n" | ${TOLOG}
+if [ ! -z "${grouptypeval}" ]; then
+    GROUPTYPEVAL="${grouptypeval}"
+else
+    GROUPTYPEVAL="${DFT_GROUPTYPEVAL}"
+fi
+printf "## use grouptypeval: \`${GROUPTYPEVAL}'\n" | ${TOLOG}
+if [ ! -z "${binspec}" ]; then
+    BINSPEC="${binspec}"
+else
+    BINSPEC="${DFT_BINSPEC}"
+fi
+printf "## use binspec: \`${BINSPEC}'\n" | ${TOLOG}
 ## parameters }}}
 
-##################################################
-#### main
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmstat dmkeypar dmhedit dmextract dmgroup"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
+### main ###
+
 ## region related {{{
 ## generate the needed region file
 printf "generate the output region file ...\n"
@@ -430,11 +466,11 @@ _EOF_
 ## open the evt file to verify or modify
 printf "## check the generated pie region ...\n"
 printf "## if modified, save with the same name \`${REG_OUT}' (overwrite)\n"
-ds9 ${EVT} -region ${REG_OUT}
+ds9 ${EVT} -region ${REG_OUT} -cmap he -bin factor 4
 
 ## check the (modified) region (pie region end angle)
 printf "check the above region (for pie region end angle) ...\n"
-INVALID=`grep -i 'pie' ${REG_OUT} | awk -F'[,()]' '$7 > 360'`
+INVALID=`\grep -i 'pie' ${REG_OUT} | awk -F'[,()]' '$7 > 360'`
 if [ "x${INVALID}" != "x" ]; then
     printf "*** WARNING: there are pie regions' END_ANGLE > 360\n" | ${TOLOG}
     printf "*** will to fix ...\n"
@@ -462,8 +498,11 @@ dmextract infile="${EVT}[sky=region(${REG_OUT})][bin PI]" \
     outfile="${AVGT_SPEC}" wmap="[bin det=8]" clobber=yes
 # group spectrum
 printf "group object spectrum ...\n"
-grppha infile="${AVGT_SPEC}" outfile="${AVGT_SPEC_GRP}" \
-    comm="${GRP_CMD} & exit" clobber=yes > /dev/null
+punlearn dmgroup
+dmgroup infile="${AVGT_SPEC}" outfile="${AVGT_SPEC_GRP}" \
+    grouptype="${GROUPTYPE}" grouptypeval=${GROUPTYPEVAL} \
+    binspec="${BINSPEC}" xcolumn="CHANNEL" ycolumn="COUNTS" \
+    clobber=yes
 
 # background
 printf "generate the background spectrum ...\n"

@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+unalias -a
 export LC_COLLATE=C
 ###########################################################
 ## based on `ciao_update_xcentroid.sh'                   ##
@@ -10,11 +11,16 @@ export LC_COLLATE=C
 ## Weitian LI <liweitianux@gmail.com>                    ##
 ## 2014/06/25                                            ##
 ###########################################################
-
-## about, used in `usage' {{{
-VERSION="v1.0"
-UPDATE="2014-06-25"
-## about }}}
+##
+VERSION="v2.0"
+UPDATED="2015/06/03"
+##
+## Changelogs:
+## v2.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replace 'grep' with '\grep', 'ls' with '\ls'
+##
 
 ## error code {{{
 ERR_USG=1
@@ -40,7 +46,7 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` evt=<evt_file> reg=<sbp_reg> basedir=<base_dir>\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -53,7 +59,7 @@ OFF_CRIT_I="0:7:0"  # 0deg 7min 0sec
 
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits 2> /dev/null`"
+DFT_EVT="`\ls evt2*_clean.fits 2> /dev/null`"
 # default dir which contains `asols, asol.lis, ...' files
 # DFT_BASEDIR="_NOT_EXIST_"
 DFT_BASEDIR=".."
@@ -85,8 +91,8 @@ getopt_keyval() {
 ddmmss2deg() {
     # convert 'dd:mm:ss' to 'deg'
     echo "$1" | awk -F':' '
-    function abs(x) { return ((x<0.0)? (-x) : x) }
-    function sign(x) { return ((x<0.0)? (-1.0) : 1.0) }
+    function abs(x) { return ((x<0.0) ? (-x) : x) }
+    function sign(x) { return ((x<0.0) ? (-1.0) : 1.0) }
     {
         value = abs($1) + ($2)/60.0 + ($3)/3600.0;
         printf("%.8f", sign($1)*value);
@@ -96,7 +102,7 @@ ddmmss2deg() {
 deg2ddmmss() {
     # convert 'deg' to 'dd:mm:ss'
     echo "$1" | awk '
-    function abs(x) { return ((x<0.0)? (-x) : x) }
+    function abs(x) { return ((x<0.0) ? (-x) : x) }
     {
         deg = $1;
         dd = int(deg);
@@ -166,14 +172,27 @@ BASEDIR=`echo ${BASEDIR} | sed 's/\/*$//'`
 printf "## use basedir: \`${BASEDIR}'\n" | ${TOLOG}
 ## parameters }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar dmcoords"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 ## main process {{{
 # asolis
-ASOLIS=`( cd ${BASEDIR} && ls ${DFT_ASOLIS_PAT} 2> /dev/null )`
+ASOLIS=`( cd ${BASEDIR} && \ls ${DFT_ASOLIS_PAT} 2> /dev/null )`
 
 # get (x,y) from sbp region
 printf "get (x,y) from ${SBP_REG}\n"
-X=`grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $1 }' | tr -d 'a-zA-Z() '`
-Y=`grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $2 }' | tr -d 'a-zA-Z() '`
+X=`\grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $1 }' | tr -d 'a-zA-Z() '`
+Y=`\grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $2 }' | tr -d 'a-zA-Z() '`
 
 # dmcoords to convert (x,y) to (ra,dec)
 printf "\`dmcoords' to convert (x,y) to (ra,dec) ...\n"
@@ -190,11 +209,11 @@ DEC_PNT=`dmkeypar infile="${EVT}" keyword="DEC_PNT" echo=yes`
 ## determine ACIS type {{{
 punlearn dmkeypar
 DETNAM=`dmkeypar ${EVT} DETNAM echo=yes`
-if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
     #printf "## \`DETNAM' (${DETNAM}) has chips 0123\n"
     #printf "## ACIS-I\n"
     ACIS_TYPE="ACIS-I"
-elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
     #printf "## \`DETNAM' (${DETNAM}) has chip 7\n"
     #printf "## ACIS-S\n"
     ACIS_TYPE="ACIS-S"

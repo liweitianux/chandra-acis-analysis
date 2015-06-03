@@ -1,15 +1,29 @@
 #!/bin/sh
 #
+# Calculate the Csb values.
 # for 'z>0.3' or 'counts_in_0.048R500<500'
-# execute this script in dir 'spc/profile'
 #
-# original filename: 'proxy_calc.sh', by Zhu Zhenhao
+# Reference: ??? (TODO)
+#
+# Note: execute this script in dir 'spc/profile'
+#
+# origin filename: 'proxy_calc.sh', by Zhenhao ZHU
 # modified by: Weitian LI
 #
-# ChangeLog:
-# 2014/12/15: (1) prompt and record the modification to csb region;
-#             (2) added 'm' answer for WR: modified.
-# 2014/06/18: added answer for WR (warn region)
+#
+UPDATED="2015/06/03"
+#
+# Changelogs:
+# 2015/06/03, Aaron LI
+#   * Copy needed pfiles to current working directory, and
+#     set environment variable $PFILES to use these first.
+#   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+#   * ds9 colormap changed from 'sls' to 'he'
+# 2014/12/15, Weitian LI
+#   * prompt and record the modification to csb region;
+#   * added 'm' answer for WR: modified.
+# 2014/06/18, Weitian LI
+#   * added answer for WR (warn region)
 #
 
 ## error code {{{
@@ -28,7 +42,9 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt_e=<evt_e_name> expmap=<expmap_name> basedir=<base_dir> imgdir=<img_dir> json=<json_name>\n"
-        printf "NOTE: exec this script in dir 'spc/profile'\n"
+        printf "\nNOTE: exec this script in dir 'spc/profile'\n"
+        printf "\nupdated:\n"
+        printf "    ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -114,8 +130,8 @@ printf "## use imgdir: \`${IMG_DIR}'\n"
 # info json
 if [ ! -z "${json}" ] && [ -r "${BASEDIR}/${json}" ]; then
     JSON_FILE="${BASEDIR}/${json}"
-elif [ `ls -1 ${BASEDIR}/${DFT_JSON_PAT} 2>/dev/null | wc -l` -eq 1 ]; then
-    JSON_FILE="`ls ${BASEDIR}/${DFT_JSON_PAT} 2>/dev/null`"
+elif [ `\ls -1 ${BASEDIR}/${DFT_JSON_PAT} 2>/dev/null | wc -l` -eq 1 ]; then
+    JSON_FILE="`\ls ${BASEDIR}/${DFT_JSON_PAT} 2>/dev/null`"
 else
     read -p "> info json: " JSON_FILE
     if [ ! -r "${BASEDIR}/${JSON_FILE}" ]; then
@@ -127,8 +143,8 @@ printf "## use json_file: \`${JSON_FILE}'\n"
 # expmap
 if [ ! -z "${expmap}" ] && [ -r "${IMG_DIR}/${expmap}" ]; then
     EXPMAP="${expmap}"
-elif [ `ls -1 ${IMG_DIR}/${DFT_EXPMAP_PAT} 2>/dev/null | wc -l` -eq 1 ]; then
-    EXPMAP="`( cd ${IMG_DIR} && ls ${DFT_EXPMAP_PAT} 2>/dev/null )`"
+elif [ `\ls -1 ${IMG_DIR}/${DFT_EXPMAP_PAT} 2>/dev/null | wc -l` -eq 1 ]; then
+    EXPMAP="`( cd ${IMG_DIR} && \ls ${DFT_EXPMAP_PAT} 2>/dev/null )`"
 else
     read -p "> expmap filename: " EXPMAP
     if [ ! -r "${IMG_DIR}/${EXPMAP}" ]; then
@@ -140,8 +156,8 @@ printf "## use expmap: \`${EXPMAP}'\n"
 # evt_e
 if [ ! -z "${evt_e}" ] && [ -r "${IMG_DIR}/${evt_e}" ]; then
     EVT_E="${evt_e}"
-elif [ `ls -1 ${IMG_DIR}/${DFT_EVTE_PAT} 2>/dev/null | wc -l` -eq 1 ]; then
-    EVT_E="`( cd ${IMG_DIR} && ls ${DFT_EVTE_PAT} 2>/dev/null )`"
+elif [ `\ls -1 ${IMG_DIR}/${DFT_EVTE_PAT} 2>/dev/null | wc -l` -eq 1 ]; then
+    EVT_E="`( cd ${IMG_DIR} && \ls ${DFT_EVTE_PAT} 2>/dev/null )`"
 else
     read -p "> evt_e filename: " EVT_E
     if [ ! -r "${IMG_DIR}/${EVT_E}" ]; then
@@ -152,16 +168,29 @@ fi
 printf "## use evt_e: \`${EVT_E}'\n"
 ## }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmlist dmextract"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 ## main {{{
 # in 'spc/profile'
-X=`grep -iE '(pie|annulus)' ${RSPEC_REG} | head -n 1 | awk -F'(' '{ print $2 }' | awk -F',' '{ print $1 }'`
-Y=`grep -iE '(pie|annulus)' ${RSPEC_REG} | head -n 1 | awk -F'(' '{ print $2 }' | awk -F',' '{ print $2 }'`
+X=`\grep -iE '(pie|annulus)' ${RSPEC_REG} | head -n 1 | awk -F'(' '{ print $2 }' | awk -F',' '{ print $1 }'`
+Y=`\grep -iE '(pie|annulus)' ${RSPEC_REG} | head -n 1 | awk -F'(' '{ print $2 }' | awk -F',' '{ print $2 }'`
 # json file
-Z=`grep -i '"redshift"' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
-R500=`grep '"R500.*kpc' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
-OBS_ID=`grep '"Obs.*ID' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
-OBJ_NAME=`grep '"Source\ Name' ${JSON_FILE} | awk -F':' '{ print $2 }' | sed -e 's/\ *"//' -e 's/"\ *,$//'`
-#CT=`grep '"Cooling_time' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
+Z=`\grep -i '"redshift"' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
+R500=`\grep '"R500.*kpc' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
+OBS_ID=`\grep '"Obs.*ID' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
+OBJ_NAME=`\grep '"Source\ Name' ${JSON_FILE} | awk -F':' '{ print $2 }' | sed -e 's/\ *"//' -e 's/"\ *,$//'`
+#CT=`\grep '"Cooling_time' ${JSON_FILE} | awk -F':' '{ print $2 }' | tr -d ' ,'`
 
 cd ${IMG_DIR}
 printf "entered img directory\n"
@@ -174,13 +203,13 @@ if [ `echo "${Z} < 0.3" | bc -l` -eq 1 ]; then
 #    exit ${ERR_Z}
 fi
 
-#KPC_PER_PIX=`${COSMO_CALC} ${Z} | grep 'kpc/pixel' | awk '{ print $3 }'`
-KPC_PER_PIX=`${COSMO_CALC} ${Z} | grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+#KPC_PER_PIX=`${COSMO_CALC} ${Z} | \grep 'kpc/pixel' | awk '{ print $3 }'`
+KPC_PER_PIX=`${COSMO_CALC} ${Z} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
 RC_PIX=`echo "scale=2; 0.048 * ${R500} / ${KPC_PER_PIX}" | bc -l`
 # test counts_in_0.048R500<500?
 RC_REG="pie(${X},${Y},0,${RC_PIX},0,360)"
 punlearn dmlist
-CNT_RC=`dmlist infile="${EVT_E}[sky=${RC_REG}]" opt=block | grep 'EVENTS' | awk '{ print $8 }'`
+CNT_RC=`dmlist infile="${EVT_E}[sky=${RC_REG}]" opt=block | \grep 'EVENTS' | awk '{ print $8 }'`
 printf "R500=${R500}, 0.048R500_pix=${RC_PIX}, counts_in_0.048R500=${CNT_RC}\n"
 if [ ${CNT_RC} -gt 500 ]; then
     F_WC=true
@@ -202,7 +231,7 @@ _EOF_
 printf "CHECK the regions (R1=${R1}, R2=${R2}) ...\n"
 printf "modify if necessary and save with the same name: \`${TMP_REG}'\n"
 cp -fv ${TMP_REG} ${TMP_REG%.reg}_orig.reg
-ds9 ${EVT_E} -regions ${TMP_REG} -cmap sls -bin factor 4
+ds9 ${EVT_E} -regions ${TMP_REG} -cmap he -bin factor 4
 read -p "> Whether the region exceeds ccd edge?(No/yes/modified) " WR_ANS
 case "${WR_ANS}" in
     [yY]*)
@@ -220,8 +249,8 @@ esac
 punlearn dmextract
 dmextract infile="${EVT_E}[bin sky=@${TMP_REG}]" outfile="${TMP_S}" exp=${EXPMAP} opt=generic clobber=yes
 punlearn dmlist
-S1=`dmlist "${TMP_S}[cols SUR_FLUX]" opt="data,clean" | grep -v '#' | sed -n -e 's/\ *//' -e '1p'`
-S2=`dmlist "${TMP_S}[cols SUR_FLUX]" opt="data,clean" | grep -v '#' | sed -n -e 's/\ *//' -e '2p'`
+S1=`dmlist "${TMP_S}[cols SUR_FLUX]" opt="data,clean" | \grep -v '#' | sed -n -e 's/\ *//' -e '1p'`
+S2=`dmlist "${TMP_S}[cols SUR_FLUX]" opt="data,clean" | \grep -v '#' | sed -n -e 's/\ *//' -e '2p'`
 CSB=`echo "${S1} ${S2}" | awk '{ print $1/$2/100 }'` 
 
 ## back to original spc/profile directory

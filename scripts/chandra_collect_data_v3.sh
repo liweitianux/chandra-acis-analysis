@@ -3,38 +3,39 @@
 unalias -a
 export LC_COLLATE=C
 # fix path for python
-export PATH=/usr/bin:$PATH
+export PATH=/usr/bin:/usr/local/bin:$PATH
 #########################################################################
-## collect needed data and save to a JSON file
+## Collect the calculated mass data and write to the JSON file.
 ##
-## LIweitiaNux <liweitianux@gmail.com>
+## Weitian LI <liweitianux@gmail.com>
 ## August 31, 2012
 ##
 ## ChangeLogs:
 ##   check JSON syntax, modify output to agree with the syntax
 ##   Ref: http://json.parser.online.fr/
-## v1.1, 2012/09/05, LIweitiaNux
+## v1.1, 2012/09/05, Weitian LI
 ##   add `T_avg(0.2-0.5 R500)' and `T_err'
-## v2.0, 2012/10/14, LIweitiaNux
+## v2.0, 2012/10/14, Weitian LI
 ##   add parameters
-## v2.1, 2012/11/07, LIweitiaNux
+## v2.1, 2012/11/07, Weitian LI
 ##   account for `fitting_dbeta'
-## v2.2, 2012/12/18, LIweitiaNux
+## v2.2, 2012/12/18, Weitian LI
 ##   add `beta' and `cooling time' parameters
-## v3.0, 2013/02/09, LIweitiaNux
+## v3.0, 2013/02/09, Weitian LI
 ##   modified for `new sample info format'
-## v3.1, 2013/05/18, LIweitiaNux
+## v3.1, 2013/05/18, Weitian LI
 ##   add key `Feature'
-## v3.2, 2013/05/29, LIweitiaNux
+## v3.2, 2013/05/29, Weitian LI
 ##   add key `XCNTRD_RA, XCNTRD_DEC'
-## v3.3, 2013/10/14, LIweitiaNux
+## v3.3, 2013/10/14, Weitian LI
 ##   add key `Unified Name'
-#########################################################################
-
-## about, used in `usage' {{{
-VERSION="v3.0"
-UPDATE="2013-02-09"
-## about }}}
+## v3.4, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+##
+VERSION="v3.4"
+UPDATED="2015/06/03"
 
 ## error code {{{
 ERR_USG=1
@@ -56,7 +57,7 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` json=<info_json> cfg=<main_cfg> res=<final_result> basedir=<repro_dir> massdir=<mass_dir>\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -110,16 +111,16 @@ INIT_DIR=`pwd -P`
 
 # check given parameters
 # check given dir
-if [ -d "${basedir}" ] && ls ${basedir}/*repro_evt2.fits > /dev/null 2>&1; then
+if [ -d "${basedir}" ] && \ls ${basedir}/*repro_evt2.fits > /dev/null 2>&1; then
     BASEDIR=${basedir}
-elif [ -d "${DFT_BASEDIR}" ] && ls ${DFT_BASEDIR}/*repro_evt2.fits > /dev/null 2>&1; then
+elif [ -d "${DFT_BASEDIR}" ] && \ls ${DFT_BASEDIR}/*repro_evt2.fits > /dev/null 2>&1; then
     BASEDIR=${DFT_BASEDIR}
 else
     read -p "> basedir (contains info json): " BASEDIR
     if [ ! -d "${BASEDIR}" ]; then
         printf "ERROR: given \`${BASEDIR}' NOT a directory\n"
         exit ${ERR_DIR}
-    elif ! ls ${BASEDIR}/*repro_evt2.fits > /dev/null 2>&1; then
+    elif ! \ls ${BASEDIR}/*repro_evt2.fits > /dev/null 2>&1; then
         printf "ERROR: given \`${BASEDIR}' NOT contains needed evt files\n"
         exit ${ERR_DIR}
     fi
@@ -145,8 +146,8 @@ printf "## use massdir: \`${MASS_DIR}'\n"
 # check json file
 if [ ! -z "${json}" ] && [ -r "${BASEDIR}/${json}" ]; then
     JSON_FILE="${json}"
-elif [ "`ls ${BASEDIR}/${DFT_JSON_PAT} | wc -l`" -eq 1 ]; then
-    JSON_FILE=`( cd ${BASEDIR} && ls ${DFT_JSON_PAT} )`
+elif [ "`\ls ${BASEDIR}/${DFT_JSON_PAT} | wc -l`" -eq 1 ]; then
+    JSON_FILE=`( cd ${BASEDIR} && \ls ${DFT_JSON_PAT} )`
 else
     read -p "> info json file: " JSON_FILE
     if ! [ -r "${BASEDIR}/${JSON_FILE}" ]; then
@@ -168,7 +169,7 @@ else
     fi
 fi
 printf "## use main config file: \`${CFG_FILE}'\n"
-SBP_CFG=`grep '^sbp_cfg' ${CFG_FILE} | awk '{ print $2 }'`
+SBP_CFG=`\grep '^sbp_cfg' ${CFG_FILE} | awk '{ print $2 }'`
 printf "## sbp config file: \`${SBP_CFG}'\n"
 # check final result file
 if [ ! -z "${res}" ] && [ -r "${res}" ]; then
@@ -198,20 +199,33 @@ IMG_DIR="${BASEDIR}/img"
 SPEC_DIR="${BASEDIR}/spc/profile"
 ## dir & file }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 cd ${BASEDIR}
 printf "## enter directory: `pwd -P`\n"
 
 ## in dir `repro' {{{
 punlearn dmkeypar
-EVT_RAW=`ls *repro_evt2.fits`
+EVT_RAW=`\ls *repro_evt2.fits`
 OBS_ID=`dmkeypar ${EVT_RAW} OBS_ID echo=yes`
 DATE_OBS=`dmkeypar ${EVT_RAW} DATE-OBS echo=yes`
 EXPOSURE_RAW=`dmkeypar ${EVT_RAW} EXPOSURE echo=yes | awk '{ print $1/1000 }'`
 ## ACIS_TYPE
 DETNAM=`dmkeypar ${EVT_RAW} DETNAM echo=yes`
-if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
     ACIS_TYPE="ACIS-I"
-elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
     ACIS_TYPE="ACIS-S"
 else
     printf "*** ERROR: unknown detector type: ${DETNAM}\n"
@@ -221,7 +235,7 @@ fi
 
 ## in dir `repro/evt' {{{
 cd ${EVT_DIR}
-EVT_CLEAN=`ls evt2_c*_clean.fits`
+EVT_CLEAN=`\ls evt2_c*_clean.fits`
 EXPOSURE_CLEAN=`dmkeypar ${EVT_CLEAN} EXPOSURE echo=yes | awk '{ print $1/1000 }'`
 ## dir `repro/evt' }}}
 
@@ -229,26 +243,26 @@ EXPOSURE_CLEAN=`dmkeypar ${EVT_CLEAN} EXPOSURE echo=yes | awk '{ print $1/1000 }
 cd ${MASS_DIR}
 
 # misc {{{
-N_H=`grep '^nh' ${CFG_FILE} | awk '{ print $2 }'`
-Z=`grep '^z' ${SBP_CFG} | awk '{ print $2 }'`
-T_DATA_FILE=`grep '^t_data_file' ${CFG_FILE} | awk '{ print $2 }'`
-NFW_RMIN_KPC=`grep '^nfw_rmin_kpc' ${CFG_FILE} | awk '{ print $2 }'`
-E_Z=`${COSMO_CALC} ${Z} | grep -i 'Hubble_parameter' | awk '{ print $3 }'`
-KPC_PER_PIXEL=`${COSMO_CALC} ${Z} | grep 'kpc/pixel' | awk '{ print $3 }'`
-RADIUS_SBP_FILE=`grep '^radius_sbp_file' ${CFG_FILE} | awk '{ print $2 }'`
+N_H=`\grep '^nh' ${CFG_FILE} | awk '{ print $2 }'`
+Z=`\grep '^z' ${SBP_CFG} | awk '{ print $2 }'`
+T_DATA_FILE=`\grep '^t_data_file' ${CFG_FILE} | awk '{ print $2 }'`
+NFW_RMIN_KPC=`\grep '^nfw_rmin_kpc' ${CFG_FILE} | awk '{ print $2 }'`
+E_Z=`${COSMO_CALC} ${Z} | \grep -i 'Hubble_parameter' | awk '{ print $3 }'`
+KPC_PER_PIXEL=`${COSMO_CALC} ${Z} | \grep 'kpc/pixel' | awk '{ print $3 }'`
+RADIUS_SBP_FILE=`\grep '^radius_sbp_file' ${CFG_FILE} | awk '{ print $2 }'`
 RMAX_SBP_PIX=`tail -n 1 ${RADIUS_SBP_FILE} | awk '{ print $1+$2 }'`
 RMAX_SBP_KPC=`echo "${RMAX_SBP_PIX} ${KPC_PER_PIXEL}" | awk '{ printf("%.2f", $1*$2) }'`
 SPC_DIR=`eval ${DFT_SPC_DIR_CMD}`
 if [ -f "${SPC_DIR}/${DFT_RSPEC_REG}" ]; then
-    RMAX_TPRO_PIX=`grep -iE '(pie|annulus)' ${SPC_DIR}/${DFT_RSPEC_REG} | tail -n 1 | awk -F',' '{ print $4 }'`
+    RMAX_TPRO_PIX=`\grep -iE '(pie|annulus)' ${SPC_DIR}/${DFT_RSPEC_REG} | tail -n 1 | awk -F',' '{ print $4 }'`
     RMAX_TPRO_KPC=`echo "${RMAX_TPRO_PIX} ${KPC_PER_PIXEL}" | awk '{ printf("%.2f", $1*$2) }'`
 fi
 IMG_DIR=`eval ${DFT_IMG_DIR_CMD}`
-EXPCORR_CONF=`ls ${IMG_DIR}/${DFT_EXPCORR_CONF_PAT} 2> /dev/null`
+EXPCORR_CONF=`\ls ${IMG_DIR}/${DFT_EXPCORR_CONF_PAT} 2> /dev/null`
 echo "EXPCORR_CONF: ${EXPCORR_CONF}"
 if [ -f "${EXPCORR_CONF}" ]; then
-    T_REF=`grep '^temp' ${EXPCORR_CONF} | awk '{ print $2 }'`
-    Z_REF=`grep '^abund' ${EXPCORR_CONF} | awk '{ print $2 }'`
+    T_REF=`\grep '^temp' ${EXPCORR_CONF} | awk '{ print $2 }'`
+    Z_REF=`\grep '^abund' ${EXPCORR_CONF} | awk '{ print $2 }'`
 fi
 [ -z "${NFW_RMIN_KPC}" ] && NFW_RMIN_KPC="null"
 [ -z "${RMAX_SBP_PIX}" ] && RMAX_SBP_PIX="null"
@@ -258,17 +272,17 @@ fi
 # misc }}}
 
 ## determine single/double beta {{{
-if grep -q '^beta2' ${SBP_CFG}; then
+if \grep -q '^beta2' ${SBP_CFG}; then
     MODEL_SBP="double-beta"
-    n01=`grep '^n01' ${RES_FINAL} | awk '{ print $2 }'`
-    beta1=`grep '^beta1' ${RES_FINAL} | awk '{ print $2 }'`
-    rc1=`grep -E '^rc1\s' ${RES_FINAL} | awk '{ print $2 }'`
-    rc1_kpc=`grep '^rc1_kpc' ${RES_FINAL} | awk '{ print $2 }'`
-    n02=`grep '^n02' ${RES_FINAL} | awk '{ print $2 }'`
-    beta2=`grep '^beta2' ${RES_FINAL} | awk '{ print $2 }'`
-    rc2=`grep -E '^rc2\s' ${RES_FINAL} | awk '{ print $2 }'`
-    rc2_kpc=`grep '^rc2_kpc' ${RES_FINAL} | awk '{ print $2 }'`
-    BKG=`grep '^bkg' ${RES_FINAL} | awk '{ print $2 }'`
+    n01=`\grep '^n01' ${RES_FINAL} | awk '{ print $2 }'`
+    beta1=`\grep '^beta1' ${RES_FINAL} | awk '{ print $2 }'`
+    rc1=`\grep -E '^rc1\s' ${RES_FINAL} | awk '{ print $2 }'`
+    rc1_kpc=`\grep '^rc1_kpc' ${RES_FINAL} | awk '{ print $2 }'`
+    n02=`\grep '^n02' ${RES_FINAL} | awk '{ print $2 }'`
+    beta2=`\grep '^beta2' ${RES_FINAL} | awk '{ print $2 }'`
+    rc2=`\grep -E '^rc2\s' ${RES_FINAL} | awk '{ print $2 }'`
+    rc2_kpc=`\grep '^rc2_kpc' ${RES_FINAL} | awk '{ print $2 }'`
+    BKG=`\grep '^bkg' ${RES_FINAL} | awk '{ print $2 }'`
     # beta1 -> smaller rc; beta2 -> bigger rc
     if [ `echo "${rc1} < ${rc2}" | bc -l` -eq 1 ]; then
         N01=${n01}
@@ -296,30 +310,30 @@ else
     BETA1="null"
     RC1="null"
     RC1_KPC="null"
-    N02=`grep '^n0' ${RES_FINAL} | awk '{ print $2 }'`
-    BETA2=`grep '^beta' ${RES_FINAL} | awk '{ print $2 }'`
-    RC2=`grep -E '^rc\s' ${RES_FINAL} | awk '{ print $2 }'`
-    RC2_KPC=`grep '^rc_kpc' ${RES_FINAL} | awk '{ print $2 }'`
-    BKG=`grep '^bkg' ${RES_FINAL} | awk '{ print $2 }'`
+    N02=`\grep '^n0' ${RES_FINAL} | awk '{ print $2 }'`
+    BETA2=`\grep '^beta' ${RES_FINAL} | awk '{ print $2 }'`
+    RC2=`\grep -E '^rc\s' ${RES_FINAL} | awk '{ print $2 }'`
+    RC2_KPC=`\grep '^rc_kpc' ${RES_FINAL} | awk '{ print $2 }'`
+    BKG=`\grep '^bkg' ${RES_FINAL} | awk '{ print $2 }'`
 fi
 ## single/double beta }}}
 
 ## get `mass/virial_radius/luminosity' {{{
 # 200 data {{{
-R200_VAL=`grep '^r200' ${RES_FINAL} | awk '{ print $2 }'`
-R200_ERR_L=`grep '^r200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-R200_ERR_U=`grep '^r200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-M200_VAL=`grep '^m200' ${RES_FINAL} | awk '{ print $2 }'`
-M200_ERR_L=`grep '^m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-M200_ERR_U=`grep '^m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L200_VAL=`grep '^L200' ${RES_FINAL} | awk '{ print $2 }'`
-L200_ERR=`grep '^L200' ${RES_FINAL} | awk '{ print $4 }'`
-MGAS200_VAL=`grep '^gas_m200' ${RES_FINAL} | awk '{ print $2 }'`
-MGAS200_ERR_L=`grep '^gas_m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-MGAS200_ERR_U=`grep '^gas_m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-FGAS200_VAL=`grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $2 }'`
-FGAS200_ERR_L=`grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-FGAS200_ERR_U=`grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+R200_VAL=`\grep '^r200' ${RES_FINAL} | awk '{ print $2 }'`
+R200_ERR_L=`\grep '^r200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+R200_ERR_U=`\grep '^r200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+M200_VAL=`\grep '^m200' ${RES_FINAL} | awk '{ print $2 }'`
+M200_ERR_L=`\grep '^m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+M200_ERR_U=`\grep '^m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+L200_VAL=`\grep '^L200' ${RES_FINAL} | awk '{ print $2 }'`
+L200_ERR=`\grep '^L200' ${RES_FINAL} | awk '{ print $4 }'`
+MGAS200_VAL=`\grep '^gas_m200' ${RES_FINAL} | awk '{ print $2 }'`
+MGAS200_ERR_L=`\grep '^gas_m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+MGAS200_ERR_U=`\grep '^gas_m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+FGAS200_VAL=`\grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $2 }'`
+FGAS200_ERR_L=`\grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+FGAS200_ERR_U=`\grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
 [ -z "${R200_VAL}" ]       && R200_VAL="null"
 [ -z "${R200_ERR_L}" ]     && R200_ERR_L="null"
 [ -z "${R200_ERR_U}" ]     && R200_ERR_U="null"
@@ -336,20 +350,20 @@ FGAS200_ERR_U=`grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $3 }' | awk -
 [ -z "${FGAS200_ERR_U}" ]  && FGAS200_ERR_U="null"
 # 200 }}}
 # 500 data {{{
-R500_VAL=`grep '^r500' ${RES_FINAL} | awk '{ print $2 }'`
-R500_ERR_L=`grep '^r500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-R500_ERR_U=`grep '^r500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-M500_VAL=`grep '^m500' ${RES_FINAL} | awk '{ print $2 }'`
-M500_ERR_L=`grep '^m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-M500_ERR_U=`grep '^m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L500_VAL=`grep '^L500' ${RES_FINAL} | awk '{ print $2 }'`
-L500_ERR=`grep '^L500' ${RES_FINAL} | awk '{ print $4 }'`
-MGAS500_VAL=`grep '^gas_m500' ${RES_FINAL} | awk '{ print $2 }'`
-MGAS500_ERR_L=`grep '^gas_m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-MGAS500_ERR_U=`grep '^gas_m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-FGAS500_VAL=`grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $2 }'`
-FGAS500_ERR_L=`grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-FGAS500_ERR_U=`grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+R500_VAL=`\grep '^r500' ${RES_FINAL} | awk '{ print $2 }'`
+R500_ERR_L=`\grep '^r500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+R500_ERR_U=`\grep '^r500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+M500_VAL=`\grep '^m500' ${RES_FINAL} | awk '{ print $2 }'`
+M500_ERR_L=`\grep '^m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+M500_ERR_U=`\grep '^m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+L500_VAL=`\grep '^L500' ${RES_FINAL} | awk '{ print $2 }'`
+L500_ERR=`\grep '^L500' ${RES_FINAL} | awk '{ print $4 }'`
+MGAS500_VAL=`\grep '^gas_m500' ${RES_FINAL} | awk '{ print $2 }'`
+MGAS500_ERR_L=`\grep '^gas_m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+MGAS500_ERR_U=`\grep '^gas_m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+FGAS500_VAL=`\grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $2 }'`
+FGAS500_ERR_L=`\grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+FGAS500_ERR_U=`\grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
 [ -z "${R500_VAL}" ]       && R500_VAL="null"
 [ -z "${R500_ERR_L}" ]     && R500_ERR_L="null"
 [ -z "${R500_ERR_U}" ]     && R500_ERR_U="null"
@@ -366,20 +380,20 @@ FGAS500_ERR_U=`grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $3 }' | awk -
 [ -z "${FGAS500_ERR_U}" ]  && FGAS500_ERR_U="null"
 # 500 }}}
 # 1500 data {{{
-R1500_VAL=`grep '^r1500' ${RES_FINAL} | awk '{ print $2 }'`
-R1500_ERR_L=`grep '^r1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-R1500_ERR_U=`grep '^r1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-M1500_VAL=`grep '^m1500' ${RES_FINAL} | awk '{ print $2 }'`
-M1500_ERR_L=`grep '^m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-M1500_ERR_U=`grep '^m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L1500_VAL=`grep '^L1500' ${RES_FINAL} | awk '{ print $2 }'`
-L1500_ERR=`grep '^L1500' ${RES_FINAL} | awk '{ print $4 }'`
-MGAS1500_VAL=`grep '^gas_m1500' ${RES_FINAL} | awk '{ print $2 }'`
-MGAS1500_ERR_L=`grep '^gas_m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-MGAS1500_ERR_U=`grep '^gas_m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-FGAS1500_VAL=`grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $2 }'`
-FGAS1500_ERR_L=`grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-FGAS1500_ERR_U=`grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+R1500_VAL=`\grep '^r1500' ${RES_FINAL} | awk '{ print $2 }'`
+R1500_ERR_L=`\grep '^r1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+R1500_ERR_U=`\grep '^r1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+M1500_VAL=`\grep '^m1500' ${RES_FINAL} | awk '{ print $2 }'`
+M1500_ERR_L=`\grep '^m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+M1500_ERR_U=`\grep '^m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+L1500_VAL=`\grep '^L1500' ${RES_FINAL} | awk '{ print $2 }'`
+L1500_ERR=`\grep '^L1500' ${RES_FINAL} | awk '{ print $4 }'`
+MGAS1500_VAL=`\grep '^gas_m1500' ${RES_FINAL} | awk '{ print $2 }'`
+MGAS1500_ERR_L=`\grep '^gas_m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+MGAS1500_ERR_U=`\grep '^gas_m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+FGAS1500_VAL=`\grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $2 }'`
+FGAS1500_ERR_L=`\grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+FGAS1500_ERR_U=`\grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
 [ -z "${R1500_VAL}" ]      && R1500_VAL="null"
 [ -z "${R1500_ERR_L}" ]    && R1500_ERR_L="null"
 [ -z "${R1500_ERR_U}" ]    && R1500_ERR_U="null"
@@ -396,20 +410,20 @@ FGAS1500_ERR_U=`grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $3 }' | awk
 [ -z "${FGAS1500_ERR_U}" ] && FGAS1500_ERR_U="null"
 # 1500 }}}
 # 2500 data {{{
-R2500_VAL=`grep '^r2500' ${RES_FINAL} | awk '{ print $2 }'`
-R2500_ERR_L=`grep '^r2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-R2500_ERR_U=`grep '^r2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-M2500_VAL=`grep '^m2500' ${RES_FINAL} | awk '{ print $2 }'`
-M2500_ERR_L=`grep '^m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-M2500_ERR_U=`grep '^m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L2500_VAL=`grep '^L2500' ${RES_FINAL} | awk '{ print $2 }'`
-L2500_ERR=`grep '^L2500' ${RES_FINAL} | awk '{ print $4 }'`
-MGAS2500_VAL=`grep '^gas_m2500' ${RES_FINAL} | awk '{ print $2 }'`
-MGAS2500_ERR_L=`grep '^gas_m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-MGAS2500_ERR_U=`grep '^gas_m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-FGAS2500_VAL=`grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $2 }'`
-FGAS2500_ERR_L=`grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
-FGAS2500_ERR_U=`grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+R2500_VAL=`\grep '^r2500' ${RES_FINAL} | awk '{ print $2 }'`
+R2500_ERR_L=`\grep '^r2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+R2500_ERR_U=`\grep '^r2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+M2500_VAL=`\grep '^m2500' ${RES_FINAL} | awk '{ print $2 }'`
+M2500_ERR_L=`\grep '^m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+M2500_ERR_U=`\grep '^m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+L2500_VAL=`\grep '^L2500' ${RES_FINAL} | awk '{ print $2 }'`
+L2500_ERR=`\grep '^L2500' ${RES_FINAL} | awk '{ print $4 }'`
+MGAS2500_VAL=`\grep '^gas_m2500' ${RES_FINAL} | awk '{ print $2 }'`
+MGAS2500_ERR_L=`\grep '^gas_m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+MGAS2500_ERR_U=`\grep '^gas_m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+FGAS2500_VAL=`\grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $2 }'`
+FGAS2500_ERR_L=`\grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
+FGAS2500_ERR_U=`\grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
 [ -z "${R2500_VAL}" ]      && R2500_VAL="null"
 [ -z "${R2500_ERR_L}" ]    && R2500_ERR_L="null"
 [ -z "${R2500_ERR_U}" ]    && R2500_ERR_U="null"
@@ -425,17 +439,17 @@ FGAS2500_ERR_U=`grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $3 }' | awk
 [ -z "${FGAS2500_ERR_L}" ] && FGAS2500_ERR_L="null"
 [ -z "${FGAS2500_ERR_U}" ] && FGAS2500_ERR_U="null"
 # 2500 }}}
-FGRR=`grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//' | awk '{ print $1 }'`
-FGRR_ERR_L=`grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//' | awk '{ print $2 }' | awk -F'/' '{ print $1 }'`
-FGRR_ERR_U=`grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//' | awk '{ print $2 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
+FGRR=`\grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//' | awk '{ print $1 }'`
+FGRR_ERR_L=`\grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//' | awk '{ print $2 }' | awk -F'/' '{ print $1 }'`
+FGRR_ERR_U=`\grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//' | awk '{ print $2 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
 [ -z "${FGRR}" ]       && FGRR="null"
 [ -z "${FGRR_ERR_L}" ] && FGRR_ERR_L="null"
 [ -z "${FGRR_ERR_U}" ] && FGRR_ERR_U="null"
 ## mrl }}}
 
 ## rcool & cooling time {{{
-RCOOL=`grep '^cooling' ${RES_FINAL} | awk '{ print $4 }'`
-COOLING_TIME=`grep '^cooling' ${RES_FINAL} | awk -F'=' '{ print $2 }' | tr -d ' Gyr'`
+RCOOL=`\grep '^cooling' ${RES_FINAL} | awk '{ print $4 }'`
+COOLING_TIME=`\grep '^cooling' ${RES_FINAL} | awk -F'=' '{ print $2 }' | tr -d ' Gyr'`
 [ -z "${RCOOL}" ] && RCOOL="null"
 [ -z "${COOLING_TIME}" ] && COOLING_TIME="null"
 ## cooling time }}}
@@ -444,35 +458,35 @@ COOLING_TIME=`grep '^cooling' ${RES_FINAL} | awk -F'=' '{ print $2 }' | tr -d ' 
 cd ${BASEDIR}
 ## orig json file {{{
 printf "## collect data from original info file ...\n"
-OBJ_NAME=`grep '"Source\ Name' ${JSON_FILE} | sed 's/.*"Source.*":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
-OBJ_UNAME=`grep '"Unified\ Name' ${JSON_FILE} | sed 's/.*"Unified.*":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
-OBJ_RA=`grep '"R\.\ A\.' ${JSON_FILE} | sed 's/.*"R\.\ A\.":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
-OBJ_DEC=`grep '"Dec\.' ${JSON_FILE} | sed 's/.*"Dec\.":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
-OBJ_XCRA=`grep '"XCNTRD_RA' ${JSON_FILE} | sed 's/.*"XCNTRD_RA":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
-OBJ_XCDEC=`grep '"XCNTRD_DEC' ${JSON_FILE} | sed 's/.*"XCNTRD_DEC":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
-REDSHIFT=`grep '"redshift' ${JSON_FILE} | sed 's/.*"redshift.*":\ //' | sed 's/\ *,$//'`
-COOLCORE=`grep -i '"cool.*core' ${JSON_FILE} | sed 's/.*"[cC]ool.*":\ //' | sed 's/\ *,$//'`
+OBJ_NAME=`\grep '"Source\ Name' ${JSON_FILE} | sed 's/.*"Source.*":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
+OBJ_UNAME=`\grep '"Unified\ Name' ${JSON_FILE} | sed 's/.*"Unified.*":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
+OBJ_RA=`\grep '"R\.\ A\.' ${JSON_FILE} | sed 's/.*"R\.\ A\.":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
+OBJ_DEC=`\grep '"Dec\.' ${JSON_FILE} | sed 's/.*"Dec\.":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
+OBJ_XCRA=`\grep '"XCNTRD_RA' ${JSON_FILE} | sed 's/.*"XCNTRD_RA":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
+OBJ_XCDEC=`\grep '"XCNTRD_DEC' ${JSON_FILE} | sed 's/.*"XCNTRD_DEC":\ //' | sed 's/^"//' | sed 's/"\ *,$//'`
+REDSHIFT=`\grep '"redshift' ${JSON_FILE} | sed 's/.*"redshift.*":\ //' | sed 's/\ *,$//'`
+COOLCORE=`\grep -i '"cool.*core' ${JSON_FILE} | sed 's/.*"[cC]ool.*":\ //' | sed 's/\ *,$//'`
 [ -z "${COOLCORE}" ] && COOLCORE="null"
-OBJ_FEATURE=`grep '"Feature' ${JSON_FILE} | sed 's/.*"Feature":\ //' | sed 's/^"//' | sed 's/"\ *,*$//'`
-OBJ_NOTE=`grep '"NOTE' ${JSON_FILE} | sed 's/.*"NOTE":\ //' | sed 's/^"//' | sed 's/"\ *,*$//'`
+OBJ_FEATURE=`\grep '"Feature' ${JSON_FILE} | sed 's/.*"Feature":\ //' | sed 's/^"//' | sed 's/"\ *,*$//'`
+OBJ_NOTE=`\grep '"NOTE' ${JSON_FILE} | sed 's/.*"NOTE":\ //' | sed 's/^"//' | sed 's/"\ *,*$//'`
 
 # T & Z {{{
-T_1R500=`grep '"T(0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-T_1ERR=`grep '"T_err(.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-T_1ERR_L=`grep '"T_err_l.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-T_1ERR_U=`grep '"T_err_u.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-Z_1R500=`grep '"Z(0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-Z_1ERR=`grep '"Z_err(.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-Z_1ERR_L=`grep '"Z_err_l.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-Z_1ERR_U=`grep '"Z_err_u.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-T_2R500=`grep '"T(0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-T_2ERR=`grep '"T_err(.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-T_2ERR_L=`grep '"T_err_l.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-T_2ERR_U=`grep '"T_err_u.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
-Z_2R500=`grep '"Z(0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-Z_2ERR=`grep '"Z_err(.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-Z_2ERR_L=`grep '"Z_err_l.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
-Z_2ERR_U=`grep '"Z_err_u.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+T_1R500=`\grep '"T(0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+T_1ERR=`\grep '"T_err(.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+T_1ERR_L=`\grep '"T_err_l.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+T_1ERR_U=`\grep '"T_err_u.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+Z_1R500=`\grep '"Z(0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+Z_1ERR=`\grep '"Z_err(.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+Z_1ERR_L=`\grep '"Z_err_l.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+Z_1ERR_U=`\grep '"Z_err_u.*0\.1.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+T_2R500=`\grep '"T(0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+T_2ERR=`\grep '"T_err(.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+T_2ERR_L=`\grep '"T_err_l.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+T_2ERR_U=`\grep '"T_err_u.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"T.*":\ //' | sed 's/\ *,$//'`
+Z_2R500=`\grep '"Z(0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+Z_2ERR=`\grep '"Z_err(.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+Z_2ERR_L=`\grep '"Z_err_l.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
+Z_2ERR_U=`\grep '"Z_err_u.*0\.2.*R500' ${JSON_FILE} | sed 's/.*"Z.*":\ //' | sed 's/\ *,$//'`
 [ -z "${T_1R500}" ]  && T_1R500="null"
 [ -z "${T_1ERR}" ]   && T_1ERR="null"
 [ -z "${T_1ERR_L}" ] && T_1ERR_L="null"

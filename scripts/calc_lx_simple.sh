@@ -1,20 +1,23 @@
 #!/bin/sh
-#
+##
+## Run calc_lx in BATCH mode
+##
+## Weitian LI <liweitianux@gmail.com>
+## Created: 2012/08/31
+##
+UPDATED="2014/06/18"
+##
+## Changelogs:
+## 2015/06/03:
+##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+## 2014/06/18:
+##   * use env variable 'MASS_PROFILE_DIR'
+##
+
 unalias -a
 export LC_COLLATE=C
 # fix path for python
-export PATH="/usr/bin:$PATH"
-###########################################################
-## calc_lx in BATCH mode                                 ##
-##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## August 31, 2012                                       ##
-##                                                       ##
-## ChangeLog:                                            ##
-##  2014/06/18: use env variable 'MASS_PROFILE_DIR'      ##
-###########################################################
-
-UPDATED="2014/06/18"
+export PATH="/usr/bin:/usr/local/bin:$PATH"
 
 ## usage, `path_conffile' is the configuration file
 ## which contains the `path' to each `repro/mass' directory
@@ -64,25 +67,25 @@ else
     [ -e "${LOGFILE}" ] && mv -fv ${LOGFILE} ${LOGFILE}_bak
     TOLOG="tee -a ${LOGFILE}"
     # fitting_mass logfile, get R500 from it
-    MLOG=`ls ${MCONF%.[confgCONFG]*}*.log | tail -n 1`
-    R500_VAL=`tail -n ${RES_LINE} ${MLOG} | grep '^r500' | awk '{ print $2 }'`
-    R200_VAL=`tail -n ${RES_LINE} ${MLOG} | grep '^r200' | awk '{ print $2 }'`
+    MLOG=`\ls ${MCONF%.[confgCONFG]*}*.log | tail -n 1`
+    R500_VAL=`tail -n ${RES_LINE} ${MLOG} | \grep '^r500' | awk '{ print $2 }'`
+    R200_VAL=`tail -n ${RES_LINE} ${MLOG} | \grep '^r200' | awk '{ print $2 }'`
     # radius_sbp_file {{{
-    RSBP=`grep '^radius_sbp_file' ${MCONF} | awk '{ print $2 }'`
+    RSBP=`\grep '^radius_sbp_file' ${MCONF} | awk '{ print $2 }'`
     TMP_RSBP="_tmp_rsbp.txt"
     [ -e "${TMP_RSBP}" ] && rm -f ${TMP_RSBP}
-    cat ${RSBP} | sed 's/#.*$//' | grep -Ev '^\s*$' > ${TMP_RSBP}
+    cat ${RSBP} | sed 's/#.*$//' | \grep -Ev '^\s*$' > ${TMP_RSBP}
     RSBP="${TMP_RSBP}"
     # rsbp }}}
-    TPRO_TYPE=`grep '^t_profile' ${MCONF} | awk '{ print $2 }'`
-    TPRO_DATA=`grep '^t_data_file' ${MCONF} | awk '{ print $2 }'`
-    TPRO_PARA=`grep '^t_param_file' ${MCONF} | awk '{ print $2 }'`
-    SBP_CONF=`grep '^sbp_cfg' ${MCONF} | awk '{ print $2 }'`
-    ABUND=`grep '^abund' ${MCONF} | awk '{ print $2 }'`
-    NH=`grep '^nh' ${MCONF} | awk '{ print $2 }'`
-    Z=`grep '^z' ${SBP_CONF} | awk '{ print $2 }'`
-    cm_per_pixel=`grep '^cm_per_pixel' ${SBP_CONF} | awk '{ print $2 }'`
-    CF_FILE=`grep '^cfunc_file' ${SBP_CONF} | awk '{ print $2 }'`
+    TPRO_TYPE=`\grep '^t_profile' ${MCONF} | awk '{ print $2 }'`
+    TPRO_DATA=`\grep '^t_data_file' ${MCONF} | awk '{ print $2 }'`
+    TPRO_PARA=`\grep '^t_param_file' ${MCONF} | awk '{ print $2 }'`
+    SBP_CONF=`\grep '^sbp_cfg' ${MCONF} | awk '{ print $2 }'`
+    ABUND=`\grep '^abund' ${MCONF} | awk '{ print $2 }'`
+    NH=`\grep '^nh' ${MCONF} | awk '{ print $2 }'`
+    Z=`\grep '^z' ${SBP_CONF} | awk '{ print $2 }'`
+    cm_per_pixel=`\grep '^cm_per_pixel' ${SBP_CONF} | awk '{ print $2 }'`
+    CF_FILE=`\grep '^cfunc_file' ${SBP_CONF} | awk '{ print $2 }'`
     printf "## use logfile: \`${LOGFILE}'\n"
     printf "## working directory: \``pwd -P`'\n" | ${TOLOG}
     printf "## use configuration files: \`${MCONF}, ${SBP_CONF}'\n" | ${TOLOG}
@@ -121,8 +124,8 @@ else
     ## flux_ratio }}}
     printf "## CMD: ${CALCLX_SCRIPT} ${RSBP} ${FLUX_RATIO} ${Z} ${R500_VAL} ${TPRO_DATA}\n" | ${TOLOG}
     printf "## CMD: ${CALCLX_SCRIPT} ${RSBP} ${FLUX_RATIO} ${Z} ${R200_VAL} ${TPRO_DATA}\n" | ${TOLOG}
-    L500=`${CALCLX_SCRIPT} ${RSBP} ${FLUX_RATIO} ${Z} ${R500_VAL} ${TPRO_DATA} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-    L200=`${CALCLX_SCRIPT} ${RSBP} ${FLUX_RATIO} ${Z} ${R200_VAL} ${TPRO_DATA} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+    L500=`${CALCLX_SCRIPT} ${RSBP} ${FLUX_RATIO} ${Z} ${R500_VAL} ${TPRO_DATA} | \grep '^Lx' | awk '{ print $2,$3,$4 }'`
+    L200=`${CALCLX_SCRIPT} ${RSBP} ${FLUX_RATIO} ${Z} ${R200_VAL} ${TPRO_DATA} | \grep '^Lx' | awk '{ print $2,$3,$4 }'`
     printf "L500= ${L500} erg/s\n" | ${TOLOG}
     printf "L200= ${L200} erg/s\n" | ${TOLOG}
 fi

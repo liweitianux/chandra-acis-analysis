@@ -3,8 +3,15 @@
 # background rescale, by adjusting `BACKSCAL'
 # according to the photon flux values in `9.5-12.0 keV'
 #
-# LIweitiaNux <liweitianux@gmail.com>
-# August 14, 2012
+# Weitian LI <liweitianux@gmail.com>
+# 2012/08/14
+#
+# Changelogs:
+# 2015/06/03, Aaron LI
+#   * Copy needed pfiles to tmp directory,
+#     set environment variable $PFILES to use these first.
+#     and remove them after usage.
+#
 
 ## background rescale (BACKSCAL) {{{
 # rescale background according to particle background
@@ -39,7 +46,7 @@ bkg_rescale() {
 }
 ## bkg rescale }}}
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 2 ] || [ "x$1" = "x-h" ]; then
     printf "usage:\n"
     printf "    `basename $0` <src_spec> <bkg_spec>\n"
     printf "\nNOTE:\n"
@@ -47,8 +54,27 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmstat dmkeypar dmhedit"
+
+PFILES_TMPDIR="/tmp/pfiles-$$"
+[ -d "${PFILES_TMPDIR}" ] && rm -rf ${PFILES_TMPDIR} || mkdir ${PFILES_TMPDIR}
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} ${PFILES_TMPDIR}/
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="${PFILES_TMPDIR}:${PFILES}"
+## pfiles }}}
+
 # perform `bkg_rescale'
 bkg_rescale "$1" "$2"
+
+# clean pfiles
+rm -rf ${PFILES_TMPDIR}
 
 exit 0
 

@@ -1,26 +1,33 @@
 #!/bin/sh
+##
+## Generate regions for 'radial spectra analysis' (rspec.reg),
+## and regions for 'surface brightness profile' extraction.
+##
+## Author: Weitian LI
+## Created: 2013/10/12
+##
+VERSION="v1.0"
+UPDATE="2013/10/12"
+##
+## Changelogs:
+## v2.0, 2015/06/03, Aaron LI
+##   * Updated script description
+##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+##   * ds9 colormap changed from 'sls' to 'he'
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+## v1.0, 2013/10/12, Weitian LI
+##   split from 'ciao_expcorr_sbp_v3.sh'
+##
+
 unalias -a
 export LC_COLLATE=C
-
-#####################################################################
-## generate 'radius spectra profile' regions
-## and 'radius surface profile' regions
-##
-## ChangeLogs:
-## v1, 2013/10/12, LIweitiaNux
-##   split from 'ciao_expcorr_sbp_v3.sh'
-#####################################################################
 
 SCRIPT_PATH=`readlink -f $0`
 SCRIPT_DIR=`dirname ${SCRIPT_PATH}`
 XCENTROID_SCRIPT="chandra_xcentroid.sh"
 GEN_SPCREG_SCRIPT="chandra_genspcreg.sh"
 GEN_SBPREG_SCRIPT="chandra_gensbpreg.sh"
-
-## about, used in `usage' {{{
-VERSION="v1"
-UPDATE="2013-10-12"
-## about }}}
 
 ## err code {{{
 ERR_USG=1
@@ -45,22 +52,22 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` evt=<evt2_clean> reg_in=<reg_in> bkgd=<bkgd_spec> ds9=<Yes|no>\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
 ## usage }}}
 
 ## link needed files {{{
-BKGD_FILE=`ls ../bkg/bkgcorr_bl*.pi 2> /dev/null | head -n 1`
+BKGD_FILE=`\ls ../bkg/bkgcorr_bl*.pi 2> /dev/null | head -n 1`
 if [ -r "${BKGD_FILE}" ]; then
     ln -svf ${BKGD_FILE} .
 fi
-ASOL_FILE=`ls ../pcad*_asol?.fits 2> /dev/null`
+ASOL_FILE=`\ls ../pcad*_asol?.fits 2> /dev/null`
 if [ -r "${ASOL_FILE}" ]; then
     ln -svf ${ASOL_FILE} .
 fi
-CELL_REG_FILE=`ls ../evt/celld*.reg 2> /dev/null | grep -v 'orig'`
+CELL_REG_FILE=`\ls ../evt/celld*.reg 2> /dev/null | \grep -v 'orig'`
 if [ -r "${CELL_REG_FILE}" ]; then
     ln -svf ${CELL_REG_FILE} .
 fi
@@ -68,11 +75,11 @@ fi
 
 ## default parameters {{{ 
 ## clean evt2 file
-DFT_EVT=`ls evt2*_clean.fits 2> /dev/null`
+DFT_EVT=`\ls evt2*_clean.fits 2> /dev/null`
 ## the repro dir
 DFT_BASEDIR=".."
 # default `asol file'
-ASOL="`ls pcadf*_asol1.fits 2> /dev/null | head -n 1`"
+ASOL="`\ls pcadf*_asol1.fits 2> /dev/null | head -n 1`"
 
 ## energy range
 # format: `E_START:E_END:E_WIDTH'
@@ -84,7 +91,7 @@ E_END=`echo ${DFT_ENERGY} | awk -F':' '{ print $2 }'`
 DFT_LOGFILE="genreg_`date '+%Y%m%d'`.log"
 
 ## background spectra
-DFT_BKGD=`ls bkgcorr_bl*.pi | head -n 1`
+DFT_BKGD=`\ls bkgcorr_bl*.pi | head -n 1`
 ## default parameters }}}
 
 ## functions {{{
@@ -188,18 +195,31 @@ else
 fi
 ## parameters }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar dmcopy dmcoords"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 ## determine ACIS type {{{
 # consistent with `ciao_procevt'
 punlearn dmkeypar
 DETNAM=`dmkeypar ${EVT} DETNAM echo=yes`
-if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
     printf "## \`DETNAM' (${DETNAM}) has chips 0123\n"
     printf "## ACIS-I\n"
     ACIS_TYPE="ACIS-I"
     CCD="0:3"
     NEW_DETNAM="ACIS-0123"
     ROOTNAME="c0-3_e${E_START}-${E_END}"
-elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
     printf "## \`DETNAM' (${DETNAM}) has chip 7\n"
     printf "## ACIS-S\n"
     ACIS_TYPE="ACIS-S"
@@ -224,19 +244,19 @@ printf "======== X-RAY CENTROID =======\n"
 CMD="${SCRIPT_DIR}/${XCENTROID_SCRIPT} evt=${EVT} reg=${REG_IN} conv=yes 2>&1 | tee xcentroid.dat"
 printf "CMD: $CMD\n"
 ${SCRIPT_DIR}/${XCENTROID_SCRIPT} evt=${EVT} reg=${REG_IN} conv=yes 2>&1 | tee xcentroid.dat
-X=`grep '(X,Y)' xcentroid.dat | tr -d ' XY():' | awk -F',' '{ print $2 }'`
-Y=`grep '(X,Y)' xcentroid.dat | tr -d ' XY():' | awk -F',' '{ print $3 }'`
+X=`\grep '(X,Y)' xcentroid.dat | tr -d ' XY():' | awk -F',' '{ print $2 }'`
+Y=`\grep '(X,Y)' xcentroid.dat | tr -d ' XY():' | awk -F',' '{ print $3 }'`
 CNTRD_WCS_REG="centroid_wcs.reg"
 CNTRD_PHY_REG="centroid_phy.reg"
 printf "## X centroid: ($X,$Y)\n"
 if [ "${F_DS9}" = "YES" ]; then
     printf "check the X centroid ...\n"
-    ds9 ${EVT_E} -regions ${CNTRD_PHY_REG} -cmap sls -bin factor 4
+    ds9 ${EVT_E} -regions ${CNTRD_PHY_REG} -cmap he -bin factor 4
 fi
 X0=$X
 Y0=$Y
-X=`grep -i 'point' ${CNTRD_PHY_REG} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $1 }'`
-Y=`grep -i 'point' ${CNTRD_PHY_REG} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $2 }'`
+X=`\grep -i 'point' ${CNTRD_PHY_REG} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $1 }'`
+Y=`\grep -i 'point' ${CNTRD_PHY_REG} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $2 }'`
 if [ "x${X}" != "x${X0}" ] || [ "x${Y}" != "x${Y0}" ]; then
     printf "## X CENTROID CHANGED -> ($X,$Y)\n"
     # update ${CNTRD_WCS_REG}
@@ -269,7 +289,7 @@ printf "CMD: ${CMD}\n"
 ${SCRIPT_DIR}/${GEN_SPCREG_SCRIPT} ${EVT} ${EVT_E} ${BKGD} ${X} ${Y} ${SPC_REG}
 if [ "${F_DS9}" = "YES" ]; then
     printf "check SPC regions ...\n"
-    ds9 ${EVT_E} -regions ${SPC_REG} -cmap sls -bin factor 4
+    ds9 ${EVT_E} -regions ${SPC_REG} -cmap he -bin factor 4
 fi
 printf "======== GENERATE SPECTRUM REGIONS FINISHED =======\n\n"
 

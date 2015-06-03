@@ -1,10 +1,13 @@
 #!/bin/sh
 ##
-## make `image' from `evt file'
-## make `spectral weight' using `make_instmap_weights'
-## use `fluximage' to generating `exposure map'
-## make `exposure-corrected' image
-## and extract `surface brighness profile'
+## This script performs exposure correction to images, and
+## finally produce the exposure-corrected image.
+##
+## * make `image' from `evt file'
+## * make `spectral weight' using `make_instmap_weights'
+## * use `fluximage' to generating `exposure map'
+## * make `exposure-corrected' image
+## * and extract `surface brighness profile'
 ##
 ## NOTES:
 ## only ACIS-I (chip: 0-3) and ACIS-S (chip: 7) supported
@@ -12,16 +15,23 @@
 ##
 ## Weitian LI
 ## 2012/08/16
-UPDATED="2014/10/30"
+##
+VERSION="v3.0"
+UPDATED="2015/06/03"
 ##
 ## ChangeLogs:
+## v3.0, 2015/06/03, Aaron LI
+##   * Changed to use 'fluximage' by default, and fallback to 'merge_all'
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
 ## v2.1, 2014/10/30, Weitian LI
 ##   Add 'aspect' parameter for 'skyfov' to fix the 'FoV shift bug'
 ## v2.0, 2014/07/29, Weitian LI
 ##   `merge_all' deprecated, use `fluximage' if possible
-## v1.2, 2012-08-21, LIweitiaNux
+## v1.2, 2012/08/21, Weitian LI
 ##   set `ardlib' before process `merge_all'
-## v1.1, 2012-08-21, LIweitiaNux
+## v1.1, 2012/08/21, Weitian LI
 ##   fix a bug with `sed'
 ##
 
@@ -43,6 +53,7 @@ ERR_SPEC=32
 ERR_DET=41
 ERR_ENG=42
 ERR_CIAO=100
+ERR_TOOL=110
 ## error code }}}
 
 ## usage, help {{{
@@ -50,8 +61,8 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt=<evt_file> energy=<e_start:e_end:e_width> basedir=<base_dir> nh=<nH> z=<redshift> temp=<avg_temperature> abund=<avg_abund> [ logfile=<log_file> ]\n"
-        printf "\nupdated:\n"
-        printf "${UPDATED}\n"
+        printf "\nversion:\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -60,7 +71,7 @@ esac
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits 2> /dev/null`"
+DFT_EVT="`\ls evt2*_clean.fits 2> /dev/null`"
 # default dir which contains `asols, asol.lis, ...' files
 # DFT_BASEDIR="_NOT_EXIST_"
 DFT_BASEDIR=".."
@@ -225,23 +236,36 @@ BASEDIR=`echo ${BASEDIR} | sed 's/\/*$//'`
 printf "## use basedir: \`${BASEDIR}'\n" | ${TOLOG}
 ## parameters }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar dmcopy dmhedit dmimgcalc ardlib make_instmap_weights skyfov get_sky_limits fluximage merge_all"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 ## check files in `basedir' {{{
 # check asol files
-ASOLIS=`ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
+ASOLIS=`\ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
 if [ -z "${ASOLIS}" ]; then
     printf "ERROR: cannot find \"${DFT_ASOLIS_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_ASOL}
 fi
 printf "## use asolis: \`${ASOLIS}'\n"
 # check badpixel file
-BPIX=`ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
+BPIX=`\ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
 if [ -z "${BPIX}" ]; then
     printf "ERROR: cannot find \"${DFT_BPIX_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_BPIX}
 fi
 printf "## use badpixel: \`${BPIX}'\n" | ${TOLOG}
 # check msk file
-MSK=`ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
+MSK=`\ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
 if [ -z "${MSK}" ]; then
     printf "ERROR: cannot find \"${DFT_MSK_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_MSK}
@@ -253,14 +277,14 @@ printf "## use msk file: \`${MSK}'\n" | ${TOLOG}
 # consistent with `ciao_procevt'
 punlearn dmkeypar
 DETNAM=`dmkeypar ${EVT} DETNAM echo=yes`
-if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
     printf "## \`DETNAM' (${DETNAM}) has chips 0123\n"
     printf "## ACIS-I\n"
     ACIS_TYPE="ACIS-I"
     CCD="0:3"
     NEW_DETNAM="ACIS-0123"
     ROOTNAME="c0-3_e${E_START}-${E_END}"
-elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
     printf "## \`DETNAM' (${DETNAM}) has chip 7\n"
     printf "## ACIS-S\n"
     ACIS_TYPE="ACIS-S"
@@ -272,7 +296,6 @@ else
     exit ${ERR_DET}
 fi
 ## ACIS type }}}
-
 
 ## main process {{{
 ## set `ardlib' at first
@@ -330,14 +353,25 @@ printf "## get \`xygrid': \`${XYGRID}'\n" | ${TOLOG}
 EXPMAP="expmap_${ROOTNAME}.fits"
 IMG_EXPCORR="img_expcorr_${ROOTNAME}.fits"
 
-if `which merge_all >/dev/null 2>&1`; then
-    # merge_all available
-    printf "merge_all ...\n"
-    ## set `ardlib' again to make sure the matched bpix file specified
-    printf "set \`ardlib' again for \`merge_all' ...\n"
-    punlearn ardlib
-    acis_set_ardlib badpixfile="${BPIX}"
-    
+if `which fluximage >/dev/null 2>&1`; then
+    ## 'fluximage' is available, use it by default
+    ## use 'fluximage' to generate `exposure map' and apply exposure correction
+    printf "use fluximage to generate expmap and apply correction ...\n"
+    punlearn fluximage
+    fluximage infile="${EVT_E}" outroot="${ROOTNAME}" \
+        binsize=1 bands="${SPEC_WGT}" xygrid="${XYGRID}" \
+        asol="@${ASOLIS}" badpixfile="${BPIX}" \
+        maskfile="${MSK}" clobber=yes
+    ## make symbolic links
+    # clipped counts image
+    ln -svf ${ROOTNAME}*band*thresh.img ${IMG_ORIG%.fits}_thresh.fits
+    # clipped exposure map
+    ln -svf ${ROOTNAME}*band*thresh.expmap ${EXPMAP}
+    # exposure-corrected image
+    ln -svf ${ROOTNAME}*band*flux.img ${IMG_EXPCORR}
+elif `which merge_all >/dev/null 2>&1`; then
+    # 'merge_all' is available, fallback to this
+    printf "fallback to merge_all ...\n"
     ## XXX: `merge_all' needs `asol files' in working directory
     printf "link asol files into currect dir (\`merge_all' needed) ...\n"
     for f in `cat ${ASOLIS}`; do
@@ -359,21 +393,9 @@ if `which merge_all >/dev/null 2>&1`; then
     dmimgcalc infile="${IMG_ORIG}" infile2="${EXPMAP}" \
         outfile="${IMG_EXPCORR}" operation=div clobber=yes
 else
-    ## `merge_all' deprecated and not available
-    ## use 'fluximage' to generate `exposure map' and apply exposure correction
-    printf "fluximage ...\n"
-    punlearn fluximage
-    fluximage infile="${EVT_E}" outroot="${ROOTNAME}" \
-        binsize=1 bands="${SPEC_WGT}" xygrid="${XYGRID}" \
-        asol="@${ASOLIS}" badpixfile="${BPIX}" \
-        maskfile="${MSK}" clobber=yes
-    ## make symbolic links
-    # clipped counts image
-    ln -svf ${ROOTNAME}*band*thresh.img ${IMG_ORIG%.fits}_thresh.fits
-    # clipped exposure map
-    ln -svf ${ROOTNAME}*band*thresh.expmap ${EXPMAP}
-    # exposure-corrected image
-    ln -svf ${ROOTNAME}*band*flux.img ${IMG_EXPCORR}
+    # neither 'fluximage' nor 'merge_all' is available
+    printf "ERROR: neither 'fluximage' nor 'merge_all' is available\n"
+    exit ${ERR_TOOL}
 fi
 
 ## main }}}

@@ -10,7 +10,15 @@
 # Weitian LI <liweitianux@gmail.com>
 # 2014/06/24
 #
+#
+VERSION="v2.0"
+UPDATED="2015/06/03"
+#
 # ChangeLog:
+# v2.0, 2015/06/03, Aaron LI
+#   * Copy needed pfiles to tmp directory,
+#     set environment variable $PFILES to use these first.
+#     and remove them after usage.
 # v1.1, 2014/12/05, Weitian LI
 #   regex '\s+' not supported by old grep version, change to use '[[:space:]]+'
 #
@@ -20,7 +28,10 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evtdir=<evt_dir> spcdir=<spc_dir> imgdir=<img_dir> massdir=<mass_dir> json=<info_json>\n"
-        printf "NOTE: run this script in dir 'repro/'\n"
+        printf "\nNOTE:\n"
+        printf "    run this script in dir 'repro/'\n"
+        printf "\nversion:\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit 1
         ;;
 esac
@@ -126,6 +137,22 @@ fi
 printf "## use massdir: \`${MASS_DIR}'\n"
 ## }}}
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar"
+
+PFILES_TMPDIR="/tmp/pfiles-$$"
+[ -d "${PFILES_TMPDIR}" ] && rm -rf ${PFILES_TMPDIR} || mkdir ${PFILES_TMPDIR}
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    punlearn ${tool} && cp -Lvf ${pfile} ${PFILES_TMPDIR}/
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="${PFILES_TMPDIR}:${PFILES}"
+## pfiles }}}
+
 # set files
 EVT2_CLEAN=`readlink -f ${EVT_DIR}/evt2*_clean*.fits | head -n 1`
 MASS_SBP_CFG=`readlink -f ${MASS_DIR}/source.cfg`
@@ -158,4 +185,7 @@ cat > ${JSON_FILE} << _EOF_
     "Comment": "Bare info json file created by `basename $0`"
 },
 _EOF_
+
+# clean pfiles
+rm -rf ${PFILES_TMPDIR}
 

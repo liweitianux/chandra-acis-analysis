@@ -1,8 +1,6 @@
-#!/bin/sh -
+#!/bin/sh
 #
-trap date INT
 unalias -a
-export GREP_OPTIONS=""
 export LC_COLLATE=C
 ###########################################################
 ## extract background spectra from src and blanksky      ##
@@ -15,14 +13,22 @@ export LC_COLLATE=C
 ## Ref: CIAO v4.4 region bugs                            ##
 ## http://cxc.harvard.edu/ciao/bugs/regions.html#bug-12187
 ##                                                       ##
-## LIweitiaNux, July 24, 2012                            ##
+## Weitian LI                                            ##
+## 2012/07/24                                            ##
 ###########################################################
 
-###########################################################
+VERSION="v5.0"
+UPDATED="2015/06/02"
 # ChangeLogs:
-# v3, 2012/08/09
-#   fix `scientific notation' for `bc'
-#   change `spec group' method to `min 15'
+# v5.0, 2015/06/02, Aaron LI
+#   * Removed 'GREP_OPTIONS' and replace 'grep' with '\grep'
+#   * Removed 'trap INT date'
+#   * Copy needed pfiles to current working directory, and
+#     set environment variable $PFILES to use these first.
+#   * replaced 'grppha' with 'dmgroup' to group spectra
+#     (dmgroup will add history to fits file, while grppha NOT)
+# v4.1, 2014/07/29, Weitian LI
+#   fix 'pbkfile' parameters for CIAO-4.6
 # v4, 2012/08/13
 #   add `clobber=yes'
 #   improve error code
@@ -31,22 +37,22 @@ export LC_COLLATE=C
 #     (through cmdline which similar to CIAO,
 #     and default filename match patterns)
 #   add simple `logging' function
-# v4.1, 2014/07/29, Weitian LI
-#   fix 'pbkfile' parameters for CIAO-4.6
-###########################################################
+# v3, 2012/08/09
+#   fix `scientific notation' for `bc'
+#   change `spec group' method to `min 15'
+#
 
-## about, used in `usage' {{{
-VERSION="v4"
-UPDATE="2012-08-14"
-## about }}}
 
 ## usage, help {{{
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> reg=<reglist> blank=<blanksky_evt> basedir=<base_dir> nh=<nH> z=<redshift> [ grpcmd=<grppha_cmd> log=<log_file> ]\n"
+        printf "    `basename $0` evt=<evt2_clean> reg=<reglist> blank=<blanksky_evt> basedir=<base_dir> nh=<nH> z=<redshift> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
+        printf "\nNotes:\n"
+        printf "    If grouptype=NUM_CTS, then grouptypeval required.\n"
+        printf "    If grouptype=BIN, then binspec required.\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -55,16 +61,18 @@ esac
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits`"
+DFT_EVT="`\ls evt2*_clean.fits`"
 # default `blanksky file'
 #DFT_BLANK="_NOT_EXIST_"
-DFT_BLANK="`ls blanksky*.fits`"
+DFT_BLANK="`\ls blanksky*.fits`"
 # default dir which contains `asols, asol.lis, ...' files
 #DFT_BASEDIR="_NOT_EXIST_"
 DFT_BASEDIR=".."
-# default `group command' for `grppha'
-#DFT_GRP_CMD="group 1 128 2 129 256 4 257 512 8 513 1024 16"
-DFT_GRP_CMD="group min 20"
+# default parameters for 'dmgroup'
+DFT_GROUPTYPE="NUM_CTS"
+DFT_GROUPTYPEVAL="20"
+#DFT_GROUPTYPE="BIN"
+DFT_BINSPEC="1:128:2,129:256:4,257:512:8,513:1024:16"
 # default `log file'
 DFT_LOGFILE="bkg_spectra_`date '+%Y%m%d'`.log"
 
@@ -115,7 +123,7 @@ CH_LOW=651
 CH_HI=822
 pb_flux() {
     punlearn dmstat
-    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | grep -i 'sum:' | awk '{ print $2 }'`
+    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | \grep -i 'sum:' | awk '{ print $2 }'`
     punlearn dmkeypar
     EXPTIME=`dmkeypar $1 EXPOSURE echo=yes`
     BACK=`dmkeypar $1 BACKSCAL echo=yes`
@@ -222,13 +230,28 @@ fi
 # remove the trailing '/'
 BASEDIR=`echo ${BASEDIR} | sed 's/\/*$//'`
 printf "## use basedir: \`${BASEDIR}'\n" | ${TOLOG}
-# check given `grpcmd'
-if [ ! -z "${grpcmd}" ]; then
-    GRP_CMD="${grpcmd}"
+# check given dmgroup parameters: grouptype, grouptypeval, binspec
+if [ -z "${grouptype}" ]; then
+    GROUPTYPE="${DFT_GROUPTYPE}"
+elif [ "x${grouptype}" = "xNUM_CTS" ] || [ "x${grouptype}" = "xBIN" ]; then
+    GROUPTYPE="${grouptype}"
 else
-    GRP_CMD="${DFT_GRP_CMD}"
+    printf "ERROR: given grouptype \`${grouptype}' invalid.\n"
+    exit ${ERR_GRPTYPE}
 fi
-printf "## use grppha cmd: \`${GRP_CMD}'\n" | ${TOLOG}
+printf "## use grouptype: \`${GROUPTYPE}'\n" | ${TOLOG}
+if [ ! -z "${grouptypeval}" ]; then
+    GROUPTYPEVAL="${grouptypeval}"
+else
+    GROUPTYPEVAL="${DFT_GROUPTYPEVAL}"
+fi
+printf "## use grouptypeval: \`${GROUPTYPEVAL}'\n" | ${TOLOG}
+if [ ! -z "${binspec}" ]; then
+    BINSPEC="${binspec}"
+else
+    BINSPEC="${DFT_BINSPEC}"
+fi
+printf "## use binspec: \`${BINSPEC}'\n" | ${TOLOG}
 ## parameters }}}
 
 ## check needed files {{{
@@ -242,7 +265,7 @@ for reg_f in ${REGLIST}; do
 done
 # check the validity of *pie* regions
 printf "check pie reg validity ...\n"
-INVALID=`cat ${REGLIST} | grep -i 'pie' | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
+INVALID=`cat ${REGLIST} | \grep -i 'pie' | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
 if [ "x${INVALID}" != "x" ]; then
     printf "WARNING: some pie region's END_ANGLE > 360\n" | ${TOLOG}
     printf "    CIAO v4.4 tools may run into trouble\n"
@@ -251,34 +274,47 @@ fi
 # check files in `basedir'
 printf "check needed files in basedir \`${BASEDIR}' ...\n"
 # check asolis files
-ASOLIS=`ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
+ASOLIS=`\ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
 if [ -z "${ASOLIS}" ]; then
     printf "ERROR: cannot find \"${DFT_ASOLIS_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_ASOL}
 fi
 printf "## use asolis: \`${ASOLIS}'\n" | ${TOLOG}
 # check badpixel file
-BPIX=`ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
+BPIX=`\ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
 if [ -z "${BPIX}" ]; then
     printf "ERROR: cannot find \"${DFT_BPIX_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_BPIX}
 fi
 printf "## use badpixel: \`${BPIX}'\n" | ${TOLOG}
 # check pbk file
-PBK=`ls -1 ${BASEDIR}/${DFT_PBK_PAT} | head -n 1`
+PBK=`\ls -1 ${BASEDIR}/${DFT_PBK_PAT} | head -n 1`
 if [ -z "${PBK}" ]; then
     printf "ERROR: cannot find \"${DFT_PBK_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_PBK}
 fi
 printf "## use pbk: \`${PBK}'\n" | ${TOLOG}
 # check msk file
-MSK=`ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
+MSK=`\ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
 if [ -z "${MSK}" ]; then
     printf "ERROR: cannot find \"${DFT_MSK_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_MSK}
 fi
 printf "## use msk: \`${MSK}'\n" | ${TOLOG}
 ## check files }}}
+
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmstat dmkeypar dmhedit specextract dmextract dmgroup"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
 
 ## main part {{{
 ## use 'for' loop to process every region file
@@ -290,7 +326,7 @@ for reg_i in ${REGLIST}; do
     [ -f "${REG_TMP}" ] && rm -fv ${REG_TMP}         # remove tmp files
     cp -fv ${reg_i} ${REG_TMP}
     # check the validity of *pie* regions {{{
-    INVALID=`grep -i 'pie' ${REG_TMP} | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
+    INVALID=`\grep -i 'pie' ${REG_TMP} | awk -F, '{ print $6 }' | tr -d ')' | awk '$1 > 360'`
     if [ "x${INVALID}" != "x" ]; then
         printf "WARNING: fix for *pie* region in file \`${reg_i}'\n"
         cat ${REG_TMP}
@@ -303,30 +339,52 @@ for reg_i in ${REGLIST}; do
     ## check pie region }}}
 
     LBKG_PI="${reg_i%.reg}.pi"
+
+    printf "use \`specextract' to generate spectra and response ...\n"
     ## use `specextract' to extract local bkg spectrum {{{
     # NOTE: set `binarfwmap=2' to save the time for generating `ARF'
     # I have tested that this bin factor has little impact on the results.
     # NO background response files
     # NO background spectrum (generate by self)
-    # NO spectrum grouping (group by self using `grppha')
+    # NO spectrum grouping (group by self using `dmgroup')
+    # Determine parameters for different versions of specextract {{{
     # 'pbkfile' parameter deprecated in CIAO-4.6
     if `pget specextract pbkfile >/dev/null 2>&1`; then
         P_PBKFILE="pbkfile=${PBK}"
     else
         P_PBKFILE=""
     fi
-    #
-    printf "use \`specextract' to generate spectra and response ...\n"
+    # specextract: revision 2013-06:
+    # 'correct' parameter renamed to 'correctpsf'
+    if `pget specextract correct >/dev/null 2>&1`; then
+        P_CORRECT="correct=no"
+    else
+        P_CORRECT="correctpsf=no"
+    fi
+    # specextract: revision 2013-12:
+    # 'weight' parameter controls whether ONLY ARFs are weighted.
+    # 'weight_rmf' added to control whether RMFs are weighted.
+    # NOTE: 
+    #   (1) only when 'weight=yes' will the 'weight_rmf' parameter be used.
+    #   (2) no longer distingush between unweighted and weighted reponses
+    #       in file extension; only .arf & .rmf are now used.
+    if `pget specextract weight_rmf >/dev/null 2>&1`; then
+        P_WEIGHTRMF="weight_rmf=yes"
+    else
+        P_WEIGHTRMF=""
+    fi
+    # }}}
     punlearn specextract
     specextract infile="${EVT}[sky=region(${REG_TMP})]" \
         outroot=${LBKG_PI%.pi} bkgfile="" asp="@${ASOLIS}" \
-        ${P_PBKFILE} mskfile="${MSK}" badpixfile="${BPIX}" \
-        weight=yes correct=no bkgresp=no \
+        mskfile="${MSK}" badpixfile="${BPIX}" \
+        ${P_PBKFILE} ${P_CORRECT} \
+        weight=yes ${P_WEIGHTRMF} \
         energy="0.3:11.0:0.01" channel="1:1024:1" \
-        combine=no binarfwmap=2 \
+        bkgresp=no combine=no binarfwmap=2 \
         grouptype=NONE binspec=NONE \
-        verbose=2 clobber=yes
-    # `specextract' }}}
+        clobber=yes verbose=2
+    # specextract }}}
 
     ## generate the blanksky bkg spectrum {{{
     printf "generate the blanksky bkg spectrum ...\n"
@@ -342,11 +400,16 @@ for reg_i in ${REGLIST}; do
     ## bkg renorm }}}
 
     ## group spectrum {{{
-    printf "group spectrum using \`grppha'\n"
+    # use 'dmgroup' instead of 'grppha', because 'dmgroup' will add
+    # command history to FITS header (maybe useful for later reference).
+    printf "group spectrum using \`dmgroup'\n"
     LBKG_GRP_PI="${LBKG_PI%.pi}_grp.pi"
-    grppha infile="${LBKG_PI}" outfile="${LBKG_GRP_PI}" \
-        comm="${GRP_CMD} & exit" clobber=yes > /dev/null
-    ## group spectra }}}
+    punlearn dmgroup
+    dmgroup infile="${LBKG_PI}" outfile="${LBKG_GRP_PI}" \
+        grouptype="${GROUPTYPE}" grouptypeval=${GROUPTYPEVAL} \
+        binspec="${BINSPEC}" xcolumn="CHANNEL" ycolumn="COUNTS" \
+        clobber=yes
+    ## group }}}
 
     ## generate a script for XSPEC {{{
     XSPEC_XCM="xspec_${LBKG_PI%.pi}_model.xcm"
@@ -420,6 +483,5 @@ printf "clean ...\n"
 rm -f ${REG_TMP}
 
 printf "DONE\n"
-###########################################################
 
 # vim: set ts=8 sw=4 tw=0 fenc=utf-8 ft=sh: #

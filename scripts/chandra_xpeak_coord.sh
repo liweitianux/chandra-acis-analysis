@@ -12,20 +12,21 @@
 ## if `DETNAM' has `0123', then `ACIS-I'                 ##
 ## if `DETNAM' has `7', then `ACIS-S'                    ##
 ##                                                       ##
-## LIweitiaNux <liweitianux@gmail.com>                   ##
-## November 8, 2012                                      ##
+## Weitian LI <liweitianux@gmail.com>                    ##
+## 2012/11/08                                            ##
 ###########################################################
-
-###########################################################
+##
+VERSION="v2.0"
+UPDATED="2015/06/03"
+##
 ## ChangeLogs:
-## v1.1, 2012/11/08, LIweitiaNux
+## v2.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replace 'grep' with '\grep', 'ls' with '\ls'
+## v1.1, 2012/11/08, Weitian LI
 ##   get x-ray peak coord from given region file
-###########################################################
-
-## about, used in `usage' {{{
-VERSION="v1.1"
-UPDATE="2012-11-08"
-## about }}}
+##
 
 ## error code {{{
 ERR_USG=1
@@ -48,7 +49,7 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` evt=<evt_cl> asol=<asol> [ reg=<reg> chip=<chip> ]\n"
         printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATE}\n"
+        printf "${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -56,11 +57,11 @@ esac
 
 ## default parameters {{{
 # default `evt clean file'
-DFT_EVT="`ls evt*clean.fits *clean*evt*.fits 2> /dev/null | head -n 1`"
+DFT_EVT="`\ls evt*clean.fits *clean*evt*.fits 2> /dev/null | head -n 1`"
 # default `asol file'
-DFT_ASOL="`ls ../pcadf*_asol1.fits pcadf*_asol1.fits 2> /dev/null | head -n 1`"
+DFT_ASOL="`\ls ../pcadf*_asol1.fits pcadf*_asol1.fits 2> /dev/null | head -n 1`"
 # default region file
-DFT_REG="`ls sbprofile.reg rspec.reg 2> /dev/null | head -n 1`"
+DFT_REG="`\ls sbprofile.reg rspec.reg 2> /dev/null | head -n 1`"
 ## default parameters }}}
 
 ## functions {{{
@@ -128,12 +129,12 @@ else
     # determine chip by ACIS type
     punlearn dmkeypar
     DETNAM=`dmkeypar ${EVT} DETNAM echo=yes`
-    if echo ${DETNAM} | grep -q 'ACIS-0123'; then
+    if echo ${DETNAM} | \grep -q 'ACIS-0123'; then
         printf "## \`DETNAM' (${DETNAM}) has chips 0123\n"
         printf "## ACIS-I\n"
         ACIS_TYPE="ACIS-I"
         CHIP="0:3"
-    elif echo ${DETNAM} | grep -q 'ACIS-[0-6]*7'; then
+    elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
         printf "## \`DETNAM' (${DETNAM}) has chip 7\n"
         printf "## ACIS-S\n"
         ACIS_TYPE="ACIS-S"
@@ -144,6 +145,19 @@ else
     fi
 fi
 ## parameters }}}
+
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmkeypar dmcopy dmstat dmcoords skyfov aconvolve"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
 
 ## main part {{{
 # generate `skyfov'
@@ -199,8 +213,8 @@ printf "  (RA,DEC):   (${MAX_RA},${MAX_DEC})\n"
 
 ## region file based {{{
 if [ -r "${REG}" ]; then
-    MAX_X2=`grep -iE '(pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $1 }'`
-    MAX_Y2=`grep -iE '(pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $2 }'`
+    MAX_X2=`\grep -iE '(pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $1 }'`
+    MAX_Y2=`\grep -iE '(pie|annulus)' ${REG} | head -n 1 | tr -d 'a-zA-Z()' | awk -F',' '{ print $2 }'`
     punlearn dmcoords
     dmcoords infile="${EVT}" asolfile="${ASOL}" option=sky x=${MAX_X2} y=${MAX_Y2}
     MAX_RA2=`pget dmcoords ra`

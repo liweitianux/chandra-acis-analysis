@@ -3,7 +3,7 @@
 analyze_path() {
     # extract `obs_id' and `source name' from path
     #
-    # LIweitiaNux <liweitianux@gmail.com>
+    # Weitian LI <liweitianux@gmail.com>
     # 2013/02/04
     #
     # input:

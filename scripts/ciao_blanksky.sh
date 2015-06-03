@@ -13,7 +13,8 @@ export LC_COLLATE=C
 ## output: `blanksky_c7.fits' for ACIS-S,                ##
 ##         `blanksky-c0-3.fits' for ACIS-I               ##
 ##                                                       ##
-## LIweitiaNux, January 11, 2011                         ##
+## Weitian LI                                            ##
+## 2011/01/11                                            ##
 ###########################################################
 
 ###########################################################
@@ -22,10 +23,17 @@ export LC_COLLATE=C
 ##   add ACIS-I support (chips 0-3)
 ## v3: 2012/08/06, Junhua Gu
 ##   pass parameters by cmd line param
-## v4: 2012/08/13, LIweitiaNux
+## v4: 2012/08/13, Weitian LI
 ##   add `clobber=yes' parameters to CIAO tools
 ##   improve `commandline arguements'
 ##   add `default parameters'
+## v5.0, 2015/06/02, Aaron LI
+##   * Replaced 'ls' with '\ls'
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Strip the directory of asol files in the 'asol*.lis' file.
+##     CIAO-4.6 save the *absolute path* of asol files in 'asol*.lis',
+##     which may cause problems if the data directory was moved later.
 ###########################################################
 
 ## about, used in `usage' {{{
@@ -48,7 +56,7 @@ esac
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits`"
+DFT_EVT="`\ls evt2*_clean.fits`"
 # default dir which contains `asols, asol.lis, ...' files
 # DFT_BASEDIR="_NOT_EXIST_"
 DFT_BASEDIR=".."
@@ -140,17 +148,36 @@ printf "## use basedir: \`${BASEDIR}'\n"
 
 ## check files in `basedir' {{{
 # check asol files
-ASOLIS=`ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
+ASOLIS=`\ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
 if [ -z ${ASOLIS} ]; then
     printf "ERROR: cannot find \"${DFT_ASOLIS_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_ASOL}
 fi
 printf "## use asolis: \`${ASOLIS}'\n"
 ## check files }}}
-#exit 0          # test script
+
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="acis_bkgrnd_lookup dmmerge dmcopy dmmakepar dmreadpar reproject_events acis_process_events"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
 
 #### main start {{{
+# Strip the directory of asol files in the 'asol*.lis' file
+# CIAO-4.6 save the absolute path of asol files in 'asol*.lis' file,
+# which may cause problems if the data directory was moved later.
+mv -fv ${ASOLIS} ${ASOLIS}_bak
+awk -F'/' '{ print $NF }' ${ASOLIS}_bak > ${ASOLIS}
+
 printf "look up coresponding background file ...\n"
+punlearn acis_bkgrnd_lookup
 BKG_LKP="`acis_bkgrnd_lookup ${EVT}`"
 AS_NUM=`echo ${BKG_LKP} | tr ' ' '\n' | \grep 'acis7sD' | wc -l`
 AI_NUM=`echo ${BKG_LKP} | tr ' ' '\n' | \grep 'acis[0123]iD' | wc -l`
@@ -216,7 +243,7 @@ EVT_HEADER="_evt_header.par"
 EVT_PNT="_evt_pnt.par"
 punlearn dmmakepar
 dmmakepar ${EVT} ${EVT_HEADER} clobber=yes
-grep -i '_pnt' ${EVT_HEADER} > ${EVT_PNT}
+\grep -i '_pnt' ${EVT_HEADER} > ${EVT_PNT}
 punlearn dmreadpar
 dmreadpar ${EVT_PNT} "${BKG_ROOT}_orig.fits[EVENTS]" clobber=yes
 printf "DONE\n"

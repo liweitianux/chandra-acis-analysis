@@ -37,10 +37,14 @@
 ##
 AUTHOR="Weitian LI <liweitianux@gmail.com>"
 CREATED="2012/07/24"
-UPDATED="2015/02/12"
-VERSION="v9.0"
+UPDATED="2015/06/03"
+VERSION="v10.0"
 ##
 ## ChangeLogs:
+## v10.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replace 'ls' with '\ls'
 ## v9.0, 2015/02/12, Weitian LI
 ##   * updated parameter settings for 'specextract' to match
 ##     specextract revision 2013-12.
@@ -98,7 +102,7 @@ esac
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
 #DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`ls evt2*_clean.fits`"
+DFT_EVT="`\ls evt2*_clean.fits`"
 # default `radial region file'
 #DFT_REG_IN="_NOT_EXIST_"
 DFT_REG_IN="rspec.reg"
@@ -371,34 +375,47 @@ fi
 # check files in `basedir'
 printf "check needed files in basedir \`${BASEDIR}' ...\n"
 # check asolis files
-ASOLIS=`ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
+ASOLIS=`\ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
 if [ -z "${ASOLIS}" ]; then
     printf "ERROR: cannot find \"${DFT_ASOLIS_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_ASOL}
 fi
 printf "## use asolis: \`${ASOLIS}'\n" | ${TOLOG}
 # check badpixel file
-BPIX=`ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
+BPIX=`\ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
 if [ -z "${BPIX}" ]; then
     printf "ERROR: cannot find \"${DFT_BPIX_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_BPIX}
 fi
 printf "## use badpixel: \`${BPIX}'\n" | ${TOLOG}
 # check pbk file
-PBK=`ls -1 ${BASEDIR}/${DFT_PBK_PAT} | head -n 1`
+PBK=`\ls -1 ${BASEDIR}/${DFT_PBK_PAT} | head -n 1`
 if [ -z "${PBK}" ]; then
     printf "ERROR: cannot find \"${DFT_PBK_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_PBK}
 fi
 printf "## use pbk: \`${PBK}'\n" | ${TOLOG}
 # check msk file
-MSK=`ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
+MSK=`\ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
 if [ -z "${MSK}" ]; then
     printf "ERROR: cannot find \"${DFT_MSK_PAT}\" in dir \`${BASEDIR}'\n"
     exit ${ERR_MSK}
 fi
 printf "## use msk: \`${MSK}'\n" | ${TOLOG}
 ## check files }}}
+
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmstat dmkeypar dmhedit specextract dmextract dmgroup"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
 
 ## process local background {{{
 if [ "${USE_LBKG_REG}" = "YES" ]; then

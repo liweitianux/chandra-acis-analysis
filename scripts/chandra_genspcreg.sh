@@ -1,9 +1,42 @@
 #!/bin/sh
+##
+## This script generate a series of regions for the extraction of
+## radial surface brightness profile (SBP).
+##
+## Regions geneartion algorithm:
+## (TODO)
+##
+## Author: Zhenghao ZHU
+## Created: ???
+##
+UPDATED="2015/06/03"
+## ChangeLogs:
+## v2.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Added missing punlearn
+##   * Removed the section of dmlist.par & dmextract.par deletion
+##
+
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmstat dmlist dmextract"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
 
 if [ $# -ne 6 ] ; then
-   printf "usage:\n"
-   printf " `basename $0` <evt> <evt_e> <bkg_pi> <x> <y>  <reg_out>\n"
-   exit 1
+    printf "usage:\n"
+    printf " `basename $0` <evt> <evt_e> <bkg_pi> <x> <y>  <reg_out>\n"
+    printf "updated:\n"
+    printf "    ${UPDATED}\n"
+    exit 1
 fi
 
 EVT=$1
@@ -20,13 +53,6 @@ echo "BKGSPC:   ${BKGSPC}"
 echo "X:        ${X}"
 echo "Y:        ${Y}"
 echo ""
-
-###
-printf "## remove dmlist.par dmextract.par\n"
-DMLIST_PAR="$HOME/cxcds_param4/dmlist.par"
-DMEXTRACT_PAR="$HOME/cxcds_param4/dmextract.par"
-[ -f "${DMLIST_PAR}" ] && rm -fv ${DMLIST_PAR}
-[ -f "${DMEXTRACT_PAR}" ] && rm -fv ${DMEXTRACT_PAR}
 
 #min counts
 CNT_MIN=2500
@@ -49,7 +75,6 @@ STN_FILE="spc_stn.dat"
 [ -e ${STN_FILE} ] && mv -fv ${STN_FILE} ${STN_FILE}_bak
 i=0
 while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
-    ## LIweitiaNux
     if [ `echo "$ROUT > $ROUT_MAX" | bc -l` -eq 1 ]; then
         break
     fi
@@ -64,23 +89,26 @@ while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
         ROUT=5
     fi
     TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
-    CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{print $8}'`
+    punlearn dmlist
+    CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
     while [ ${CNTS} -lt ${CNT_MIN} ]; do
         ROUT=`expr $ROUT + 1 `
         if [ `echo "$ROUT > $ROUT_MAX" | bc -l` -eq 1 ]; then
             break
         fi
         TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
-        CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{print $8}'`
+        punlearn dmlist
+        CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
     done
     TMP_SPC=_tmpspc.pi
     punlearn dmextract
     dmextract infile="${EVT}[sky=${TMP_REG}][bin pi]" outfile=${TMP_SPC} wmap="[energy=300:12000][bin tdet=8]" clobber=yes
-    INDEX_SRC=`dmstat "${TMP_SPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]"  | grep "sum:" | awk '{print $2}' `
-    INDEX_BKG=`dmstat "${BKGSPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | grep "sum:" | awk '{print $2}' `
+    punlearn dmstat
+    INDEX_SRC=`dmstat "${TMP_SPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]"  | \grep "sum:" | awk '{print $2}' `
+    INDEX_BKG=`dmstat "${BKGSPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | \grep "sum:" | awk '{print $2}' `
 
-    COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}' `
-    COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}' `
+    COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}' `
+    COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}' `
     if [ ${INDEX_SRC} -eq 0 ] ;then 
         STN=10000
     else
@@ -89,7 +117,7 @@ while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
     echo "  STN: ${STN}"
     echo "${STN}" >> "${STN_FILE}"
 done
-## LIweitiaNux
+
 ## fix 'i', to consistent with the actual annuluses
 i=`expr $i - 1`
 
@@ -104,7 +132,8 @@ if [ $i -lt 3 ]; then
 elif [ $i -gt 6 ]; then
     mv -fv ${REG_OUT} ${REG_OUT}_2500bak
     CNTS=0
-    CNTS_TOTAL=`dmlist "${EVT_E}[sky=pie($X,$Y,0,$RIN,0,360)]" blocks | grep 'EVENTS' | awk '{print $8}'`
+    punlearn dmlist
+    CNTS_TOTAL=`dmlist "${EVT_E}[sky=pie($X,$Y,0,$RIN,0,360)]" blocks | \grep 'EVENTS' | awk '{print $8}'`
     CNTS_USE=`echo "${CNTS_TOTAL} 6" | awk '{printf("%d", $1/$2)}'`
     echo "CNT_USE: ${CNT_USE}"
     printf "*** too many annulus ***\n"
@@ -119,7 +148,8 @@ elif [ $i -gt 6 ]; then
                break
            fi
            TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
-           CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{print $8}'`
+           punlearn dmlist
+           CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
        done
        j=`expr $j + 1 `
        echo "${TMP_REG}" >> ${REG_OUT}

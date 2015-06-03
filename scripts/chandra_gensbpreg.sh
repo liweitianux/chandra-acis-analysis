@@ -14,7 +14,13 @@
 ## Author: Zhenghao ZHU
 ## Created: ??? (TODO)
 ##
+UPDATED="2015/06/03"
 ## ChangeLogs:
+## v3.0, 2015/06/03, Aaron LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Added missing punlearn
+##   * Removed the section of dmlist.par & dmextract.par deletion
 ## v2.1, 2015/02/13, Weitian LI
 ##   * added '1' to denominators when calculate STN to avoid division by zero
 ##   * added script description
@@ -22,7 +28,6 @@
 ##   * added the parameter `-t' to print STN results for testing
 ##
 
-UPDATED="2015/02/13"
 
 # minimal counts
 CNT_MIN=50
@@ -35,11 +40,26 @@ CH_HI=479
 CH_BKG_LOW=651
 CH_BKG_HI=822
 
+## prepare parameter files (pfiles) {{{
+CIAO_TOOLS="dmstat dmlist dmextract"
+
+# Copy necessary pfiles for localized usage
+for tool in ${CIAO_TOOLS}; do
+    pfile=`paccess ${tool}`
+    [ -n "${pfile}" ] && punlearn ${tool} && cp -Lvf ${pfile} .
+done
+
+# Modify environment variable 'PFILES' to use local pfiles first
+export PFILES="./:${PFILES}"
+## pfiles }}}
+
 
 if [ $# -lt 6 ]; then
     printf "usage:\n"
     printf "    `basename $0` <evt> <evt_e> <x> <y> <bkg_pi> <reg_out>\n"
     printf "    `basename $0` -t <evt> <evt_e> <x> <y> <bkg_pi> <rin1> ...\n"
+    printf "updated:\n"
+    printf "    ${UPDATED}\n"
     exit 1
 fi
 
@@ -59,10 +79,11 @@ if [ "x$1" = "x-t" ] && [ $# -ge 7 ]; then
         TMP_SPC="_tmpspc.pi"
         punlearn dmextract
         dmextract infile="${EVT}[sky=${TMP_REG}][bin pi]" outfile=${TMP_SPC} wmap="[energy=300:12000][bin det=8]" clobber=yes
-        INDEX_SRC=`dmstat "${TMP_SPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
-        INDEX_BKG=`dmstat "${BKGSPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
-        COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
-        COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
+        punlearn dmstat
+        INDEX_SRC=`dmstat "${TMP_SPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
+        INDEX_BKG=`dmstat "${BKGSPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
+        COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
+        COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
         # echo "CNT_SRC: ${COUNT_SRC}, IDX_SRC: ${INDEX_SRC}, CNT_BKG: ${COUNT_BKG}, IDX_BKG: ${INDEX_BKG}"
         # exit
         STN=`echo ${COUNT_SRC} ${INDEX_SRC} ${COUNT_BKG} ${INDEX_BKG} | awk '{ printf("%f",$1/$2/$3*$4) }'`
@@ -88,13 +109,6 @@ echo "Y:        ${Y}"
 echo "BKGSPC:   ${BKGSPC}"
 echo ""
 
-###
-printf "## remove dmlist.par dmextract.par\n"
-DMLIST_PAR="$HOME/cxcds_param4/dmlist.par"
-DMEXTRACT_PAR="$HOME/cxcds_param4/dmextract.par"
-[ -f "${DMLIST_PAR}" ] && rm -f ${DMLIST_PAR}
-[ -f "${DMEXTRACT_PAR}" ] && rm -f ${DMEXTRACT_PAR}
-
 RIN=0
 ROUT=0
 CNTS=0
@@ -102,11 +116,13 @@ for i in `seq 1 10`; do
     printf "gen reg #$i @ cnts:${CNT_MIN} ...\n"
     ROUT=`expr $RIN + 5`
     TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
-    CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{ print $8 }'`
+    punlearn dmlist
+    CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{ print $8 }'`
     while [ `echo "$CNTS < $CNT_MIN" | bc -l` -eq 1 ]; do
         ROUT=`expr $ROUT + 1`
         TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
-        CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{ print $8 }'`
+        punlearn dmlist
+        CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{ print $8 }'`
     done
     TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
     echo "${TMP_REG}" >> ${REG_OUT}
@@ -134,18 +150,20 @@ while [ `echo "${STN} > 1.5" | bc -l` -eq 1 ]; do
     TMP_SPC=_tmpspc.pi
     punlearn dmextract
     dmextract infile="${EVT}[sky=${TMP_REG}][bin pi]" outfile=${TMP_SPC} wmap="[energy=300:12000][bin det=8]" clobber=yes
-    INDEX_SRC=`dmstat "${TMP_SPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
-    INDEX_BKG=`dmstat "${BKGSPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
+    punlearn dmstat
+    INDEX_SRC=`dmstat "${TMP_SPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
+    INDEX_BKG=`dmstat "${BKGSPC}[channel=${CH_BKG_LOW}:${CH_BKG_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
 
-    COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
-    COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | grep "sum:" | awk '{print $2}'`
+    COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
+    COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}'`
 
     #echo "CNT_SRC: ${COUNT_SRC}, IDX_SRC: ${INDEX_SRC}, CNT_BKG: ${COUNT_BKG}, IDX_BKG: ${INDEX_BKG}"
     #exit 99
 
     # Add '1' to the denominators to avoid division by zero.
     STN=`echo ${COUNT_SRC} ${INDEX_SRC} ${COUNT_BKG} ${INDEX_BKG} | awk '{ printf("%f", ($1 / ($2 + 1)) / ($3 / ($4 + 1))) }'`
-    CNT=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | grep 'EVENTS' | awk '{ print $8 }'`
+    punlearn dmlist
+    CNT=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{ print $8 }'`
     echo "CNT: ${CNT}"
     echo "CNT_MIN: ${CNT_MIN}"
     if [ `echo "${CNT} < ${CNT_MIN}" | bc -l` -eq 1 ]; then 

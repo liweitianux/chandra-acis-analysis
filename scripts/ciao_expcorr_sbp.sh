@@ -3,7 +3,14 @@
 ## Make exposure map and exposure-corrected image (revoke 'ciao_expcorr.sh'),
 ## and extract surface brightness profile (revoke 'ciao_sbp.sh').
 ##
-## ChangeLogs:
+## Author: Weitian LI
+##
+VERSION="v4.3"
+UPDATED="2015/06/03"
+##
+## Changelogs:
+## v4.3, 2015/06/03, Aaron LI
+##   * Replaced 'ls' with '\ls'
 ## v4.2, 2015/03/05, Weitian LI
 ##   * Added exit code check for the 'EXPCORR_SCRIPT' and 'EXTRACT_SBP_SCRIPT'
 ##   * Removed the code of 'spc_fit.cfg' generation
@@ -11,13 +18,11 @@
 ## v4.1, 2014/10/30, Weitian LI
 ##   * updated 'EXPCORR_SCRIPT' & 'EXTRACT_SBP_SCRIPT',
 ##   * removed version number in scripts filename.
-## v4, 2013/10/12, LIweitiaNux
+## v4, 2013/10/12, Weitian LI
 ##   * split out the 'generate regions' parts -> 'ciao_genreg_v1.sh'
-## v3, 2013/05/03, LIweitiaNux
+## v3, 2013/05/03, Weitian LI
 ##   * add parameter 'ds9' to check the centroid and regions
 ##
-
-UPDATED="2015/03/05"
 
 unalias -a
 export LC_COLLATE=C
@@ -49,7 +54,8 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt=<evt2_clean> sbp_reg=<sbprofile.reg> nh=<nh> z=<redshift> temp=<avg_temp> abund=<avg_abund> cellreg=<celld_reg> expcorr=<yes|no>\n"
-        printf "\nVersion: ${UPDATED}\n"
+        printf "\nversion:\n"
+        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -57,7 +63,7 @@ esac
 
 ## default parameters {{{ 
 ## clean evt2 file
-DFT_EVT=`ls evt2*_clean.fits 2> /dev/null`
+DFT_EVT=`\ls evt2*_clean.fits 2> /dev/null`
 ## the repro dir
 DFT_BASEDIR=".."
 
@@ -68,10 +74,10 @@ DFT_SBP_REG="sbprofile.reg"
 DFT_LOGFILE="expcorr_sbp_`date '+%Y%m%d'`.log"
 
 ## cell region
-DFT_CELL_REG=`ls celld*.reg 2> /dev/null`
+DFT_CELL_REG=`\ls celld*.reg 2> /dev/null`
 
 ## background spectra
-DFT_BKGD=`ls bkgcorr_bl*.pi 2> /dev/null`
+DFT_BKGD=`\ls bkgcorr_bl*.pi 2> /dev/null`
 ## default parameters }}}
 
 ## functions {{{
@@ -215,8 +221,8 @@ else
     printf "======== EXPOSURE CORRECTION FINISHED =======\n\n"
 fi
 
-EXPMAP=`ls expmap*e700-7000*fits 2> /dev/null`
-EVT_E=`ls evt*e700-7000*fits 2> /dev/null`
+EXPMAP=`\ls expmap*e700-7000*fits 2> /dev/null`
+EVT_E=`\ls evt*e700-7000*fits 2> /dev/null`
 
 printf "======== EXTRACT SBP =======\n"
 CMD="${SCRIPT_DIR}/${EXTRACT_SBP_SCRIPT} evt_e=${EVT_E} reg=${SBP_REG} expmap=${EXPMAP} cellreg=${CELL_REG}"

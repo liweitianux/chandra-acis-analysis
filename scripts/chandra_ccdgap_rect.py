@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-
 import sys
 import math
 import re
@@ -71,10 +70,11 @@ def poly2rect(plist):
 
 if __name__=='__main__':
     if len(sys.argv)!=2:
-        print("Usage:%s %s"%(sys.argv[0]," <input regfile, including only polygens>"))
+        print("Usage:")
+        print("    %s <input regfile (only polygens)>" % sys.argv[0])
         sys.exit()
     for i in open(sys.argv[1]):
         if re.match('.*olygon',i):
             reg=poly2rect(parse_poly(i))
             print(reg)
-            
+
