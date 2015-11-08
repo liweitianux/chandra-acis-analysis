@@ -256,8 +256,8 @@ CNTRD_X=`\grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $
 CNTRD_Y=`\grep -iE '(pie|annulus)' ${SBP_REG} | head -n 1 | awk -F',' '{ print $2 }' | tr -d 'a-zA-Z() '`
 
 SEARCH_REGION="circle(${CNTRD_X},${CNTRD_Y},${SEARCH_RADIUS})"
-# dmstat to find the centroid
-printf "\`dmstat' to find the centroid ...\n"
+# dmstat to find the maximum location
+printf "\`dmstat' to find the peak ...\n"
 punlearn dmstat
 dmstat infile="${IMG_ACONV}[sky=${SEARCH_REGION}]" verbose=0
 PEAK_X=`pget dmstat out_max_loc | cut -d',' -f1`
