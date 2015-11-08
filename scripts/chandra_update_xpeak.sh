@@ -21,10 +21,14 @@ export LC_COLLATE=C
 ## Weitian LI <liweitianux@gmail.com>
 ## Created: 2015-11-08
 ##
-VERSION="v1.0"
+VERSION="v1.2"
 UPDATED="2015-11-08"
 ##
 ## ChangeLogs:
+## 2015-11-08:
+##   * Also add offset to info json
+##   * Default to use aconvolve
+##   * Change Gaussian kernel from gaus(2,5,1,10,10) to gaus(2,3,1,3,3)
 ##
 
 ## error code {{{
@@ -49,7 +53,7 @@ ERR_CIAO=100
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt_file> reg=<sbp_reg> basedir=<base_dir> info=<INFO.json> conv=<yes|NO> update=<YES|no>\n"
+        printf "    `basename $0` evt=<evt_file> reg=<sbp_reg> basedir=<base_dir> info=<INFO.json> conv=<YES|no> update=<YES|no>\n"
         printf "\nversion:\n"
         printf "${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
@@ -63,7 +67,7 @@ OFFSET_CRIC=20
 # energy range: 700-2000 eV
 E_RANGE="700:2000"
 # default `event file' which used to match `blanksky' files
-DFT_EVT="`\ls evt2*_clean.fits 2> /dev/null`"
+DFT_EVT="`\ls evt2*c7*_clean.fits evt2*c0-3*_clean.fits 2> /dev/null`"
 # default dir which contains `asols, asol.lis, ...' files
 DFT_BASEDIR=".."
 # default `radial region file' to extract surface brightness
@@ -182,15 +186,16 @@ fi
 
 # convolve (optional)
 if [ -z "${conv}" ]; then
-    CONV="NO"
+    CONV="YES"
 else
     case "${conv}" in
-        [yY]*)
-            CONV="YES"
-            printf "## apply \`aconvolve' !\n"
+        [nN]*)
+            CONV="NO"
+            printf "## Do NOT apply \`aconvolve' !\n"
             ;;
         *)
-            CONV="NO"
+            CONV="YES"
+            printf "## apply \`aconvolve'\n"
             ;;
     esac
 fi
@@ -215,8 +220,8 @@ CUR_DIR=`pwd -P`
 # Generate the defalred event file (without filtering out the point sources)
 EVT_DIR=$(dirname $(readlink ${EVT}))
 cd ${EVT_DIR}
-EVT_ORIG="`\ls evt*_orig.fits`"
-GTI="`\ls *.gti`"
+EVT_ORIG="`\ls evt*c7*_orig.fits evt2*c0-3*_orig.fits 2>/dev/null`"
+GTI="`\ls *bkg*.gti | head -n 1`"
 printf "make a deflared evt (without filtering out point sources) ...\n"
 EVT_DEFLARE="${EVT_ORIG%_orig.fits}_deflare.fits"
 punlearn dmcopy
@@ -240,7 +245,7 @@ dmcopy infile="${EVT_DEFLARE}[sky=region(${SKYFOV}[ccd_id=${CHIP}])][energy=${E_
 # aconvolve
 if [ "${CONV}" = "YES" ]; then
     IMG_ACONV="${IMG%.fits}_aconv.fits"
-    KERNELSPEC="lib:gaus(2,5,1,10,10)"
+    KERNELSPEC="lib:gaus(2,3,1,3,3)"
     METHOD="fft"
     printf "\`aconvolve' to smooth img: \`${IMG_ACONV}' ...\n"
     printf "## aconvolve: kernelspec=\"${KERNELSPEC}\" method=\"${METHOD}\"\n"
