@@ -20,6 +20,10 @@ VERSION="v3.0"
 UPDATED="2015/06/03"
 ##
 ## ChangeLogs:
+## v3.1, 2015/06/04, Aaron LI
+##   * Added check for 'fluximage' parameter 'xygrid' before to use.
+##     'fluximage' of version before '15Oct2012' does not have parameter
+##     'xygrid' and dose not support spectral weights with parameter 'bands'.
 ## v3.0, 2015/06/03, Aaron LI
 ##   * Changed to use 'fluximage' by default, and fallback to 'merge_all'
 ##   * Copy needed pfiles to current working directory, and
@@ -353,7 +357,17 @@ printf "## get \`xygrid': \`${XYGRID}'\n" | ${TOLOG}
 EXPMAP="expmap_${ROOTNAME}.fits"
 IMG_EXPCORR="img_expcorr_${ROOTNAME}.fits"
 
-if `which fluximage >/dev/null 2>&1`; then
+# Check whether fluximage is capable to make exposure correction for us
+# version after '15Oct2012' supports 'xygrid' and spectral weights file.
+if `pget fluximage xygrid >/dev/null 2>&1`; then
+    USE_FLUXIMAGE="YES"
+else
+    # 'fluximage' do not support 'xygrid' parameter and spectral weights.
+    # fallback to use 'merge_all'
+    USE_FLUXIMAGE="NO"
+fi
+
+if [ "${USE_FLUXIMAGE}" = "YES" ]; then
     ## 'fluximage' is available, use it by default
     ## use 'fluximage' to generate `exposure map' and apply exposure correction
     printf "use fluximage to generate expmap and apply correction ...\n"
@@ -369,7 +383,7 @@ if `which fluximage >/dev/null 2>&1`; then
     ln -svf ${ROOTNAME}*band*thresh.expmap ${EXPMAP}
     # exposure-corrected image
     ln -svf ${ROOTNAME}*band*flux.img ${IMG_EXPCORR}
-elif `which merge_all >/dev/null 2>&1`; then
+else
     # 'merge_all' is available, fallback to this
     printf "fallback to merge_all ...\n"
     ## XXX: `merge_all' needs `asol files' in working directory
@@ -378,7 +392,7 @@ elif `which merge_all >/dev/null 2>&1`; then
         asol=`basename ${f}`
         ln -svf ${BASEDIR}/${asol} .
     done
-    
+
     printf "use \`merge_all' to generate \`exposure map' ONLY ...\n"
     punlearn merge_all
     merge_all evtfile="${EVT_E}" asol="@${ASOLIS}" \
@@ -386,16 +400,12 @@ elif `which merge_all >/dev/null 2>&1`; then
         energy="${SPEC_WGT}" expmap="${EXPMAP}" \
         dtffile="" refcoord="" merged="" expcorr="" \
         clobber=yes
-    
+
     ## apply exposure correction
     printf "use \`dmimgcalc' to apply \`exposure correction' ...\n"
     punlearn dmimgcalc
     dmimgcalc infile="${IMG_ORIG}" infile2="${EXPMAP}" \
         outfile="${IMG_EXPCORR}" operation=div clobber=yes
-else
-    # neither 'fluximage' nor 'merge_all' is available
-    printf "ERROR: neither 'fluximage' nor 'merge_all' is available\n"
-    exit ${ERR_TOOL}
 fi
 
 ## main }}}
