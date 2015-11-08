@@ -59,7 +59,7 @@ esac
 
 ## default parameters {{{
 # critical offset (in pixel)
-OFFSET_CRIC=10
+OFFSET_CRIC=20
 # energy range: 700-2000 eV
 E_RANGE="700:2000"
 # default `event file' which used to match `blanksky' files
@@ -294,13 +294,16 @@ echo "point(${PEAK_RA},${PEAK_DEC})" > ${PEAK_WCS_REG}
 
 if [ "${F_UPDATE}" = "YES" ]; then
     cp -f ${INFO_JSON} ${INFO_JSON}_bak
-    printf "update X-ray peak coordinate for info.json ...\n"
+    printf "update/add X-ray peak coordinate to info.json ...\n"
     if \grep -qE 'XPEAK_(RA|DEC)' ${INFO_JSON}; then
         printf "update ...\n"
         sed -i'' "s/XPEAK_RA.*$/XPEAK_RA\":\ \"${PEAK_RA}\",/" ${INFO_JSON}
         sed -i'' "s/XPEAK_DEC.*$/XPEAK_DEC\":\ \"${PEAK_DEC}\",/" ${INFO_JSON}
+        sed -i'' "s/XPEAK_XCNTRD_dist.*$/XPEAK_XCNTRD_dist\ (pix)\":\ \"${OFFSET}\",/" ${INFO_JSON}
     else
         printf "add ...\n"
+        sed -i'' "/\"Dec\.\"/ a\
+\ \ \ \ \"XPEAK_XCNTRD_dist\ (pix)\": \"${OFFSET}\"," ${INFO_JSON}
         sed -i'' "/\"Dec\.\"/ a\
 \ \ \ \ \"XPEAK_DEC\": \"${PEAK_DEC}\"," ${INFO_JSON}
         sed -i'' "/\"Dec\.\"/ a\
