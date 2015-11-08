@@ -16,10 +16,12 @@
 ## 2012/11/08                                            ##
 ###########################################################
 ##
-VERSION="v3.0"
-UPDATED="2015/06/03"
+VERSION="v3.1"
+UPDATED="2015-11-08"
 ##
 ## ChangeLogs:
+## v3.1, 2015-11-08, Aaron LI
+##   * Use previously generated skyfov instead to make a new one without asol
 ## v3.0, 2015/06/03, Aaron LI
 ##   * Copy needed pfiles to current working directory, and
 ##     set environment variable $PFILES to use these first.
@@ -201,7 +203,7 @@ fi
 ## parameters }}}
 
 ## prepare parameter files (pfiles) {{{
-CIAO_TOOLS="dmkeypar dmcopy dmstat dmcoords skyfov aconvolve"
+CIAO_TOOLS="dmkeypar dmcopy dmstat dmcoords aconvolve"
 
 # Copy necessary pfiles for localized usage
 for tool in ${CIAO_TOOLS}; do
@@ -214,11 +216,8 @@ export PFILES="./:${PFILES}"
 ## pfiles }}}
 
 ## main part {{{
-# generate `skyfov'
-SKYFOV="_skyfov.fits"
-printf "generate skyfov: \`${SKYFOV}' ...\n"
-punlearn skyfov
-skyfov infile="${EVT}" outfile="${SKYFOV}" clobber=yes
+# Use previously generated `skyfov'
+SKYFOV=`\ls *skyfov*.fits 2>/dev/null | head -n 1`
 
 # generate image
 IMG="img_c`echo ${CHIP} | tr ':' '-'`_e`echo ${E_RANGE} | tr ':' '-'`.fits"
