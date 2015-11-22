@@ -21,14 +21,17 @@ export LC_COLLATE=C
 ## Weitian LI <liweitianux@gmail.com>
 ## Created: 2015-11-08
 ##
-VERSION="v1.2"
-UPDATED="2015-11-08"
+VERSION="v1.3"
+UPDATED="2015-11-22"
 ##
 ## ChangeLogs:
 ## 2015-11-08:
 ##   * Also add offset to info json
 ##   * Default to use aconvolve
 ##   * Change Gaussian kernel from gaus(2,5,1,10,10) to gaus(2,3,1,3,3)
+## 2015-11-20:
+##   * Re-arrange default parameters
+##   * Use previously generated image
 ##
 
 ## error code {{{
@@ -62,8 +65,11 @@ esac
 ## usage, help }}}
 
 ## default parameters {{{
+# default circle radius within which to search the X-ray peak
+SEARCH_RADIUS=100
 # critical offset (in pixel)
 OFFSET_CRIC=20
+
 # energy range: 700-2000 eV
 E_RANGE="700:2000"
 # default `event file' which used to match `blanksky' files
@@ -79,8 +85,9 @@ DFT_ASOLIS_PAT="acis*asol?.lis"
 # default INFO.json pattern
 DFT_INFO_PAT="*_INFO.json"
 
-# default circle radius within which to search the X-ray peak
-SEARCH_RADIUS=100
+# aconvolve parameters
+ACONV_KERNELSPEC="lib:gaus(2,3,1,3,3)"
+ACONV_METHOD="fft"
 ## default parameters }}}
 
 ## functions {{{
@@ -238,19 +245,25 @@ CHIP=`echo "${EVT}" | sed 's/^.*_c\(7\|0-3\)_.*$/\1/' | tr '-' ':'`
 
 # generate image
 IMG="img_c`echo ${CHIP} | tr ':' '-'`_e`echo ${E_RANGE} | tr ':' '-'`_deflare.fits"
-printf "generate image: \`${IMG}' ...\n"
-punlearn dmcopy
-dmcopy infile="${EVT_DEFLARE}[sky=region(${SKYFOV}[ccd_id=${CHIP}])][energy=${E_RANGE}][bin sky=::1]" outfile="${IMG}" clobber=yes
+if [ -r "${IMG}" ]; then
+    printf "use previously generated image: \`${IMG}'\n"
+else
+    printf "generate image: \`${IMG}' ...\n"
+    punlearn dmcopy
+    dmcopy infile="${EVT_DEFLARE}[sky=region(${SKYFOV}[ccd_id=${CHIP}])][energy=${E_RANGE}][bin sky=::1]" outfile="${IMG}" clobber=yes
+fi
 
 # aconvolve
 if [ "${CONV}" = "YES" ]; then
     IMG_ACONV="${IMG%.fits}_aconv.fits"
-    KERNELSPEC="lib:gaus(2,3,1,3,3)"
-    METHOD="fft"
-    printf "\`aconvolve' to smooth img: \`${IMG_ACONV}' ...\n"
-    printf "## aconvolve: kernelspec=\"${KERNELSPEC}\" method=\"${METHOD}\"\n"
-    punlearn aconvolve
-    aconvolve infile="${IMG}" outfile="${IMG_ACONV}" kernelspec="${KERNELSPEC}" method="${METHOD}" clobber=yes
+    #if [ -r "${IMG_ACONV}" ]; then
+    #    printf "use previously convolved image: \`${IMG_ACONV}'\n"
+    #else
+        printf "\`aconvolve' to smooth img: \`${IMG_ACONV}' ...\n"
+        printf "## aconvolve: kernelspec=\"${ACONV_KERNELSPEC}\" method=\"${ACONV_METHOD}\"\n"
+        punlearn aconvolve
+        aconvolve infile="${IMG}" outfile="${IMG_ACONV}" kernelspec="${ACONV_KERNELSPEC}" method="${ACONV_METHOD}" clobber=yes
+    #fi
 else
     IMG_ACONV=${IMG}
 fi
