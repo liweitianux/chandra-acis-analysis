@@ -227,7 +227,7 @@ if [ -r "${IMG}" ]; then
 else
     printf "generate image: \`${IMG}' ...\n"
     punlearn dmcopy
-    dmcopy infile="${EVT_DEFLARE}[sky=region(${SKYFOV}[ccd_id=${CHIP}])][energy=${E_RANGE}][bin sky=::1]" outfile="${IMG}" clobber=yes
+    dmcopy infile="${EVT}[sky=region(${SKYFOV}[ccd_id=${CHIP}])][energy=${E_RANGE}][bin sky=::1]" outfile="${IMG}" clobber=yes
 fi
 
 # aconvolve
