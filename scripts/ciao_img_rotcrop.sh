@@ -63,12 +63,12 @@ punlearn dmkeypar
 DETNAM=`dmkeypar ${TMP_ROT_IMG} DETNAM echo=yes`
 if echo "${DETNAM}" | \grep -q 'ACIS-0123'; then
     printf "## \`DETNAM' (${DETNAM}) has chips 0123 => ACIS-I\n"
-    WIDTH=${WIDTH_ACIS_S}
-    HEIGHT=${HEIGHT_ACIS_S}
-elif echo "${DETNAM}" | \grep -q 'ACIS-[0-6]*7'; then
-    printf "## \`DETNAM' (${DETNAM}) has chip 7 => ACIS-S\n"
     WIDTH=${WIDTH_ACIS_I}
     HEIGHT=${HEIGHT_ACIS_I}
+elif echo "${DETNAM}" | \grep -q 'ACIS-[0-6]*7'; then
+    printf "## \`DETNAM' (${DETNAM}) has chip 7 => ACIS-S\n"
+    WIDTH=${WIDTH_ACIS_S}
+    HEIGHT=${HEIGHT_ACIS_S}
 else
     printf "ERROR: unknown detector type: ${DETNAM}\n"
     exit 11
