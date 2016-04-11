@@ -1,20 +1,27 @@
 #!/bin/sh
 #
 # Rotate the FITS image to be upright using 'dmregrid2',
-# and crop the outside blank areas of the rotated image
-# according to the CCD sizes.
+# and crop the blank edges from the rotated image
+# according to the CCDs sizes.
 #
 # NOTE:
-# * rotation angle is obtained from "ROLL_PNT" keyword
-# * rotation center is the central point of the input image
-#   (in _image_ coordinate and in pixel unit)
-# * cropped image size is set to '1204x1204' for ACIS-S, and
-#   '2066x2066' for ACIS-I
+# * rotation center is set to be the center of the input image
+#   (in *image* coordinate and in pixel unit)
+# * rotation angle is obtained from the "ROLL_PNT" keyword
+# * cropped image size is set to '1010x1010' for ACIS-S, and
+#   '2060x2060' for ACIS-I
 #
 #
 # Aaron LI
-# 2015/08/23
+# Created: 2015-08-23
+# Updated: 2016-04-11
 #
+
+WIDTH_ACIS_S="1010"
+HEIGHT_ACIS_S="1010"
+WIDTH_ACIS_I="2060"
+HEIGHT_ACIS_I="2060"
+
 
 if [ $# -ne 2 ]; then
     printf "Usage:\n"
@@ -56,12 +63,12 @@ punlearn dmkeypar
 DETNAM=`dmkeypar ${TMP_ROT_IMG} DETNAM echo=yes`
 if echo "${DETNAM}" | \grep -q 'ACIS-0123'; then
     printf "## \`DETNAM' (${DETNAM}) has chips 0123 => ACIS-I\n"
-    WIDTH="2066"
-    HEIGHT="2066"
+    WIDTH=${WIDTH_ACIS_S}
+    HEIGHT=${HEIGHT_ACIS_S}
 elif echo "${DETNAM}" | \grep -q 'ACIS-[0-6]*7'; then
     printf "## \`DETNAM' (${DETNAM}) has chip 7 => ACIS-S\n"
-    WIDTH="1024"
-    HEIGHT="1024"
+    WIDTH=${WIDTH_ACIS_I}
+    HEIGHT=${HEIGHT_ACIS_I}
 else
     printf "ERROR: unknown detector type: ${DETNAM}\n"
     exit 11
