@@ -11,6 +11,15 @@
 # * cropped image size is set to '1010x1010' for ACIS-S, and
 #   '2060x2060' for ACIS-I
 #
+# XXX/CAVEAT:
+# The `dmregrid2' will take account for the *excluded* source regions
+# even after the FITS image creation.  Therefore, even if we fill the
+# excluded source regions using `dmfilth', then rotate the FITS image
+# using `dmregrid2', the filled regions are *EXCLUDED* in the rotated
+# image!
+# This problem is due to that `dmregrid2' considers the DSTYP1/DSVAL1, ...
+# keywords/attributes in the FITS header.
+#
 #
 # Aaron LI
 # Created: 2015-08-23
@@ -85,4 +94,13 @@ dmcopy "${TMP_ROT_IMG}[sky=${CROP_REG}]" ${OUTIMG} clobber=yes
 
 # Clean temporary file
 rm -f ${TMP_ROT_IMG}
+
+echo "=============== CAVEAT ==============="
+echo "The 'dmregrid2' will take account for the *excluded* source regions"
+echo "even after the FITS image creation.  Therefore, even if we fill the"
+echo "excluded source regions using 'dmfilth', then rotate the FITS image"
+echo "using 'dmregrid2', the filled regions are *EXCLUDED* in the rotated"
+echo "image!"
+echo "*** CHECK THE RESULTS BEFORE PROCEDDING ***"
+echo "======================================"
 
