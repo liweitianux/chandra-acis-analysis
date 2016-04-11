@@ -120,11 +120,17 @@ set_variable OUTFILE "img_${ROOTNAME}_fill.fits" ${outfile}
 set_variable_pattern REG "celld_evt2_c7.reg celld_evt2_c0-3.reg" ${reg}
 set_variable REPRO ".." ${repro}
 
-set_pfiles dmcopy dmkeypar dmmakereg roi dmfilth
+set_pfiles skyfov dmcopy dmkeypar dmmakereg roi dmfilth
 
-# FoV
-ln -svf ${REPRO}/acisf*_fov1.fits .
-FOV=`\ls acisf*_fov1.fits`
+# Aspect/asol
+ASOL_LIS=`\ls ${REPRO}/acisf*_asol1.lis`
+
+# Generate FoV file, since some obs. do NOT provide the `fov1.fits' file
+# NOTE: the parameter `aspec' should be provided for the correct FoV
+echo "Make skyfov file ..."
+FOV="skyfov.fits"
+punlearn skyfov
+skyfov infile=${EVT} outfile=${FOV} aspect="@${ASOL_LIS}"
 
 # Filter energy
 EVT_E="evt2_${ROOTNAME}_deflare.fits"
