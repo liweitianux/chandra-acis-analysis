@@ -2,7 +2,11 @@
 #
 # Fill the detected source regions by sampling from their surrounding
 # regions, using CIAO `roi' and `dmfilth'.
-# NOTE: The `dmfilth' only operates on the FITS image, NOT event table.
+#
+# NOTE:
+# * The `dmfilth' only operates on the FITS image, NOT event table.
+# * Make `dmfilth' operates on the ONLY DEFLARED image (WITHOUT point
+#   sources excluded/removed) (see the CAVEAT of script `ciao_img_rotcrop.sh')
 #
 # References:
 # [1] An Image of Diffuse Emission - CIAO
@@ -108,9 +112,9 @@ esac
 
 # arguments
 getopt_keyval "$@"
-set_variable_pattern EVT "evt2_c7_clean.fits evt2_c0-3_clean.fits" ${evt}
+set_variable_pattern EVT "evt2_c7_deflare.fits evt2_c0-3_deflare.fits" ${evt}
 set_variable ERANGE "700:7000" ${erange}
-ROOTNAME="${EVT%_clean.fits}_e`echo ${ERANGE} | tr ':' '-'`"
+ROOTNAME="${EVT%_deflare.fits}_e`echo ${ERANGE} | tr ':' '-'`"
 ROOTNAME="${ROOTNAME#evt2_}"
 set_variable OUTFILE "img_${ROOTNAME}_fill.fits" ${outfile}
 set_variable_pattern REG "celld_evt2_c7.reg celld_evt2_c0-3.reg" ${reg}
@@ -123,7 +127,7 @@ ln -svf ${REPRO}/acisf*_fov1.fits .
 FOV=`\ls acisf*_fov1.fits`
 
 # Filter energy
-EVT_E="evt2_${ROOTNAME}.fits"
+EVT_E="evt2_${ROOTNAME}_deflare.fits"
 if [ ! -e "${EVT_E}" ]; then
     echo "Filter by energy range ..."
     punlearn dmcopy
@@ -131,7 +135,7 @@ if [ ! -e "${EVT_E}" ]; then
 fi
 
 # Make image
-IMG="img_${ROOTNAME}.fits"
+IMG="img_${ROOTNAME}_deflare.fits"
 if [ ! -e "${IMG}" ]; then
     echo "Make FITS image ..."
     ACIS_TYPE=`get_acis_type ${EVT_E}`
@@ -175,7 +179,7 @@ dmmakereg region="region(${REG_FILL_BKG})" \
 # Fill the source regions using `dmfilth'
 echo "Fill the source regions ..."
 punlearn dmfilth
-dmfilth infile=${IMG} outfile=${OUTFILE} method=POISSON \
+dmfilth infile=${IMG} outfile=${OUTFILE} method=DIST \
     srclist="@${REG_FILL_SRC}" bkglist="@${REG_FILL_BKG}" clobber=yes
 
 rm -rf ${ROI_TMP_DIR}
