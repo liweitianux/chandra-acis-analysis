@@ -15,7 +15,7 @@
 #
 # Aaron LI
 # Created: 2016-04-11
-UPDATED="2016-04-11"
+UPDATED="2016-04-12"
 
 
 usage() {
@@ -130,7 +130,7 @@ ASOL_LIS=`\ls ${REPRO}/acisf*_asol1.lis`
 echo "Make skyfov file ..."
 FOV="skyfov.fits"
 punlearn skyfov
-skyfov infile=${EVT} outfile=${FOV} aspect="@${ASOL_LIS}"
+skyfov infile=${EVT} outfile=${FOV} aspect="@${ASOL_LIS}" clobber=yes
 
 # Filter energy
 EVT_E="evt2_${ROOTNAME}_deflare.fits"
