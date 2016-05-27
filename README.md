@@ -1,5 +1,7 @@
-README.md
-=========
+Chandra ACIS analysis tools and documents
+=========================================
+
+Weitian (Aaron) LI, Junhu GU, and Zhenghao ZHU
 
 
 Install/Compile
@@ -39,4 +41,10 @@ alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
 Usage
 -----
 see 'HOWTO_chandra_acis_process
+
+
+License
+-------
+The tools are distributed under the MIT license unless otherwise declared.
+The documents are distributed under the ??? license (comming...).
 
