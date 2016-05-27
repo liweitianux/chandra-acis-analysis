@@ -1,0 +1,2 @@
+LIB ./
+INC /usr/local/heasoft/x86_64-unknown-linux-gnu/include

@@ -1,0 +1,24 @@
+# ignore built executables
+calc_distance
+calc_lx
+calc_lx_beta
+calc_lx_dbeta
+cooling_time
+cosmo_calc
+fit_beta_sbp
+fit_dbeta_sbp
+fit_direct_beta
+fit_lt_bpl
+fit_lt_pl
+fit_mt_bpl
+fit_mt_pl
+fit_nfw_mass
+fit_nfw_sbp
+fit_wang2012_model
+
+# building dependent libraries
+libcpgplot.a
+libpgplot.a
+
+# ignore the backup files
+ly_mod/

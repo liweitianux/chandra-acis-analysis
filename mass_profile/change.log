@@ -1,0 +1,25 @@
+Changes:
+v201208132246:
+	Change the fitting plot of surface brightness to log-log from the original linear one.
+	Add a constraint over the power law component and the Gaussian component of zyy model.
+
+v201208161900:
+	Utilize the mass calculation of
+http://adsabs.harvard.edu/abs/2012MNRAS.422.3503W
+
+v201208172340:
+	Output the both components of the double beta model in rho_fit.qdp
+	added the cm per pixel parameter to fit_zyy_model
+v201208180209:
+	add the cooling function calculation program
+v201208181800:
+	add the 1-beta model fitting tools
+v201208201200:
+	add the wang2012 model
+	make the temperature fitting programmes output fit_result.dat with a kpc x-axis
+v201208261700:
+	use nfw to calcualte mass profile extrapolation
+v201208281500:
+	change from calculate std error to 68% double-sided error
+	added output of ra and dec in query_source_info.sh
+	
