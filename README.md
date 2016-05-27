@@ -6,22 +6,31 @@ Weitian (Aaron) LI, Junhu GU, and Zhenghao ZHU
 
 Install/Compile
 ---------------
-needs `libgsl-dev'
-(1) mass_profile
+Dependence:
++ ``libgsl-dev``
+
+1. ``mass_profile``
+```
 $ cd mass_profile
 $ make clean
 $ heainit   # initilize heasoft, to link libpgplot.a and libcpgplot.a
 $ ./init.sh
 $ make
-(2) cosmo_calc
+```
+
+2. ``cosmo_calc``
+```
 $ cd tools/cosmo_calc
 $ make clean; make
 $ cp cosmo_calc ~/bin   # within $PATH
+```
 
 
 Settings
 --------
-## Add following settings to ~/.bashrc
+Add the following settings to your shell's initialization file
+(e.g., ``~/.bashrc`` or ``~/.zshrc``).
+```
 # environment variables:
 export MASS_PROFILE_DIR="/path/to/mass_profile"
 export CHANDRA_SCRIPT_DIR="/path/to/script"
@@ -36,15 +45,16 @@ alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
 alias fitwang="${MASS_PROFILE_DIR}/fit_wang2012_model tcl_temp_profile.txt"
 alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_simple.sh"
 alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
+```
 
 
 Usage
 -----
-see 'HOWTO_chandra_acis_process
+See the doc ``HOWTO_chandra_acis_analysis.txt``
 
 
 License
 -------
-The tools are distributed under the MIT license unless otherwise declared.
+The tools are distributed under the **MIT license** unless otherwise declared.
 The documents are distributed under the ??? license (comming...).
 
