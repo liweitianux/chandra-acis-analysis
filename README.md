@@ -28,6 +28,14 @@ These tools are tested with:
 + HEASoft v6.16
 
 
+TODO
+----
++ drop ``calc_distance`` in favor of ``cosmo_calc``
++ add arguments to control the ``cosmo_calc`` output for easier use in scripts
++ integrate the memos/docs for Chandra data analysis
++ integrate the ``chandra_guide`` doc
+
+
 Installation
 ------------
 Dependencies:
