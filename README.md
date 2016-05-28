@@ -4,10 +4,35 @@ Chandra ACIS analysis tools and documents
 Weitian (Aaron) LI, Junhu GU, and Zhenghao ZHU
 
 
-Install/Compile
----------------
-Dependence:
-+ ``libgsl-dev``
+Introduction
+------------
+This repository currently contains the following tools:
++ Chandra ACIS data reduction
++ Point source and flares removal
++ Blanksky reprojection
++ Background spectrum correction
++ Source spectra extraction and deprojection analysis (temperature profile)
++ Surface brightness profile extraction
++ Gravitational mass profile calculation (NFW profile extrapolation)
++ Luminosity and flux calculation
+
+These tools are developed to help and automate our batch analysis of the
+big galaxy groups and clusters sample observed by Chandra ACIS.
+Therefore, there are many assumptions and hacks in these tools, and many
+cleanups are needed.  Last but not least, documents are badly needed.
+
+These tools are tested with:
++ CIAO v4.4 (support will be dropped)
++ CIAO v4.6
++ HEASoft v6.12
++ HEASoft v6.16
+
+
+Installation
+------------
+Dependencies:
++ GSL
++ a working HEASoft installation (for ``libpgplot.a`` and ``libcpgplot.a``)
 
 1. ``mass_profile``
 ```
@@ -19,8 +44,8 @@ $ make
 ```
 
 2. ``cosmo_calc``
-Get from repository [atoolbox](https://github.com/liweitianux/atoolbox)
-``astro/cosmo_calc``.
+Get from repository [atoolbox](https://github.com/liweitianux/atoolbox),
+under the directory ``astro/cosmo_calc``.
 
 
 Settings
@@ -53,5 +78,5 @@ See the doc ``HOWTO_chandra_acis_analysis.txt``
 License
 -------
 The tools are distributed under the **MIT license** unless otherwise declared.
-The documents are distributed under the ??? license (comming...).
+The documents are distributed under the ??? License (coming...).
 
