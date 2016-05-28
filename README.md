@@ -19,11 +19,8 @@ $ make
 ```
 
 2. ``cosmo_calc``
-```
-$ cd tools/cosmo_calc
-$ make clean; make
-$ cp cosmo_calc ~/bin   # within $PATH
-```
+Get from repository [atoolbox](https://github.com/liweitianux/atoolbox)
+``astro/cosmo_calc``.
 
 
 Settings
