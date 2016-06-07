@@ -77,7 +77,7 @@ export CHANDRA_SCRIPT_DIR="/path/to/script"
 alias chcld="${CIAO_SCRIPT_DIR}/chandra_collect_data_v3.sh"
 alias chr500="${CIAO_SCRIPT_DIR}/ciao_r500avgt_v3.sh"
 # mass_profile related
-alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
+alias fitmass="${MASS_PROFILE_DIR}/fit_nfwmass.sh"
 alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
 alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
 alias fitwang="${MASS_PROFILE_DIR}/fit_wang2012_model tcl_temp_profile.txt"
