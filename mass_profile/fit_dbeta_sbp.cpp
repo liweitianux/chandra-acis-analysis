@@ -1,7 +1,7 @@
 /*
   Perform a double-beta density model fitting to the surface brightness data
   Author: Junhua Gu
-  Last modified: 2011.01.01
+  Last modified: 2016.06.07
   This code is distributed with no warrant
 */
 
@@ -26,7 +26,7 @@ double dbeta_func(double r,
 		  double n01,double rc1,double beta1,
 		  double n02,double rc2,double beta2)
 {
-  
+
   return abs(n01)*pow(1+r*r/rc1/rc1,-3./2.*abs(beta1))+abs(n02)*pow(1+r*r/rc2/rc2,-3./2.*abs(beta2));
 }
 
@@ -38,7 +38,7 @@ static double calc_critical_density(double z,
 {
   const double G=6.673E-8;//cm^3 g^-1 s^2
   const double E=std::sqrt(Omega_m*(1+z)*(1+z)*(1+z)+1-Omega_m);
-  const double H=H0*E;    
+  const double H=H0*E;
   return 3*H*H/8/pi/G;
 }
 
@@ -57,7 +57,7 @@ public:
   {
     return spl.get_value(x);
   }
-  
+
   //we need this function, when this object is performing a clone of itself
   spline_func_obj* do_clone()const
   {
@@ -70,7 +70,7 @@ public:
   {
     spl.push_point(x,y);
   }
-  
+
   //before getting the intepolated value, the spline should be initialzied by calling this function
   void gen_spline()
   {
@@ -89,9 +89,9 @@ int main(int argc,char* argv[])
   ifstream cfg_file(argv[1]);
   assert(cfg_file.is_open());
   cfg_map cfg=parse_cfg_file(cfg_file);
-  
+
   //check the existence of following parameters
-  
+
   const double z=cfg.z;
 
   //initialize the radius list, sbp list and sbp error list
@@ -147,7 +147,7 @@ int main(int argc,char* argv[])
     {
       rmin=cfg.rmin_kpc*kpc/cm_per_pixel;
     }
-  
+
   cerr<<"rmin="<<rmin<<endl;
   std::list<double> radii_tmp,sbps_tmp,sbpe_tmp;
   radii_tmp.resize(radii.size());
@@ -195,7 +195,7 @@ int main(int argc,char* argv[])
       cf.add_point(x,y);//change with source
     }
   cf.gen_spline();
-  
+
   //read temperature profile data
   spline_func_obj Tprof;
   int tcnt=0;
@@ -220,10 +220,10 @@ int main(int argc,char* argv[])
 
 
   Tprof.gen_spline();
-  
+
   default_data_set<std::vector<double>,std::vector<double> > ds;
   ds.add_data(data<std::vector<double>,std::vector<double> >(radii,sbps,sbpe,sbpe,radii,radii));
-  
+
   //initial fitter
   fitter<vector<double>,vector<double>,vector<double>,double> f;
   f.load_data(ds);
@@ -255,7 +255,7 @@ int main(int argc,char* argv[])
   //attach the cooling function
   a.attach_cfunc(cf);
   a.set_cm_per_pixel(cm_per_pixel);
-  
+
   f.set_model(a);
   //chi^2 statistic
   vchisq<double> c;
@@ -311,7 +311,7 @@ int main(int argc,char* argv[])
     }
 
 
-  
+
   //perform the fitting, first freeze beta1, beta2, rc1, and rc2
   if(tie_beta)
     {
@@ -328,9 +328,9 @@ int main(int argc,char* argv[])
 			   freeze_param<std::vector<double>,std::vector<double>,std::vector<double>,std::string>("rc2")
 			   );
     }
-  
+
   f.fit();
-  
+
   f.clear_param_modifier();
 
   //then perform the fitting, freeze beta1 and beta2
@@ -343,7 +343,7 @@ int main(int argc,char* argv[])
   f.fit();
   double beta1=0;
   double beta2=0;
-  
+
   n01=f.get_param_value("n01");
   rc1=f.get_param_value("rc1");
   n02=f.get_param_value("n02");
@@ -379,19 +379,19 @@ int main(int argc,char* argv[])
     }
   cerr<<"chi square="<<f.get_statistic_value()/(radii.size()-f.get_model().get_num_free_params())<<endl;
   param_output<<"chi square="<<f.get_statistic_value()/(radii.size()-f.get_model().get_num_free_params())<<endl;
-  
+
   //c.verbose(false);
   //f.set_statistic(c);
   //f.fit();
   std::vector<double> p=f.get_all_params();
   f.clear_param_modifier();
   std::vector<double> mv=f.eval_model(radii,p);
-  
-  
+
+
   ofstream ofs_sbp("sbp_fit.qdp");
   ofs_sbp<<"read serr 2"<<endl;
   ofs_sbp<<"skip single"<<endl;
-  
+
   ofs_sbp<<"line on 2"<<endl;
   ofs_sbp<<"line on 3"<<endl;
   ofs_sbp<<"line on 4"<<endl;
@@ -401,7 +401,7 @@ int main(int argc,char* argv[])
   ofs_sbp<<"ls 2 on 3"<<endl;
   ofs_sbp<<"ls 2 on 4"<<endl;
   ofs_sbp<<"ls 2 on 5"<<endl;
-  
+
 
 
   ofs_sbp<<"!LAB  POS Y  4.00"<<endl;
@@ -500,12 +500,14 @@ int main(int argc,char* argv[])
       ofs_rho<<x*cm_per_pixel/kpc<<"\t"<<ym<<endl;
     }
   */
-  
+
   double lower,upper;
   double dr=1;
   //calculate the mass profile
   const double G=6.673E-8;//cm^3 g^-1 s^-2
-  static const double mu=1.4074;
+  // Molecular weight per electron
+  // Reference: Ettori et al. 2013, Space Sci. Rev., 177, 119-154; Eq.(9) below
+  static const double mu=1.155;
   static const double mp=1.67262158E-24;//g
   static const double M_sun=1.98892E33;//g
   static const double k=1.38E-16;
@@ -532,7 +534,7 @@ int main(int argc,char* argv[])
 
       double dmgas=V_cm3*ne*mu*mp/M_sun;
       gas_mass+=dmgas;
-      
+
       ofs_gas_mass<<r*cm_per_pixel/kpc<<"\t"<<gas_mass<<endl;
       double ne_beta1=dbeta_func(r,n01,rc1,beta1,
 				 0,rc2,beta2);
@@ -542,10 +544,10 @@ int main(int argc,char* argv[])
 
       double ne1=dbeta_func(r1,n01,rc1,beta1,
 			    n02,rc2,beta2);//cm^3
-      
+
       double T_keV=Tprof(r);
       double T1_keV=Tprof(r1);
-      
+
       double T_K=T_keV*11604505.9;
       double T1_K=T1_keV*11604505.9;
 
@@ -560,7 +562,7 @@ int main(int argc,char* argv[])
       //Walker et al. 2012
       double M=-3.68E13*M_sun*T_keV*r_Mpc*(dlnT/dlnr+dlnn/dlnr);
       double rho=M/(4./3.*pi*r_cm*r_cm*r_cm);
-      
+
       double S=T_keV/pow(ne,2./3.);
       //cout<<r<<"\t"<<M/M_sun<<endl;
       //cout<<r<<"\t"<<T_keV<<endl;
@@ -577,9 +579,9 @@ int main(int argc,char* argv[])
       ofs_mass<<r*cm_per_pixel/kpc<<"\t"<<M/M_sun<<endl;
       if(r<radii.back())
 	{
-	  ofs_mass_dat<<r*cm_per_pixel/kpc<<"\t0\t"<<M/M_sun<<"\t"<<M/M_sun*.1<<endl;	  
+	  ofs_mass_dat<<r*cm_per_pixel/kpc<<"\t0\t"<<M/M_sun<<"\t"<<M/M_sun*.1<<endl;
 	}
       ofs_overdensity<<r*cm_per_pixel/kpc<<"\t"<<rho/calc_critical_density(z)<<endl;
-      
+
     }
 }

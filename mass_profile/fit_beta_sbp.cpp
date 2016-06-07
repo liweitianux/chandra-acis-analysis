@@ -1,7 +1,7 @@
 /*
   Perform a double-beta density model fitting to the surface brightness data
   Author: Junhua Gu
-  Last modified: 2011.01.01
+  Last modified: 2016.06.07
   This code is distributed with no warrant
 */
 
@@ -30,7 +30,7 @@ const double Mpc=kpc*1000;
 double beta_func(double r,
 		 double n0,double rc,double beta)
 {
-  
+
   return abs(n0)*pow(1+r*r/rc/rc,-3./2.*abs(beta));
 }
 
@@ -42,7 +42,7 @@ static double calc_critical_density(double z,
 {
   const double G=6.673E-8;//cm^3 g^-1 s^2
   const double E=std::sqrt(Omega_m*(1+z)*(1+z)*(1+z)+1-Omega_m);
-  const double H=H0*E;    
+  const double H=H0*E;
   return 3*H*H/8/pi/G;
 }
 
@@ -61,7 +61,7 @@ public:
   {
     return spl.get_value(x);
   }
-  
+
   //we need this function, when this object is performing a clone of itself
   spline_func_obj* do_clone()const
   {
@@ -74,7 +74,7 @@ public:
   {
     spl.push_point(x,y);
   }
-  
+
   //before getting the intepolated value, the spline should be initialzied by calling this function
   void gen_spline()
   {
@@ -93,9 +93,9 @@ int main(int argc,char* argv[])
   ifstream cfg_file(argv[1]);
   assert(cfg_file.is_open());
   cfg_map cfg=parse_cfg_file(cfg_file);
-  
+
   //check the existence of following parameters
-  
+
   const double z=cfg.z;
 
   //initialize the radius list, sbp list and sbp error list
@@ -151,7 +151,7 @@ int main(int argc,char* argv[])
     {
       rmin=cfg.rmin_kpc*kpc/cm_per_pixel;
     }
-  
+
   cerr<<"rmin="<<rmin<<endl;
   std::list<double> radii_tmp,sbps_tmp,sbpe_tmp;
   radii_tmp.resize(radii.size());
@@ -199,7 +199,7 @@ int main(int argc,char* argv[])
       cf.add_point(x,y);//change with source
     }
   cf.gen_spline();
-  
+
   //read temperature profile data
   spline_func_obj Tprof;
   int tcnt=0;
@@ -224,7 +224,7 @@ int main(int argc,char* argv[])
 
 
   Tprof.gen_spline();
-  
+
   default_data_set<std::vector<double>,std::vector<double> > ds;
   ds.add_data(data<std::vector<double>,std::vector<double> >(radii,sbps,sbpe,sbpe,radii,radii));
 
@@ -322,7 +322,7 @@ int main(int argc,char* argv[])
       ofs_sbp<<"color 3 on 3"<<endl;
       ofs_sbp<<"color 4 on 4"<<endl;
       ofs_sbp<<"color 5 on 5"<<endl;
-      
+
       ofs_sbp<<"win 1"<<endl;
       ofs_sbp<<"yplot 1 2 3 4 5"<<endl;
       ofs_sbp<<"loc 0 0 1 1"<<endl;
@@ -356,7 +356,7 @@ int main(int argc,char* argv[])
       ofs_sbp<<"color 4 on 3"<<endl;
       ofs_sbp<<"color 5 on 4"<<endl;
       //ofs_sbp<<"ma 1 on 2"<<endl;
-      
+
       ofs_sbp<<"win 1"<<endl;
       ofs_sbp<<"yplot 1 2 3 4"<<endl;
       ofs_sbp<<"loc 0 0 1 1"<<endl;
@@ -454,12 +454,14 @@ int main(int argc,char* argv[])
       ofs_rho<<x*cm_per_pixel/kpc<<"\t"<<ym<<endl;
     }
   */
-  
+
   double lower,upper;
   double dr=1;
   //calculate the mass profile
   const double G=6.673E-8;//cm^3 g^-1 s^-2
-  static const double mu=1.4074;
+  // Molecular weight per electron
+  // Reference: Ettori et al. 2013, Space Sci. Rev., 177, 119-154; Eq.(9) below
+  static const double mu=1.155;
   static const double mp=1.67262158E-24;//g
   static const double M_sun=1.98892E33;//g
   static const double k=1.38E-16;
@@ -485,13 +487,13 @@ int main(int argc,char* argv[])
 
       double dmgas=V_cm3*ne*mu*mp/M_sun;
       gas_mass+=dmgas;
-      
+
       ofs_gas_mass<<r*cm_per_pixel/kpc<<"\t"<<gas_mass<<endl;
       double ne1=beta_func(r1,n0,rc,beta);//cm^3
-      
+
       double T_keV=Tprof(r);
       double T1_keV=Tprof(r1);
-      
+
       double T_K=T_keV*11604505.9;
       double T1_K=T1_keV*11604505.9;
 
@@ -506,7 +508,7 @@ int main(int argc,char* argv[])
       //Walker et al. 2012
       double M=-3.68E13*M_sun*T_keV*r_Mpc*(dlnT/dlnr+dlnn/dlnr);
       double rho=M/(4./3.*pi*r_cm*r_cm*r_cm);
-      
+
       double S=T_keV/pow(ne,2./3.);
       //cout<<r<<"\t"<<M/M_sun<<endl;
       //cout<<r<<"\t"<<T_keV<<endl;
@@ -523,9 +525,9 @@ int main(int argc,char* argv[])
       ofs_mass<<r*cm_per_pixel/kpc<<"\t"<<M/M_sun<<endl;
       if(r<radii.at(sbps.size()))
 	{
-	  ofs_mass_dat<<r*cm_per_pixel/kpc<<"\t0\t"<<M/M_sun<<"\t"<<M/M_sun*.1<<endl;	  
+	  ofs_mass_dat<<r*cm_per_pixel/kpc<<"\t0\t"<<M/M_sun<<"\t"<<M/M_sun*.1<<endl;
 	}
       ofs_overdensity<<r*cm_per_pixel/kpc<<"\t"<<rho/calc_critical_density(z)<<endl;
-      
-    }  
+
+    }
 }
