@@ -13,12 +13,14 @@
 #   * rho_fit_center.dat
 #   * rho_fit_center.qdp
 #   * sbp_fit_center.qdp
+#   * entropy_center.qdp
 #   * ${t_profile_type}_param_center.txt
 #   * ${t_profile_type}_dump_center.qdp
 #   * ${t_profile_type}_fit_center.qdp
 #   * summary_mass_profile.qdp
 #   * summary_overdensity.qdp
 #   * summary_gas_mass_profile.qdp
+#   * summary_entropy.qdp
 #
 # Junhua Gu
 # Weitian LI
@@ -153,12 +155,13 @@ cat ${RES_SBPFIT_CENTER}
 mv -fv sbp_fit.qdp sbp_fit_center.qdp
 mv -fv rho_fit.qdp rho_fit_center.qdp
 mv -fv rho_fit.dat rho_fit_center.dat
-$base_path/fit_nfw_mass mass_int.dat $z $nfw_rmin_kpc 2> /dev/null
-mv -fv nfw_param.txt nfw_param_center.txt
+mv -fv entropy.qdp entropy_center.qdp
+${base_path}/fit_nfw_mass mass_int.dat $z $nfw_rmin_kpc 2> /dev/null
+mv -fv nfw_param.txt      nfw_param_center.txt
 mv -fv nfw_fit_result.qdp nfw_fit_center.qdp
-mv -fv nfw_dump.qdp mass_int_center.qdp
-mv -fv overdensity.qdp overdensity_center.qdp
-mv -fv gas_mass_int.qdp gas_mass_int_center.qdp
+mv -fv nfw_dump.qdp       mass_int_center.qdp
+mv -fv overdensity.qdp    overdensity_center.qdp
+mv -fv gas_mass_int.qdp   gas_mass_int_center.qdp
 
 #exit 233
 
@@ -186,6 +189,7 @@ fi
 rm -f summary_overdensity.qdp
 rm -f summary_mass_profile.qdp
 rm -f summary_gas_mass_profile.qdp
+rm -f summary_entropy.qdp
 
 
 # Estimate the errors of Lx and Fx by Monte Carlo simulation
@@ -226,6 +230,8 @@ for i in `seq 1 ${MC_TIMES}`; do
     echo "no no no"      >> summary_overdensity.qdp
     cat gas_mass_int.qdp >> summary_gas_mass_profile.qdp
     echo "no no no"      >> summary_gas_mass_profile.qdp
+    cat entropy.qdp      >> summary_entropy.qdp
+    echo "no no no"      >> summary_entropy.qdp
 
 done  # end `while'
 # recover `center_files'
@@ -239,10 +245,10 @@ RES_FINAL="final_result.txt"
 [ -e "${RES_TMP}" ]   && mv -fv ${RES_TMP}   ${RES_TMP}_bak
 [ -e "${RES_FINAL}" ] && mv -fv ${RES_FINAL} ${RES_FINAL}_bak
 
-$base_path/analyze_mass_profile.py  200 | tee -a ${RES_TMP}
-$base_path/analyze_mass_profile.py  500 | tee -a ${RES_TMP}
-$base_path/analyze_mass_profile.py 1500 | tee -a ${RES_TMP}
-$base_path/analyze_mass_profile.py 2500 | tee -a ${RES_TMP}
+${base_path}/analyze_mass_profile.py  200 | tee -a ${RES_TMP}
+${base_path}/analyze_mass_profile.py  500 | tee -a ${RES_TMP}
+${base_path}/analyze_mass_profile.py 1500 | tee -a ${RES_TMP}
+${base_path}/analyze_mass_profile.py 2500 | tee -a ${RES_TMP}
 
 R200_VAL=`grep  '^r200'  ${RES_TMP} | awk '{ print $2 }'`
 R500_VAL=`grep  '^r500'  ${RES_TMP} | awk '{ print $2 }'`
