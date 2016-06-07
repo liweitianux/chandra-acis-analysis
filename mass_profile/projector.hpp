@@ -10,8 +10,13 @@
 #include <core/fitter.hpp>
 #include <vector>
 #include <cmath>
+
 static const double pi=4*atan(1);
-static const double ne_np_ratio=1.2;
+// Ratio of the electron density (n_e) to the proton density (n_p)
+//   n_gas = n_e + n_p ~= 1.826 n_e  =>  n_e / n_p ~= 1.21
+// Reference: Ettori et al. 2013, Space Sci. Rev., 177, 119-154; Eq.(9) below
+static const double ne_np_ratio = 1.21;
+
 namespace opt_utilities
 {
   //This is used to project a 3-D surface brightness model to 2-D profile
@@ -42,7 +47,7 @@ namespace opt_utilities
 	{
 	  pcfunc=NULL_PTR;
 	}
-	
+
     }
     //assign operator
     projector& operator=(const projector& rhs)
@@ -78,12 +83,12 @@ namespace opt_utilities
 	}
     }
     //used to clone self
-    model<std::vector<T>,std::vector<T>,std::vector<T> >* 
+    model<std::vector<T>,std::vector<T>,std::vector<T> >*
     do_clone()const
     {
       return new projector(*this);
     }
-    
+
   public:
     void set_cm_per_pixel(const T& x)
     {
@@ -113,7 +118,7 @@ namespace opt_utilities
     }
 
   public:
-    //calc the volume 
+    //calc the volume
     /*
       This is a sphere that is subtracted by a cycline.
        /|     |\
@@ -132,7 +137,7 @@ namespace opt_utilities
 	}
       return 0;
     }
-    
+
     //calc the No. nsph sphere's projection volume on the No. nrad pie region
     T calc_v(const std::vector<T>& rlist,int nsph,int nrad)
     {
@@ -146,7 +151,7 @@ namespace opt_utilities
 	}
 
       return calc_v_ring(rlist[nsph+1],rlist[nrad])-calc_v_ring(rlist[nsph],rlist[nrad])-calc_v_ring(rlist[nsph+1],rlist[nrad+1])+calc_v_ring(rlist[nsph],rlist[nrad+1]);
-      
+
     }
   public:
     bool do_meets_constraint(const std::vector<T>& p)const
@@ -166,7 +171,7 @@ namespace opt_utilities
 	{
 	  p2.at(i)=p1[i];
 	}
-      
+
       return pmodel->meets_constraint(p2);
     }
   public:
@@ -187,7 +192,8 @@ namespace opt_utilities
 	      v1+=v;
 	      if(pcfunc)
 		{
-		  projected[nrad]+=v*ne_np_ratio*unprojected[nsph]*unprojected[nsph]*(*pcfunc)((x[nrad+1]+x[nrad])/2.);
+		  projected[nrad] += (v / ne_np_ratio) * unprojected[nsph] * \
+			unprojected[nsph] * (*pcfunc)((x[nsph+1] + x[nsph]) / 2.0);
 		}
 	      else
 		{
@@ -196,7 +202,7 @@ namespace opt_utilities
 	    }
 	  projected[nrad]/=(pi*(x[nrad+1]*x[nrad+1]-x[nrad]*x[nrad]));
 	  projected[nrad]+=bkg;
-	  
+
 	}
       return projected;
     }
