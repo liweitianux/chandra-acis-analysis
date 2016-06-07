@@ -28,6 +28,14 @@ These tools are tested with:
 + HEASoft v6.16
 
 
+WARNING
+-------
+Our Chandra sample has been finished for a period of time, and we at the moment
+have no plan to re-process/update the results.
+In consequence, these tools/scripts are currently **untested** and very likely have
+some **bugs**.
+
+
 TODO
 ----
 + drop ``calc_distance`` in favor of ``cosmo_calc``
