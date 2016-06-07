@@ -62,13 +62,10 @@ sbp_data_file=`grep '^sbp_file' $sbp_cfg | awk '{ print $2 }'`
 T_file=`grep '^T_file' $sbp_cfg | awk '{ print $2 }'`
 # filename of the cooling function data
 cfunc_file=`grep '^cfunc_file' $sbp_cfg |awk '{ print $2 }'`
-nfw_rmin_kpc=`grep '^nfw_rmin_kpc' $cfg_file | awk '{ print $2 }'`
 cm_per_pixel=`grep '^cm_per_pixel' $sbp_cfg | awk '{ print $2 }'`
 z=`grep '^z' $sbp_cfg | awk '{ print $2 }'`
 nh=`grep '^nh' $cfg_file |awk '{ print $2 }'`
 abund=`grep '^abund' $cfg_file |awk '{ print $2 }'`
-da=`python -c "print($cm_per_pixel/(0.492/3600/180*3.1415926))"`
-dl=`python -c "print($da*(1+$z)**2)"`
 
 if grep -q '^beta2' $sbp_cfg; then
     MODEL="dbeta"
@@ -76,13 +73,13 @@ else
     MODEL="beta"
 fi
 
-if [ "$t_profile_type" = "wang2012" ]; then
-    ${base_path}/fit_wang2012_model $t_data_file $t_param_file $cm_per_pixel 2> /dev/null
-    mv -f wang2012_dump.qdp ${T_file}
-else
+# only 'wang2012' model supported
+if [ "X${t_profile_type}" != "Xwang2012" ]; then
     echo "ERROR: unsupported temperature profile: ${t_profile_type}"
     exit 11
 fi
+${base_path}/fit_wang2012_model $t_data_file $t_param_file $cm_per_pixel 2> /dev/null
+mv -f wang2012_dump.qdp ${T_file}
 
 # energy bands for which the cooling function data will be calculated
 BLIST="blist.txt"
