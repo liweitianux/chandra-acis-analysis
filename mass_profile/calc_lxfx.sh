@@ -7,6 +7,9 @@
 # Output:
 #   * lx_result.txt
 #   * fx_result.txt
+#   * summary_lx.dat
+#   * summary_fx.dat
+#   * lx_beta_param.txt / lx_dbeta_param.txt
 #
 # Author: Junhua GU
 # Created: 2013-06-24
@@ -107,8 +110,8 @@ FX1=`grep '^Fx1' ${LX_RES} | awk '{ print $2 }'`
 FX2=`grep '^Fx2' ${LX_RES} | awk '{ print $2 }'`
 FX3=`grep '^Fx3' ${LX_RES} | awk '{ print $2 }'`
 
-echo $LX1 $LX2 $LX3 >summary_lx.dat
-echo $FX1 $FX2 $FX3 >summary_fx.dat
+echo "${LX1} ${LX2} ${LX3}" >summary_lx.dat
+echo "${FX1} ${FX2} ${FX3}" >summary_fx.dat
 
 # save the calculated central values
 mv ${LX_RES} ${LX_RES%.txt}_center.txt
@@ -118,8 +121,8 @@ mv lx_rho_fit.dat lx_rho_fit_center.dat
 # only calculate the central values
 if [ "${F_C}" = "YES" ]; then
     echo "Calculate the central values only ..."
-    ${base_path}/analyze_lx.py
-    ${base_path}/analyze_fx.py
+    ${base_path}/analyze_lxfx.py "Lx" summary_lx.dat lx_result.txt ${BLIST}
+    ${base_path}/analyze_lxfx.py "Fx" summary_fx.dat fx_result.txt ${BLIST}
     exit 0
 fi
 
@@ -139,19 +142,22 @@ for i in `seq 1 ${MC_TIMES}`; do
         exit 11
     fi
 
-    echo >temp_sbp.cfg
+    # clear ${TMP_SBP_CFG}
+    TMP_SBP_CFG="temp_sbp.cfg"
+    # : > ${TMP_SBP_CFG}
+    [ -e "${TMP_SBP_CFG}" ] && rm -f ${TMP_SBP_CFG}
     cat ${sbp_cfg} | while read l; do
         if echo "${l}" | grep -q '^sbp_file' >/dev/null; then
-            echo "sbp_file  temp_shuffled_sbp.dat" >>temp_sbp.cfg
+            echo "sbp_file  temp_shuffled_sbp.dat" >> ${TMP_SBP_CFG}
         elif echo "${l}" | grep -q '^T_file' >/dev/null; then
-            echo "T_file  ${T_file}" >>temp_sbp.cfg
+            echo "T_file  ${T_file}" >> ${TMP_SBP_CFG}
         else
-            echo "${l}" >>temp_sbp.cfg
+            echo "${l}" >> ${TMP_SBP_CFG}
         fi
     done
 
     echo "### `pwd -P`"
-    echo "### $i ###"
+    echo "### $i / ${MC_TIMES} ###"
     ${base_path}/coolfunc_calc.sh ${T_file} $abund $nh $z $cfunc_file
     ${base_path}/coolfunc_calc_erg.sh ${T_file} $abund $nh $z "cfunc_" ${BLIST}
     ${base_path}/${PROG} temp_sbp.cfg ${rout} \
@@ -165,12 +171,12 @@ for i in `seq 1 ${MC_TIMES}`; do
     FX2=`grep '^Fx2' ${LX_RES} | awk '{ print $2 }'`
     FX3=`grep '^Fx3' ${LX_RES} | awk '{ print $2 }'`
 
-    echo $LX1 $LX2 $LX3 >>summary_lx.dat
-    echo $FX1 $FX2 $FX3 >>summary_fx.dat
+    echo "${LX1} ${LX2} ${LX3}" >>summary_lx.dat
+    echo "${FX1} ${FX2} ${FX3}" >>summary_fx.dat
 done # end of 'for'
 
-# analyze lx & fx
-${base_path}/analyze_lx.py
-${base_path}/analyze_fx.py
+# analyze Lx & Fx Monte Carlo results
+${base_path}/analyze_lxfx.py "Lx" summary_lx.dat lx_result.txt ${BLIST}
+${base_path}/analyze_lxfx.py "Fx" summary_fx.dat fx_result.txt ${BLIST}
 
 exit 0
