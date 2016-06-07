@@ -19,6 +19,3 @@ fit_wang2012_model
 # building dependent libraries
 libcpgplot.a
 libpgplot.a
-
-# ignore the backup files
-ly_mod/
