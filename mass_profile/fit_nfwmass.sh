@@ -117,15 +117,8 @@ else
 fi
 # }}}
 
-# determine which temperature profile to be used, and fit the T profile {{{
-if [ "X${t_profile_type}" = "Xzyy" ] || \
-       [ "X${t_profile_type}" = "Xwang2012" ] || \
-       [ "X${t_profile_type}" = "Xzzl" ]; then
-    :
-elif [ "X${t_profile_type}" = "Xm0603246" ] || \
-         [ "X${t_profile_type}" = "Xallen" ]; then
-    t_param_file=""
-else
+# only 'wang2012' model supported {{{
+if [ "X${t_profile_type}" != "Xwang2012" ]; then
     printf "ERROR: invalid temperature profile model: \`${t_profile_type}'!\n"
     exit 10
 fi
