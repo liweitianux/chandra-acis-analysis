@@ -1,12 +1,12 @@
 #!/bin/sh
 #
-###########################################################
-# to calculate the Lx Fx data
-# based on 'loop_lx.sh', but to calculate one src per time
+# Calculate the Lx & Fx data.
 #
-# LIweitiaNux
-# 2013/10/30
-###########################################################
+# Based on 'loop_lx.sh', but only process one source
+#
+# Weitian LI
+# 2013-10-30
+#
 
 
 full_path=`readlink -f $0`
@@ -42,8 +42,10 @@ fi
 
 if [ ! -r "${cfg_file}" ]; then
     printf "ERROR: global cfg not accessible\n"
+    exit 11
 elif [ ! -r "${pre_results}" ]; then
     printf "ERROR: previous '${pre_results}' not accessible\n"
+    exit 12
 else
     sbp_cfg=`grep '^sbp_cfg' $cfg_file | awk '{ print $2 }'`
     ##
@@ -57,11 +59,11 @@ else
         if [ "${F_C}" = "YES" ]; then
             lx_res="lx_result_${delta}_c.txt"
             fx_res="fx_result_${delta}_c.txt"
-            CMD="$base_dir/calc_lx_${MODEL}.sh $cfg_file $rout c"
+            CMD="$base_dir/calc_lxfx.sh $cfg_file $rout c"
         else
             lx_res="lx_result_${delta}.txt"
             fx_res="fx_result_${delta}.txt"
-            CMD="$base_dir/calc_lx_${MODEL}.sh $cfg_file $rout"
+            CMD="$base_dir/calc_lxfx.sh $cfg_file $rout"
         fi
         [ -e "${lx_res}" ] && mv -f ${lx_res} ${lx_res}_bak
         [ -e "${fx_res}" ] && mv -f ${fx_res} ${fx_res}_bak
@@ -72,4 +74,3 @@ else
 fi
 
 exit 0
-
