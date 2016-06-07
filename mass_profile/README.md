@@ -29,4 +29,8 @@ TODO
 ----
 * to merge the scripts/tools for single-beta and double-beta SBP models
   (to reduce code duplications)
+* the uncertainties/errors calculation **maybe** inappropriate/problematic
+  (e.g., ``analyze_mass_profile.py``)
+  why not just use the quantile-based (e.g., Q84.15-Q15.85 ~= 68.3%) uncertainties
+  or standard deviation ???
 

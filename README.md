@@ -39,6 +39,7 @@ some **bugs**.
 TODO
 ----
 + drop ``calc_distance`` in favor of ``cosmo_calc``
++ use JSON as the output format (for easier parse and conversion)
 + add arguments to control the ``cosmo_calc`` output for easier use in scripts
 + integrate the memos/docs for Chandra data analysis
 + integrate the ``chandra_guide`` doc
