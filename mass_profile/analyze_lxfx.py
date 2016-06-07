@@ -1,32 +1,57 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+#
+# Calculate the mean and standard deviation of the (Monte Carlo)
+# Lx and Fx data
+#
+# Junhua GU
+# Weitian LI
+# 2016-06-07
+#
 
 import sys
-import math
-import numpy
-
-lx1_array=[]
-lx2_array=[]
-lx3_array=[]
-for i in open('summary_lx.dat'):
-    x1,x2,x3=i.split()
-    x1=float(x1)
-    x2=float(x2)
-    x3=float(x3)
-    lx1_array.append(x1)
-    lx2_array.append(x2)
-    lx3_array.append(x3)
+import argparse
+import numpy as np
 
 
-lx1_array=numpy.array(lx1_array)
-lx2_array=numpy.array(lx2_array)
-lx3_array=numpy.array(lx3_array)
+def read_bands(bands):
+    """
+    Read energy bands list, each band per line.
+    """
+    bands = map(str.split, open(bands).readlines())
+    bands = ["-".join(b) for b in bands]
+    return bands
 
 
-f=open('lx_result.txt','w')
-f.write("Lx(bolo)= %4.2E +/- %4.2E erg/s\n"%(lx1_array[0],lx1_array.std()))
-print("Lx(bolo)= %4.2E +/- %4.2E erg/s"%(lx1_array[0],lx1_array.std()))
-f.write("Lx(0.7-7)= %4.2E +/- %4.2E erg/s\n"%(lx2_array[0],lx2_array.std()))
-print("Lx(0.7-7)= %4.2E +/- %4.2E erg/s"%(lx2_array[0],lx2_array.std()))
-f.write("Lx(0.1-2.4)= %4.2E +/- %4.2E erg/s\n"%(lx3_array[0],lx3_array.std()))
-print("Lx(0.1-2.4)= %4.2E +/- %4.2E erg/s"%(lx3_array[0],lx3_array.std()))
+def output(name, bands, means, sigmas, outfile=sys.stdout):
+    if outfile is not sys.stdout:
+        outfile = open(outfile, "w")
+    for b, m, s in zip(bands, means, sigmas):
+        print("%s(%s)= %4.2E +/- %4.2E erg/s" % (name, b, m, s),
+              file=outfile)
+    if outfile is not sys.stdout:
+        outfile.close()
 
+
+def main():
+    parser = argparse.ArgumentParser(
+            description="Analyze Lx/Fx results")
+    parser.add_argument("name", help="Lx or Fx")
+    parser.add_argument("infile", help="input data file")
+    parser.add_argument("outfile", help="output results file")
+    parser.add_argument("bands", help="energy bands of the input data columns")
+    args = parser.parse_args()
+
+    data = np.loadtxt(args.infile)
+    bands = read_bands(args.bands)
+    if len(bands) != data.shape[1]:
+        raise ValueError("number of energy bands != number of data columns")
+
+    means = np.mean(data, axis=0)
+    sigmas = np.std(data, axis=0)
+    output(name=args.name, bands=bands, means=means, sigmas=sigmas)
+    output(name=args.name, bands=bands, means=means, sigmas=sigmas,
+           outfile=args.outfile)
+
+
+if __name__ == "__main__":
+    main()
