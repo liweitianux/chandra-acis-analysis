@@ -1,5 +1,12 @@
 #!/bin/sh
 #
+# Handy script for SBP fitting.
+# This script wraps the 'fit_beta_sbp' and 'fit_dbeta_sbp',
+# and automatically determine the sbp model according to the config file.
+#
+# Weitian LI
+# 2013-02-20
+#
 
 if [ $# -ne 1 ]; then
     printf "usage: $0 <mass_conf>\n"
@@ -19,8 +26,8 @@ t_param_file=`grep '^t_param_file' $cfg_file | awk '{ print $2 }'`
 nh=`grep '^nh' $cfg_file | awk '{ print $2 }'`
 abund=`grep '^abund' $cfg_file | awk '{ print $2 }'`
 z=`grep '^z' $sbp_cfg | awk '{ print $2 }'`
-cm_per_pixel=`${base_path}/calc_distance ${z} | grep 'cm_per_pixel' | awk '{ print $2 }'`
-sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel    ${cm_per_pixel}/" ${sbp_cfg}
+cm_per_pixel=`cosmo_calc ${z} | grep 'cm/pixel' | awk -F':' '{ print $2 }'`
+sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
 cfunc_file=`grep '^cfunc_file' $sbp_cfg | awk '{ print $2 }'`
 T_file=`grep '^T_file' $sbp_cfg | awk '{ print $2 }'`
 
@@ -40,4 +47,3 @@ fi
 $base_path/$PROG $sbp_cfg
 printf "## MODEL: ${MODEL}\n"
 printf "## z: ${z}\n"
-
