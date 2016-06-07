@@ -1,57 +1,145 @@
-targets=fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp fit_direct_beta calc_distance fit_wang2012_model fit_nfw_mass calc_lx fit_mt_pl fit_lt_pl fit_mt_bpl fit_lt_bpl cooling_time calc_lx_dbeta calc_lx_beta
-target:$(targets) py
-
-LIB_PGPLOT_PATH="`ls`"
-LIB_PGPLOT=plot_reporter.cpp -lcpgplot -lpgplot -lX11 -lgfortran
-
-py:
-	chmod a+x *.py
-
-fit_nfw_sbp:fit_nfw_sbp.cpp nfw_ne.hpp projector.hpp spline.h vchisq.hpp plot_reporter.hpp plot_reporter.cpp
-	g++ $< -o $@ -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
-
-fit_dbeta_sbp:fit_dbeta_sbp.cpp beta_cfg.cpp beta_cfg.hpp constrained_dbeta.hpp projector.hpp spline.h vchisq.hpp plot_reporter.hpp plot_reporter.cpp report_error.hpp report_error.cpp
-	g++ -o $@ $< report_error.cpp beta_cfg.cpp -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
-
-fit_beta_sbp:fit_beta_sbp.cpp beta_cfg.cpp beta_cfg.hpp beta.hpp projector.hpp spline.h vchisq.hpp plot_reporter.hpp plot_reporter.cpp dump_fit_qdp.cpp dump_fit_qdp.hpp
-	g++ -o $@ $< dump_fit_qdp.cpp beta_cfg.cpp report_error.cpp -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
-
-fit_wang2012_model:fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp plot_reporter.hpp plot_reporter.cpp
-	g++ $< -o $@ -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
-
-fit_nfw_mass:fit_nfw_mass.cpp nfw.hpp chisq.hpp plot_reporter.hpp plot_reporter.cpp
-	g++ $< -o $@ -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
+#
+# Makefile for `mass_profile` tools
+#
+# Junhua GU
+# Weitian LI
+# 2016-06-07
+#
 
 
-fit_direct_beta:fit_direct_beta.cpp plot_reporter.hpp plot_reporter.cpp
-	g++ $< -o $@ -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
+CXX ?= g++
+#CXXFLAGS += -Wall -Werror
+CXXFLAGS += -Wall
 
-calc_lx:calc_lx.cpp plot_reporter.hpp plot_reporter.cpp calc_distance.h calc_distance.cc
-	g++ -o $@ $< calc_distance.cc -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
+ifdef DEBUG
+	CXXFLAGS += -g
+else
+	CXXFLAGS += -O2
+endif
 
-calc_lx_dbeta:calc_lx_dbeta.cpp beta_cfg.cpp beta_cfg.hpp constrained_dbeta.hpp projector.hpp spline.h vchisq.hpp plot_reporter.hpp plot_reporter.cpp report_error.hpp report_error.cpp
-	g++ -o $@ $< report_error.cpp beta_cfg.cpp -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
+OPT_UTIL_INC ?= -I../opt_utilities
+PGPLOT_INC= -I$(HEADAS)/include
+PGPLOT_LIB= -L. -lcpgplot -lpgplot -lX11 -lgfortran
 
-calc_lx_beta:calc_lx_beta.cpp beta_cfg.cpp beta_cfg.hpp beta.hpp projector.hpp spline.h vchisq.hpp plot_reporter.hpp plot_reporter.cpp dump_fit_qdp.cpp dump_fit_qdp.hpp
-	g++ -o $@ $< dump_fit_qdp.cpp beta_cfg.cpp report_error.cpp -I ../opt_utilities -O3 `if [ -e pgplot_path.txt ]; then grep LIB pgplot_path.txt|awk '{print "-L" $$2}'; fi` `if [ -e pgplot_path.txt ]; then grep INC pgplot_path.txt|awk '{print "-I" $$2}'; fi` $(LIB_PGPLOT)
+TARGETS= fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp \
+		fit_direct_beta calc_distance fit_wang2012_model \
+		fit_nfw_mass calc_lx fit_mt_pl fit_lt_pl fit_mt_bpl \
+		fit_lt_bpl cooling_time calc_lx_dbeta calc_lx_beta
+HEADERS= projector.hpp spline.h vchisq.hpp
 
-calc_distance:call_calc_distance.cc calc_distance.cc calc_distance.h adapt_trapezoid.h
-	g++ call_calc_distance.cc calc_distance.cc -o $@ -O3
+all: pgplot $(TARGETS)
 
-fit_mt_pl:fit_mt_pl.cpp
-	g++ $< -o $@ -O3 -I ../opt_utilities
+pgplot: libcpgplot.a libpgplot.a
 
-fit_lt_pl:fit_lt_pl.cpp
-	g++ $< -o $@ -O3 -I ../opt_utilities
+libcpgplot.a:
+ifdef HEADAS
+	ln -sv $(HEADAS)/lib/libcpgplot*.a ./$@
+else
+	$(error HEASoft not initialized)
+endif
 
-fit_mt_bpl:fit_mt_bpl.cpp
-	g++ $< -o $@ -O3 -I ../opt_utilities
+libpgplot.a:
+ifdef HEADAS
+	ln -sv $(HEADAS)/lib/libpgplot*.a  ./$@
+else
+	$(error HEASoft not initialized)
+endif
 
-fit_lt_bpl:fit_lt_bpl.cpp
-	g++ $< -o $@ -O3 -I ../opt_utilities
+# NOTE:
+# Since we link against the static `libcpgplot.a` and `libpgplot.a` here,
+# we cannot separate the compilation and linkage stages, otherwise, the
+# linkage will failed with undefined reference errors.
+fit_nfw_sbp: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-cooling_time:cooling_time.cpp
-	g++ $< -o $@ -O3
+fit_dbeta_sbp: beta_cfg.o report_error.o fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+fit_beta_sbp: beta_cfg.o dump_fit_qdp.o fit_beta_sbp.cpp beta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+fit_wang2012_model: fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+fit_nfw_mass: fit_nfw_mass.cpp nfw.hpp chisq.hpp plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+fit_direct_beta: fit_direct_beta.o plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+calc_lx: calc_lx.o calc_distance.o plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+calc_lx_dbeta: beta_cfg.o report_error.o calc_lx_dbeta.cpp constrained_dbeta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+calc_lx_beta: beta_cfg.o dump_fit_qdp.o calc_lx_beta.cpp beta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
+
+calc_distance: calc_distance_main.o calc_distance.o
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+fit_mt_pl: fit_mt_pl.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
+
+fit_lt_pl: fit_lt_pl.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
+
+fit_mt_bpl: fit_mt_bpl.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
+
+fit_lt_bpl: fit_lt_bpl.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
+
+cooling_time: cooling_time.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $<
+
+
+#fit_nfw_sbp.o: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS)
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#fit_dbeta_sbp.o: fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS)
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#fit_beta_sbp.o: fit_beta_sbp.cpp beta.hpp $(HEADERS)
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#fit_wang2012_model.o: fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#fit_nfw_mass.o: fit_nfw_mass.cpp nfw.hpp chisq.hpp
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#calc_lx_dbeta.o: calc_lx_dbeta.cpp constrained_dbeta.hpp $(HEADERS)
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#calc_lx_beta.o: calc_lx_beta.cpp beta.hpp $(HEADERS)
+#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+#
+#plot_reporter.o: plot_reporter.cpp plot_reporter.hpp
+#	$(CXX) $(CXXFLAGS) $(PGPLOT_INC) -c $<
+
+beta_cfg.o: beta_cfg.cpp beta_cfg.hpp
+	$(CXX) $(CXXFLAGS) -c $<
+
+report_error.o: report_error.cpp report_error.hpp
+	$(CXX) $(CXXFLAGS) -c $<
+
+dump_fit_qdp.o: dump_fit_qdp.cpp dump_fit_qdp.hpp
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
+
+calc_distance.o: calc_distance.cc calc_distance.h adapt_trapezoid.h
+	$(CXX) $(CXXFLAGS) -c $<
+
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
+
 
 clean:
-	rm -f $(targets)
+	rm -f *.o $(TARGETS)
+
+cleanall: clean
+	rm -f libpgplot.a libcpgplot.a
