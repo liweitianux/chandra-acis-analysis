@@ -27,6 +27,7 @@ NOTE
 
 TODO
 ----
+* to add compilation macro to make pgplot and X11 optional
 * to merge the scripts/tools for single-beta and double-beta SBP models
   (to reduce code duplications)
 * the uncertainties/errors calculation **maybe** inappropriate/problematic
