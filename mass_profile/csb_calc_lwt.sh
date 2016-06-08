@@ -1,10 +1,6 @@
 #!/bin/sh
 #
-# Calculate the surface brightness concentration (C_SB) for objects
-# meet the conditions: 'z>0.3' or 'counts_in_0.048R500<500'.
-#
-# Aaron LI
-# Updated: 2016-05-28
+# for 'z>0.3' or 'counts_in_0.048R500<500'
 #
 
 ERR_CALC=1
@@ -12,6 +8,16 @@ ERR_DIR=2
 ERR_JSON=3
 ERR_Z=4
 ERR_CNT=5
+
+## cosmology claculator {{{
+## write the path of cosmo claculator here
+BASE_PATH=`dirname $0`
+COSMO_CALC="${BASE_PATH}/cosmo_calc"
+if [ -z "${COSMO_CALC}" ] || [ ! -x  ${COSMO_CALC} ] ; then 
+    printf "ERROR: ${COSMO_CALC} neither executable nor specified\n"
+    exit ${ERR_CALC}
+fi
+## }}}
 
 # default basedir relative to 'spc/profile'
 DFT_BASEDIR="../.."
@@ -109,7 +115,7 @@ if [ `echo "${Z} < 0.3" | bc -l` -eq 1 ]; then
 #    exit ${ERR_Z}
 fi
 
-KPC_PER_PIXEL=`cosmo_calc ${Z} | grep 'kpc/pixel' | awk '{ print $3 }'`
+KPC_PER_PIXEL=`${COSMO_CALC} ${Z} | grep 'kpc/pixel' | awk '{ print $3 }'`
 RC_PIX=`echo "scale=2; 0.048 * ${R500} / ${KPC_PER_PIXEL}" | bc -l`
 # test counts_in_0.048R500<500?
 RC_REG="pie(${X},${Y},0,${RC_PIX},0,360)"

@@ -134,7 +134,7 @@ mv -fv ${T_dump} ${T_file_center}
 mv -fv fit_result.qdp ${T_file_center}
 # temp profile }}}
 
-$base_path/coolfunc_calc.sh ${T_file_center} $abund $nh $z $cfunc_file cfunc_bolo.dat
+$base_path/coolfunc_calc2.sh ${T_file_center} $abund $nh $z $cfunc_file cfunc_bolo.dat
 cfunc_file_center="coolfunc_data_center.txt"
 cp -f ${cfunc_file} ${cfunc_file_center}
 mv -fv flux_cnt_ratio.txt flux_cnt_ratio_center.txt
@@ -213,7 +213,7 @@ for i in `seq 1 ${MC_TIMES}`; do
 
     printf "## ${i} / ${MC_TIMES} ##\n"
     printf "## `pwd -P` ##\n"
-    ${base_path}/coolfunc_calc.sh ${T_file} ${abund} ${nh} ${z} ${cfunc_file}
+    ${base_path}/coolfunc_calc2.sh ${T_file} ${abund} ${nh} ${z} ${cfunc_file}
     ${base_path}/${SBP_PROG} ${TMP_SBP_CFG} 2> /dev/null
     cat ${RES_SBPFIT}
     $base_path/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null

@@ -17,9 +17,14 @@
 ###########################################################
 
 ## cmdline arguments {{{
-if [ $# -ne 5 ]; then
+if [ $# -eq 5 ]; then
+    :
+elif [ $# -eq 6 ]; then
+    COOLFUNC_BOLO=$6
+    [ -e "${COOLFUNC_BOLO}" ] && rm -f ${COOLFUNC_BOLO}
+else
     printf "usage:\n"
-    printf "    `basename $0` <tprofile> <avg_abund> <nH> <redshift> <coolfunc_outfile>\n"
+    printf "    `basename $0` <tprofile> <avg_abund> <nH> <redshift> <coolfunc_outfile> [coolfunc_bolo]\n"
     exit 1
 fi
 base_path=`dirname $0`
@@ -27,13 +32,9 @@ TPROFILE=$1
 ABUND_VAL=$2
 N_H=$3
 REDSHIFT=$4
-NORM=`$base_path/calc_distance $REDSHIFT|grep norm|awk '{print $2}'`
-
-echo $NORM
-
-
+NORM=`$base_path/calc_distance $REDSHIFT | grep norm | awk '{ print $2 }'`
 COOLFUNC_DAT=$5
-COOLFUNC_DAT_RATIO=flux_cnt_ratio.txt
+COOLFUNC_DAT_RATIO="flux_cnt_ratio.txt"
 
 if [ ! -r "${TPROFILE}" ]; then
     printf "ERROR: given tprofile '${TPROFILE}' NOT accessiable\n"
@@ -78,14 +79,13 @@ dummyrsp 0.3 11.0 1024
 model wabs*apec & \${nh} & 1.0 & \${abund_val} & \${redshift} & \${norm} & /*
 ## xspec }}}
 
-## set input and output filename
+## set input and output filename & open files
 set tpro_fn "${TPROFILE}"
 set cf_fn "${COOLFUNC_DAT}"
 set cff_fn "${COOLFUNC_DAT_RATIO}"
 if { [ file exists \${cf_fn} ] } {
     exec rm -fv \${cf_fn}
 }
-
 if { [ file exists \${cff_fn} ] } {
     exec rm -fv \${cff_fn}
 }
@@ -95,6 +95,21 @@ set tpro_fd [ open \${tpro_fn} r ]
 set cf_fd [ open \${cf_fn} w ]
 set cff_fd [ open \${cff_fn} w ]
 
+_EOF_
+
+if  [ ! -z "${COOLFUNC_BOLO}" ]; then
+    cat >> ${XSPEC_CF_XCM} << _EOF_
+# coolfunc bolometric
+set cfbolo_fn "${COOLFUNC_BOLO}"
+if { [ file exists \${cfbolo_fn} ] } {
+    exec rm -fv \${cfbolo_fn}
+}
+set cfbolo_fd [ open \${cfbolo_fn} w ]
+
+_EOF_
+fi
+
+cat >> ${XSPEC_CF_XCM} << _EOF_
 ## read data from tprofile line by line
 while { [ gets \${tpro_fd} tpro_line ] != -1 } {
     # gets one line
@@ -112,12 +127,32 @@ while { [ gets \${tpro_fd} tpro_line ] != -1 } {
     tclout flux 1
     scan \${xspec_tclout} "%f %f %f %f" cff_data holder holder holder
     puts \${cff_fd} "\${radius}   [expr \${cff_data}/\${cf_data}]"
+_EOF_
+if  [ ! -z "${COOLFUNC_BOLO}" ]; then
+    cat >> ${XSPEC_CF_XCM} << _EOF_
+    # coolfunc bolometric
+    set cfbolo_data \$cff_data
+    #puts "cfbolo_data: \${cfbolo_data}"
+    puts \${cfbolo_fd} "\${radius}    \${cfbolo_data}"
+_EOF_
+fi
+cat >> ${XSPEC_CF_XCM} << _EOF_
 }
 
 ## close opened files
 close \${tpro_fd}
 close \${cf_fd}
+_EOF_
 
+if  [ ! -z "${COOLFUNC_BOLO}" ]; then
+    cat >> ${XSPEC_CF_XCM} << _EOF_
+# coolfunc bolometric
+close \${cfbolo_fd}
+
+_EOF_
+fi
+
+cat >> ${XSPEC_CF_XCM} << _EOF_
 ## exit
 tclexit
 _EOF_
