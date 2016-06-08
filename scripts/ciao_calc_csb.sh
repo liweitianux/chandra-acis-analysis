@@ -1,30 +1,33 @@
 #!/bin/sh
-#
-# Calculate the Csb values.
-# for 'z>0.3' or 'counts_in_0.048R500<500'
-#
-# Reference: ??? (TODO)
-#
-# Note: execute this script in dir 'spc/profile'
-#
-# origin filename: 'proxy_calc.sh', by Zhenhao ZHU
-# modified by: Weitian LI
-#
-#
-UPDATED="2015/06/03"
-#
-# Changelogs:
-# 2015/06/03, Aaron LI
-#   * Copy needed pfiles to current working directory, and
-#     set environment variable $PFILES to use these first.
-#   * Replaced 'grep' with '\grep', 'ls' with '\ls'
-#   * ds9 colormap changed from 'sls' to 'he'
-# 2014/12/15, Weitian LI
-#   * prompt and record the modification to csb region;
-#   * added 'm' answer for WR: modified.
-# 2014/06/18, Weitian LI
-#   * added answer for WR (warn region)
-#
+##
+## Calculate the surface brightness concentration (C_SB) values.
+## for 'z>0.3' or 'counts_in_0.048R500<500'
+##
+## Reference:
+## [1] Santos et al. 2008, A&A, 483, 35-47
+##     Eq.(5)
+##
+## Note: execute this script in dir 'spc/profile'
+##
+## Zhenghao ZHU
+## Weitian LI
+## Updated: 2016-06-08
+##
+## Change logs:
+## 2016-06-08, Weitian LI
+##   * Add a reference
+##   * Drop 'calc_distance' in favor of 'cosmo_calc'
+## 2015/06/03, Weitian LI
+##   * Copy needed pfiles to current working directory, and
+##     set environment variable $PFILES to use these first.
+##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+##   * ds9 colormap changed from 'sls' to 'he'
+## 2014/12/15, Weitian LI
+##   * prompt and record the modification to csb region;
+##   * added 'm' answer for WR: modified.
+## 2014/06/18, Weitian LI
+##   * added answer for WR (warn region)
+##
 
 ## error code {{{
 ERR_USG=1
@@ -43,22 +46,10 @@ case "$1" in
         printf "usage:\n"
         printf "    `basename $0` evt_e=<evt_e_name> expmap=<expmap_name> basedir=<base_dir> imgdir=<img_dir> json=<json_name>\n"
         printf "\nNOTE: exec this script in dir 'spc/profile'\n"
-        printf "\nupdated:\n"
-        printf "    ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
 ## usage, help }}}
-
-## cosmology claculator {{{
-## write the path of cosmo claculator here
-BASE_PATH=`dirname $0`
-COSMO_CALC="`which cosmo_calc calc_distance 2>/dev/null | head -n 1`"
-if [ -z "${COSMO_CALC}" ] || [ ! -x  ${COSMO_CALC} ] ; then 
-    printf "ERROR: ${COSMO_CALC} neither executable nor specified\n"
-    exit ${ERR_CALC}
-fi
-## }}}
 
 ## default parameters {{{
 # default basedir relative to 'spc/profile'
@@ -203,8 +194,7 @@ if [ `echo "${Z} < 0.3" | bc -l` -eq 1 ]; then
 #    exit ${ERR_Z}
 fi
 
-#KPC_PER_PIX=`${COSMO_CALC} ${Z} | \grep 'kpc/pixel' | awk '{ print $3 }'`
-KPC_PER_PIX=`${COSMO_CALC} ${Z} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+KPC_PER_PIX=`cosmo_calc ${Z} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
 RC_PIX=`echo "scale=2; 0.048 * ${R500} / ${KPC_PER_PIX}" | bc -l`
 # test counts_in_0.048R500<500?
 RC_REG="pie(${X},${Y},0,${RC_PIX},0,360)"
@@ -222,7 +212,7 @@ TMP_REG="_tmp_csb.reg"
 TMP_S="_tmp_csb.fits"
 
 R1=`echo "scale=2;  40 / ${KPC_PER_PIX}" | bc -l`
-R2=`echo "scale=2; 400 / ${KPC_PER_PIX}" | bc -l` 
+R2=`echo "scale=2; 400 / ${KPC_PER_PIX}" | bc -l`
 cat > ${TMP_REG} << _EOF_
 pie(${X},${Y},0,${R1},0,360)
 pie(${X},${Y},0,${R2},0,360)
@@ -251,7 +241,7 @@ dmextract infile="${EVT_E}[bin sky=@${TMP_REG}]" outfile="${TMP_S}" exp=${EXPMAP
 punlearn dmlist
 S1=`dmlist "${TMP_S}[cols SUR_FLUX]" opt="data,clean" | \grep -v '#' | sed -n -e 's/\ *//' -e '1p'`
 S2=`dmlist "${TMP_S}[cols SUR_FLUX]" opt="data,clean" | \grep -v '#' | sed -n -e 's/\ *//' -e '2p'`
-CSB=`echo "${S1} ${S2}" | awk '{ print $1/$2/100 }'` 
+CSB=`echo "${S1} ${S2}" | awk '{ print $1/$2/100 }'`
 
 ## back to original spc/profile directory
 cd ${INIT_DIR}
@@ -271,4 +261,3 @@ printf "# $OBS_ID,$OBJ_NAME,$Z,$R500,$RC_PIX,$CNT_RC,$R1,$R2,$S1,$S2,$CSB,$WZ,$W
 ## main }}}
 
 exit 0
-
