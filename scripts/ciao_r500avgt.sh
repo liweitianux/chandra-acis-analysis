@@ -1,50 +1,45 @@
 #!/bin/sh
-#
-unalias -a
-export LC_COLLATE=C
-###########################################################
-## script to extract spectrum and prepare needed files   ##
-## for calculating the `average temperature'             ##
-## within (0.1-0.5 r500) region                          ##
-##                                                       ##
-## NOTE:                                                 ##
-## 1) r500 default in unit `pixel', if in `kpc',         ##
-## then `redshift z' and `calculator' are needed.        ##
-## 2) `background process' is same as `deproj_spectra'   ##
-## which supports `spectrum', `local' and `blanksky'     ##
-## 3) ARF/RMF files either provided or use the ARF/RMF   ##
-## of the outmost region                                 ##
-##                                                       ##
-## Weitian LI <liweitianux@gmail.com>                    ##
-## 2012/08/22                                            ##
-###########################################################
 ##
-## ChangeLogs
-## v1.1, 2012/08/26, LIweitiaNux
+## To extract the spectrum and prepare the necessary files for
+## calculating the average temperature within (0.1-0.5 r500) region.
+##
+## NOTE:
+## 1) r500 default in unit `pixel', if in `kpc',
+##    then `redshift z' and `calculator' are needed.
+## 2) `background process' is same as `deproj_spectra'
+##    which supports `spectrum', `local' and `blanksky'
+## 3) ARF/RMF files either provided or use the ARF/RMF
+##    of the outmost region
+##
+## Weitian LI <liweitianux@gmail.com>
+## Updated: 2016-06-08
+##
+## Change logs
+## v1.1, 2012/08/26, Weitian LI
 ##   modify `KPC_PER_PIX', able to use the newest version `calc_distance'
-## v1.2, 2012/08/26, LIweitiaNux
+## v1.2, 2012/08/26, Weitian LI
 ##   fix a bug with `DFT_BKGD'
-## v2.0, 2012/09/04, LIweitiaNux
+## v2.0, 2012/09/04, Weitian LI
 ##   add parameter `inner' and `outer' to adjust the region range
 ##   modify parameter `r500' to take `kpc' as the default unit
-## v2.1, 2012/10/05, LIweitiaNux
+## v2.1, 2012/10/05, Weitian LI
 ##   change `DFT_GRP_CMD' to `group 1 128 4 ...'
-## v3.0, 2013/02/09, LIweitiaNux
+## v3.0, 2013/02/09, Weitian LI
 ##   modify for new process
-## v3.1, 2015/05/27, Aaron LI
+## v3.1, 2015/05/27, Weitian LI
 ##   update 'DFT_ARF' & 'DFT_RMF' to find '*.arf' & '*.rmf' files
 ##   (specextract only use .arf & .rmf extensions since revision 2014-12)
-## v3.2, 2015/05/30, Aaron LI
+## v3.2, 2015/05/30, Weitian LI
 ##   Added options '-cmap he -bin factor 4' to ds9 command
-## v4.0, 2015/06/03, Aaron LI
+## v4.0, 2015/06/03, Weitian LI
 ##   * Copy needed pfiles to current working directory, and
 ##     set environment variable $PFILES to use these first.
 ##   * Replace 'grep' with '\grep', 'ls' with '\ls'
 ##   * replaced 'grppha' with 'dmgroup' to group spectra
 ##     (dmgroup will add history to fits file, while grppha NOT)
+## 2016-06-08, Weitian LI
+##   * Drop 'calc_distance' in favor of 'cosmo_calc'
 ##
-VERSION="v4.1"
-UPDATED="2015/06/03"
 
 ## error code {{{
 ERR_USG=1
@@ -69,25 +64,10 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` evt=<evt2_clean> r500=<r500_kpc> basedir=<basedir> info=<info_json> inner=<inner_val> outer=<outer_val> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt|lbkg_reg|bkg_spec> nh=<nH> z=<redshift> arf=<arf_file> rmf=<rmf_file> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
-        printf "\nversion:\n"
-        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
 ## usage, help }}}
-
-## comology calculator {{{
-## XXX: MODIFY THIS TO YOUR OWN CASE
-## and make sure this `calc' is executable
-## NOTES: use `$HOME' instead of `~' in path
-COSCALC="`which cosmo_calc calc_distance 2>/dev/null | head -n 1`"
-# COSCALC="_path_to_calc_distance_"
-# COSCALC="$HOME/bin/mass/calc_distance"
-if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
-    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
-    exit 255
-fi
-## }}}
 
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
@@ -262,7 +242,7 @@ case "${R500_UNI}" in
         ;;
     *)
         printf "## units in \`kpc', convert to \`Chandra pixel'\n" | ${TOLOG}
-        KPC_PER_PIX=`${COSCALC} ${REDSHIFT} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+        KPC_PER_PIX=`cosmo_calc ${REDSHIFT} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
         # convert scientific notation for `bc'
         KPC_PER_PIX_B=`echo ${KPC_PER_PIX} | sed 's/[eE]/\*10\^/' | sed 's/+//'`
         printf "## calculated \`kpc/pixel': ${KPC_PER_PIX_B}\n"
@@ -578,4 +558,3 @@ _EOF_
 ## xspec script }}}
 
 exit 0
-

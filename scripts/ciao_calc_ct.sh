@@ -1,31 +1,24 @@
 #!/bin/sh
 #
-unalias -a
-export LC_COLLATE=C
-###########################################################
-## based on `ciao_r500avgt.sh'                           ##
-## for calculating the `cooling time'                    ##
-## within (0.-0.048 r500) region                         ##
-##                                                       ##
-## Author: Junhua GU                                     ##
-## Created: 2012/08/22                                   ##
-##                                                       ##
-## Modified by: Weitian LI                               ##
-## 2013/04/28                                            ##
-###########################################################
+## Calculate the cooling time within the (0.-0.048 r500) region.
+## Based on `ciao_r500avgt.sh'
 ##
-VERSION="v2.0"
-UPDATE="2015/06/03"
+## Junhua GU
+## Created: 2012-08-22
+## Weitian LI
+## Updated: 2016-06-08
 ##
-## Changelogs:
-## v2.0, 2015/06/03, Aaron LI
+## Change logs:
+## 2016-06-08, Weitian LI
+##   * Drop 'calc_distance' in favor of 'cosmo_calc'
+## v2.0, 2015/06/03, Weitian LI
 ##   * Copy needed pfiles to current working directory, and
 ##     set environment variable $PFILES to use these first.
 ##   * Replace 'grep' with '\grep', 'ls' with '\ls'
 ##   * replaced 'grppha' with 'dmgroup' to group spectra
 ##     (dmgroup will add history to fits file, while grppha NOT)
 ##   * ds9 colormap changed from 'sls' to 'he'
-## v1.2, 2015/05/27, Aaron LI
+## v1.2, 2015/05/27, Weitian LI
 ##   update 'DFT_ARF' & 'DFT_RMF' to find '*.arf' & '*.rmf' files
 ##   (specextract only use .arf & .rmf extensions since revision 2014-12)
 ## v1.1, 2014/06/18
@@ -54,22 +47,10 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` basedir=<repro_dir> evt=<evt2_clean> r500=<r500_kpc> regin=<input_reg> regout=<output_reg> bkgd=<blank_evt | lbkg_reg | bkg_spec> nh=<nH> z=<redshift> arf=<arf_file> rmf=<rmf_file> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
-        printf "\nversion:\n"
-        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
 ## usage, help }}}
-
-## comology calculator {{{
-## NOTES: use `$HOME' instead of `~' in path
-BASE_PATH=`dirname $0`
-COSCALC="`which cosmo_calc calc_distance 2>/dev/null | head -n 1`"
-if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
-    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
-    exit 255
-fi
-## }}}
 
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
@@ -252,7 +233,7 @@ case "${R500_UNI}" in
         ;;
     *)
         printf "## units in \`kpc', convert to \`Chandra pixel'\n" | ${TOLOG}
-        KPC_PER_PIX=`${COSCALC} ${REDSHIFT} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+        KPC_PER_PIX=`cosmo_calc ${REDSHIFT} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
         # convert scientific notation for `bc'
         KPC_PER_PIX_B=`echo ${KPC_PER_PIX} | sed 's/[eE]/\*10\^/' | sed 's/+//'`
         printf "## calculated \`kpc/pixel': ${KPC_PER_PIX_B}\n"
@@ -446,7 +427,7 @@ export PFILES="./:${PFILES}"
 ### main ###
 
 ## D_A {{{
-D_A_CM=`${COSCALC} ${REDSHIFT} | \grep -i 'd_a.*cm' | awk -F'=' '{ print $2 }' | awk '{ print $1 }'`
+D_A_CM=`cosmo_calc ${REDSHIFT} | \grep -i 'd_a.*cm' | awk -F'=' '{ print $2 }' | awk '{ print $1 }'`
 printf "D_A_CM(${REDSHIFT})= ${D_A_CM}\n"
 ## D_A }}}
 
@@ -632,4 +613,3 @@ else
 fi
 
 exit 0
-
