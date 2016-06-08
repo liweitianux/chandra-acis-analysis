@@ -11,6 +11,10 @@ CXX ?= g++
 #CXXFLAGS += -Wall -Werror
 CXXFLAGS += -Wall
 
+ifdef OPENMP
+	CXXFLAGS += -fopenmp
+endif
+
 ifdef DEBUG
 	CXXFLAGS += -g
 else
@@ -33,14 +37,14 @@ pgplot: libcpgplot.a libpgplot.a
 
 libcpgplot.a:
 ifdef HEADAS
-	ln -sv $(HEADAS)/lib/libcpgplot*.a ./$@
+	ln -s $(HEADAS)/lib/libcpgplot*.a ./$@
 else
 	$(error HEASoft not initialized)
 endif
 
 libpgplot.a:
 ifdef HEADAS
-	ln -sv $(HEADAS)/lib/libpgplot*.a  ./$@
+	ln -s $(HEADAS)/lib/libpgplot*.a  ./$@
 else
 	$(error HEASoft not initialized)
 endif
