@@ -40,6 +40,7 @@ TODO
 ----
 + drop ``calc_distance`` in favor of ``cosmo_calc``
 + use JSON as the output format (for easier parse and conversion)
++ use python (instead of shell) to manipulate JSON data files
 + add arguments to control the ``cosmo_calc`` output for easier use in scripts
 + integrate the memos/docs for Chandra data analysis
 + integrate the ``chandra_guide`` doc
@@ -49,15 +50,15 @@ Installation
 ------------
 Dependencies:
 + GSL
++ X11 libraries
 + a working HEASoft installation (for ``libpgplot.a`` and ``libcpgplot.a``)
 
 1. ``mass_profile``
 ```
 $ cd mass_profile
-$ make clean
-$ heainit   # initilize heasoft, to link libpgplot.a and libcpgplot.a
-$ ./init.sh
-$ make
+$ make cleanall
+$ heainit   # initilize HEASoft, in order to find libpgplot.a and libcpgplot.a
+$ make OPENMP=yes
 ```
 
 2. ``cosmo_calc``
@@ -96,4 +97,3 @@ License
 -------
 The tools are distributed under the **MIT license** unless otherwise declared.
 The documents are distributed under the ??? License (coming...).
-
