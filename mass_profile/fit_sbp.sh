@@ -42,7 +42,7 @@ fi
 $base_path/fit_wang2012_model $t_data_file $t_param_file $cm_per_pixel 2> /dev/null
 cp wang2012_dump.qdp $T_file
 if [ ! -f ${cfunc_file} ]; then
-    $base_path/coolfunc_calc2.sh $T_file $abund $nh $z $cfunc_file
+    $base_path/coolfunc_calc.sh $T_file $abund $nh $z $cfunc_file
 fi
 $base_path/$PROG $sbp_cfg
 printf "## MODEL: ${MODEL}\n"
