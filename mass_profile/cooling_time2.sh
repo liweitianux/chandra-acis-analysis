@@ -2,38 +2,26 @@
 #
 unalias -a
 export LC_COLLATE=C
-###########################################################
-## based on `ciao_r500avgt'                              ##
-## for calculating the `cooling time '                   ##
-## within (0.-0.048 r500) region                         ##
-##                                                       ##
-## Junhua Gu                                             ##
-## August 22, 2012                                       ##
-##                                                       ##
-## LIweitiaNux                                           ##
-## 2013/04/28                                            ##
-###########################################################
-
-###########################################################
-## ChangeLogs
-###########################################################
-
-## comology calculator {{{
-## XXX: MODIFY THIS TO YOUR OWN CASE
-## and make sure this `calc' is executable
-## NOTES: use `$HOME' instead of `~' in path
-BASE_PATH=`dirname $0`
-# COSCALC="`which cosmo_calc calc_distance | head -n 1`"
-COSCALC="${BASE_PATH}/calc_distance"
-if [ -z "${COSCALC}" ] || [ ! -x ${COSCALC} ]; then
-    printf "ERROR: \`COSCALC: ${COSCALC}' neither specified nor executable\n"
-    exit 255
-fi
-## }}}
+##
+## based on `ciao_r500avgt'
+## for calculating the `cooling time'
+## within (0.-0.048 r500) region
+##
+## Junhua Gu
+## August 22, 2012
+##
+## Weitian LI
+## 2013-04-28
+##
+##
+## Change logs:
+## 2016-05-28:
+##   * Remove 'COSCALC', just use 'cosmo_calc'
+##
 
 ## about, used in `usage' {{{
-VERSION="v1.1"
-UPDATE="2012-08-26"
+VERSION="v2.0"
+UPDATE="2016-05-28"
 ## about }}}
 
 ## error code {{{
@@ -242,7 +230,7 @@ case "${R500_UNI}" in
         ;;
     *)
         printf "## units in \`kpc', convert to \`Chandra pixel'\n" | ${TOLOG}
-        KPC_PER_PIX=`${COSCALC} ${REDSHIFT} | grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+        KPC_PER_PIX=`cosmo_calc ${REDSHIFT} | grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
         # convert scientific notation for `bc'
         KPC_PER_PIX_B=`echo ${KPC_PER_PIX} | sed 's/[eE]/\*10\^/' | sed 's/+//'`
         printf "## calculated \`kpc/pixel': ${KPC_PER_PIX_B}\n"
@@ -407,7 +395,7 @@ printf "## use grppha cmd: \`${GRP_CMD}'\n" | ${TOLOG}
 ##################################################
 #### main
 ## D_A
-D_A_CM=`${COSCALC} ${REDSHIFT} | grep '^d_a_cm' | awk '{ print $2 }'`
+D_A_CM=`cosmo_calc ${REDSHIFT} | grep 'Angular_diameter_distance' | awk -F'[=,]' '{ print $2 }' | tr -d '[cm] '
 printf "D_A_CM(${REDSHIFT})= ${D_A_CM}\n"
 
 ## region related {{{
