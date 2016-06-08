@@ -184,7 +184,7 @@ int main(int argc,char* argv[])
   for(ifstream ifs(cfg.cfunc_file.c_str());;)
     {
       assert(ifs.is_open());
-      double x,y,y1,y2;
+      double x,y;
       ifs>>x>>y;
       if(!ifs.good())
 	{
@@ -251,7 +251,7 @@ int main(int argc,char* argv[])
   //double beta=atof(arg_map["beta"].c_str());
   double beta=0;
   double rc=0;
-  double bkg=0;
+  double bkg_level=0;
 
   for(std::map<std::string,std::vector<double> >::iterator i=cfg.param_map.begin();
       i!=cfg.param_map.end();++i)
@@ -285,7 +285,7 @@ int main(int argc,char* argv[])
   beta=f.get_param_value("beta");
   //output the datasets and fitting results
   ofstream param_output("beta_param.txt");
-  for(int i=0;i<f.get_num_params();++i)
+  for(size_t i=0;i<f.get_num_params();++i)
     {
       if(f.get_param_info(i).get_name()=="rc")
 	{
@@ -377,7 +377,7 @@ int main(int argc,char* argv[])
 
     }
   // cout<<sbps_all.size()<<"\t"<<sbps.size()<<"\t"<<sbps_inner_cut_size<<endl;
-  for(int i=1;i<sbps_all.size();++i)
+  for(size_t i=1;i<sbps_all.size();++i)
     {
       double x=(radii_all[i]+radii_all[i-1])/2;
       double y=sbps_all[i-1];
@@ -395,7 +395,7 @@ int main(int argc,char* argv[])
 	}
     }
   ofs_sbp<<"no no no"<<endl;
-  for(int i=sbps_inner_cut_size;i<sbps_all.size();++i)
+  for(size_t i=sbps_inner_cut_size;i<sbps_all.size();++i)
     {
       double x=(radii_all[i]+radii_all[i-1])/2;
       double ym=mv[i-1];
@@ -403,8 +403,8 @@ int main(int argc,char* argv[])
     }
   ofs_sbp<<"no no no"<<endl;
   //bkg level
-  double bkg_level=abs(f.get_param_value("bkg"));
-  for(int i=0;i<sbps_all.size();++i)
+  bkg_level=abs(f.get_param_value("bkg"));
+  for(size_t i=0;i<sbps_all.size();++i)
     {
       double x=(radii_all[i]+radii_all[i-1])/2;
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<bkg_level<<"\t0"<<endl;
@@ -420,23 +420,23 @@ int main(int argc,char* argv[])
     }
   //resid
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
       double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<(ym-sbps[i-1])/sbpe[i-1]<<"\t"<<1<<endl;
     }
 
   //zero level of resid
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
-      double ym=mv[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
+      //double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<0<<"\t"<<0<<endl;
     }
 
@@ -455,16 +455,16 @@ int main(int argc,char* argv[])
     }
   */
 
-  double lower,upper;
+  //double lower,upper;
   double dr=1;
   //calculate the mass profile
-  const double G=6.673E-8;//cm^3 g^-1 s^-2
+  //const double G=6.673E-8;//cm^3 g^-1 s^-2
   // Molecular weight per electron
   // Reference: Ettori et al. 2013, Space Sci. Rev., 177, 119-154; Eq.(9) below
   static const double mu=1.155;
   static const double mp=1.67262158E-24;//g
   static const double M_sun=1.98892E33;//g
-  static const double k=1.38E-16;
+  //static const double k=1.38E-16;
 
   ofstream ofs_mass("mass_int.qdp");
   ofstream ofs_mass_dat("mass_int.dat");
@@ -494,14 +494,14 @@ int main(int argc,char* argv[])
       double T_keV=Tprof(r);
       double T1_keV=Tprof(r1);
 
-      double T_K=T_keV*11604505.9;
-      double T1_K=T1_keV*11604505.9;
+      //double T_K=T_keV*11604505.9;
+      //double T1_K=T1_keV*11604505.9;
 
       double dlnT=log(T1_keV/T_keV);
       double dlnr=log(r+dr)-log(r);
       double dlnn=log(ne1/ne);
 
-      double r_kpc=r_cm/kpc;
+      //double r_kpc=r_cm/kpc;
       double r_Mpc=r_cm/Mpc;
       //double M=-r_cm*T_K*k/G/mu/mp*(dlnT/dlnr+dlnn/dlnr);
       //ref:http://adsabs.harvard.edu/abs/2012MNRAS.422.3503W

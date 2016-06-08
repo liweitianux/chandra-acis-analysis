@@ -92,7 +92,7 @@ int main(int argc,char* argv[])
 	}
       line+=" ";
       istringstream iss(line);
-      
+
       if(line[0]=='#')
 	{
 	  if(!is_first_nonono)
@@ -129,7 +129,7 @@ int main(int argc,char* argv[])
 	  cerr<<line<<endl;
 	  continue;
 	}
-#endif 
+#endif
       if(std::abs(Mu)+std::abs(Ml)<M*.1)
 	{
 	  double k=M*.1/(std::abs(Mu)+std::abs(Ml));
@@ -170,7 +170,7 @@ int main(int argc,char* argv[])
   double Mb=sxx*sy-sx*sxy;
   double k0=Ma/M;
   double b0=Mb/M;
-  
+
   ofs_result<<"no no no"<<endl;
   fitter<double,double,vector<double>,double,std::string> fit;
   fit.set_opt_method(powell_method<double,vector<double> >());
@@ -203,12 +203,12 @@ int main(int argc,char* argv[])
   ofs_resid<<"skip single"<<endl;
   ofs_resid<<"ma 3 on 1"<<endl;
   ofs_resid<<"log x"<<endl;
-  for(int i=0;i<ds.size();++i)
+  for(size_t i=0;i<ds.size();++i)
     {
       double x=ds.get_data(i).get_x();
       double y=ds.get_data(i).get_y();
-      double xe1=-ds.get_data(i).get_x_lower_err()*0;
-      double xe2=ds.get_data(i).get_x_upper_err()*0;
+      //double xe1=-ds.get_data(i).get_x_lower_err()*0;
+      //double xe2=ds.get_data(i).get_x_upper_err()*0;
       double ye1=-ds.get_data(i).get_y_lower_err();
       double ye2=ds.get_data(i).get_y_upper_err();
       ofs_resid<<exp(x)<<"\t"<<0<<"\t"<<0<<"\t"<<y-fit.eval_model_raw(x,p)<<"\t"<<ye1<<"\t"<<ye2<<"\t"<<"0\t0\t0"<<endl;
@@ -223,7 +223,7 @@ int main(int argc,char* argv[])
       ++cnt;
       cerr<<".";
       opt_utilities::default_data_set<double,double> ds1;
-      for(int i=0;i<ds.size();++i)
+      for(size_t i=0;i<ds.size();++i)
 	{
 	  double new_x=shuffle_data(ds.get_data(i).get_x(),
 				    ds.get_data(i).get_x_lower_err(),
@@ -238,7 +238,7 @@ int main(int argc,char* argv[])
 					   ds.get_data(i).get_y_upper_err()));
 	}
       fit.load_data(ds1);
-      
+
       fit.fit();
       double k=fit.get_param_value("k");
       double b=fit.get_param_value("b");
@@ -260,6 +260,6 @@ int main(int argc,char* argv[])
   std::cerr<<"M=M0*T^gamma"<<endl;
   std::cout<<"M0= "<<exp(p[1])<<"+/-"<<std_A<<endl;
   std::cout<<"gamma= "<<p[0]<<"+/-"<<std_g<<endl;
-  std::cout<<"Num of sources:"<<ds.size()<<endl; 
+  std::cout<<"Num of sources:"<<ds.size()<<endl;
 
 }

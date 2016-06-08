@@ -46,7 +46,7 @@ public:
     */
     return spl.get_value(x);
   }
-  
+
   //we need this function, when this object is performing a clone of itself
   spline_func_obj* do_clone()const
   {
@@ -59,7 +59,7 @@ public:
   {
     spl.push_point(x,y);
   }
-  
+
   //before getting the intepolated value, the spline should be initialzied by calling this function
   void gen_spline()
   {
@@ -137,9 +137,9 @@ int main(int argc,char* argv[])
     this will be convenient to calculate the volume of each spherical shell,
     and can naturally ensure the annuli are adjacent with each other, with out any gaps.
 
-    
+
    */
-  
+
   std::vector<double> radii;//to store radius
   std::vector<double> sbps;//to store the surface brightness value
   std::vector<double> sbpe;//to store the sbp error
@@ -148,8 +148,8 @@ int main(int argc,char* argv[])
     About the format of the radius file:
     the radius file contains only radius, separated by space or line feed (i.e., the <ENTER> key).
     the unit should be pixel
-    
-    The number of radius can be larger than the number of annuli+1, the exceeded radius can be used 
+
+    The number of radius can be larger than the number of annuli+1, the exceeded radius can be used
     to calculate the influence of outer shells.
    */
   int ncut=0;
@@ -208,7 +208,7 @@ int main(int argc,char* argv[])
   for(ifstream ifs(arg_map["cfunc_file"].c_str());;)
     {
       assert(ifs.is_open());
-      double x,y,y1,y2;
+      double x,y;
       ifs>>x>>y;
       if(!ifs.good())
 	{
@@ -250,7 +250,7 @@ int main(int argc,char* argv[])
   nfw.set_cm_per_pixel(cm_per_pixel);
   //define the temperature profile model
   spline_func_obj tf;
-  
+
   for(ifstream ifs_tfunc(arg_map["T_file"].c_str());;)
     {
       assert(ifs_tfunc.is_open());
@@ -286,8 +286,8 @@ int main(int argc,char* argv[])
   f.set_param_value("n0",n0);
   f.set_param_value("rho0",rho0);
   f.set_param_value("rs",rs);
-  
-  
+
+
   f.set_param_value("bkg",bkg);
 
   cout<<f.get_data_set().size()<<endl;
@@ -302,8 +302,8 @@ int main(int argc,char* argv[])
 #endif
   //output the parameters
   ofstream param_output("nfw_param.txt");
-  
-  for(int i=0;i<f.get_num_params();++i)
+
+  for(size_t i=0;i<f.get_num_params();++i)
     {
       cout<<f.get_param_info(i).get_name()<<"\t"<<abs(f.get_param_info(i).get_value())<<endl;
       param_output<<f.get_param_info(i).get_name()<<"\t"<<abs(f.get_param_info(i).get_value())<<endl;
@@ -326,7 +326,7 @@ int main(int argc,char* argv[])
   //output the surface brightness profile
   ofs_sbp<<"read serr 2"<<endl;
   ofs_sbp<<"skip single"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
       double y=sbps[i-1];
@@ -338,7 +338,7 @@ int main(int argc,char* argv[])
   //output the electron density
   mv=nfw.eval(radii,p);
   ofstream ofs_rho("rho_fit.qdp");
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
       double ym=mv[i-1];
@@ -354,7 +354,7 @@ int main(int argc,char* argv[])
     }
   //calculate the overdensity profile
   ofstream ofs_overdensity("overdensity.qdp");
-  
+
   std::vector<double> radius_list;
   std::vector<double> delta_list;
 
@@ -380,8 +380,8 @@ int main(int argc,char* argv[])
       */
       ofs_overdensity<<r/kpc<<"\t"<<delta<<endl;
     }
-  
-  for(int i=0;i<radius_list.size()-1;++i)
+
+  for(size_t i=0;i<radius_list.size()-1;++i)
     {
       double r=radius_list[i];
       if(delta_list[i]>=200&&delta_list[i+1]<200)

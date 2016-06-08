@@ -28,7 +28,7 @@ namespace opt_utilities
     int n;
     bool limit_bound;
     typedef std::vector<T> Tp;
-    
+
     vchisq<T>* do_clone()const
     {
       return new vchisq<T>(*this);
@@ -38,7 +38,7 @@ namespace opt_utilities
     {
       return "chi^2 statistic";
     }
-    
+
   public:
     void verbose(bool v)
     {
@@ -49,7 +49,7 @@ namespace opt_utilities
     {
       limit_bound=true;
     }
-    
+
     void clear_limit()
     {
       limit_bound=false;
@@ -58,8 +58,8 @@ namespace opt_utilities
     vchisq()
       :verb(false),limit_bound(false)
     {}
-    
-    
+
+
 
     T do_eval(const std::vector<T>& p)
     {
@@ -71,7 +71,7 @@ namespace opt_utilities
 	    }
 	}
       T result(0);
-      
+
       std::vector<float> vx;
       std::vector<float> vy;
       std::vector<float> vye;
@@ -80,7 +80,7 @@ namespace opt_utilities
       if(verb)
 	{
 	  n++;
-	  
+
 	  if(n%100==0)
 	    {
 	      vx.resize(this->get_data_set().get_data(0).get_y().size());
@@ -88,24 +88,24 @@ namespace opt_utilities
 	      vye.resize(this->get_data_set().get_data(0).get_y().size());
 	      my.resize(this->get_data_set().get_data(0).get_y().size());
 	    }
-	  
+
 	}
       for(int i=(this->get_data_set()).size()-1;i>=0;--i)
 	{
 	  const std::vector<double> y_model(this->eval_model(this->get_data_set().get_data(i).get_x(),p));
 	  const std::vector<double>& y=this->get_data_set().get_data(i).get_y();
 	  const std::vector<double>& ye=this->get_data_set().get_data(i).get_y_lower_err();
-	  for(int j=0;j<y.size();++j)
+	  for(size_t j=0;j<y.size();++j)
 	    {
 	      double chi=(y_model[j]-y[j])/ye[j];
 	      result+=chi*chi;
 	    }
-	  
-	  
+
+
 	  if(verb&&n%100==0)
 	    {
-	      
-	      for(int j=0;j<y.size();++j)
+
+	      for(size_t j=0;j<y.size();++j)
 		{
 		  vx.at(j)=((this->get_data_set().get_data(i).get_x().at(j)+this->get_data_set().get_data(i).get_x().at(j+1))/2.);
 		  vy.at(j)=(y[j]);
@@ -121,9 +121,9 @@ namespace opt_utilities
 		  my[j]=log10(my[j]);
 
 		}
-		
+
 	    }
-	      
+
 	}
       if(verb)
 	{
@@ -148,7 +148,7 @@ namespace opt_utilities
 	      pr.plot_line(vx,my);
 	    }
 	}
-      
+
       return result;
     }
   };

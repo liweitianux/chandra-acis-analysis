@@ -24,7 +24,7 @@ namespace opt_utilities
       this->push_param_info(param_info<std::vector<T>,std::string>("n02",1));
       this->push_param_info(param_info<std::vector<T>,std::string>("beta2",.67));
       this->push_param_info(param_info<std::vector<T>,std::string>("rc2",110));
-      
+
     }
 
   public:
@@ -44,10 +44,10 @@ namespace opt_utilities
       T beta2=p[4];
       T rc2=p[5];
 
-      
+
 
       std::vector<T> result(x.size()-1);
-      for(int i=1;i<x.size();++i)
+      for(size_t i=1;i<x.size();++i)
 	{
 	  T xi=(x[i]+x[i-1])/2;
 	  T yi=0;
@@ -70,7 +70,7 @@ namespace opt_utilities
       this->push_param_info(param_info<std::vector<T>,std::string>("n02",1));
       this->push_param_info(param_info<std::vector<T>,std::string>("rc2",110));
       this->push_param_info(param_info<std::vector<T>,std::string>("beta",.67));
-      
+
     }
 
   public:
@@ -92,7 +92,7 @@ namespace opt_utilities
       T beta2=beta;
 
       std::vector<T> result(x.size()-1);
-      for(int i=1;i<x.size();++i)
+      for(size_t i=1;i<x.size();++i)
 	{
 	  T xi=(x[i]+x[i-1])/2;
 	  T yi=0;

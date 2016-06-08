@@ -36,7 +36,7 @@ namespace opt_utilities
       {
 	return rho0;
       }
-    
+
     return nfw_mass_enclosed(r,rho0,rs)/(4.*pi/3*r*r*r);
   }
 
@@ -46,7 +46,7 @@ namespace opt_utilities
 				      const double Omega_m=.27)
   {
     const double E=std::sqrt(Omega_m*(1+z)*(1+z)*(1+z)+1-Omega_m);
-    const double H=H0*E;    
+    const double H=H0*E;
     return 3*H*H/8/pi/G;
   }
 
@@ -66,7 +66,7 @@ namespace opt_utilities
     nfw_ne()
       :pTfunc(0),cm_per_pixel(1)
     {
-      
+
       this->push_param_info(param_info<std::vector<T>,std::string>("rho0",1));//in mp
       this->push_param_info(param_info<std::vector<T>,std::string>("rs",100));
       this->push_param_info(param_info<std::vector<T>,std::string>("n0",.01));
@@ -89,7 +89,7 @@ namespace opt_utilities
       this->push_param_info(param_info<std::vector<T>,std::string>("rs",rhs.get_param_info("rs").get_value()));
       this->push_param_info(param_info<std::vector<T>,std::string>("n0",rhs.get_param_info("n0").get_value()));
     }
-    
+
     //assignment operator
     nfw_ne& operator=(const nfw_ne& rhs)
     {
@@ -146,19 +146,19 @@ namespace opt_utilities
      */
     std::vector<T> do_eval(const std::vector<T> & r,
 			   const std::vector<T>& p)
-    {						
+    {
       assert(pTfunc);
       //const T kT_erg=k*5;
       T rho0=std::abs(p[0])*mp;
       T rs=std::abs(p[1]);
       T n0=std::abs(p[2]);
       T rs_cm=rs*cm_per_pixel;
-      
+
       std::vector<T> yvec(r.size());
       const T kT_erg0=pTfunc->eval((r.at(0)+r.at(1))/2)*k;
       //calculate the integration
 #pragma omp parallel for schedule(dynamic)
-      for(int i=0;i<r.size();++i)
+      for(size_t i=0;i<r.size();++i)
 	{
 	  T r_cm=r[i]*cm_per_pixel;
 	  T kT_erg=pTfunc->eval(r[i])*k;
@@ -170,10 +170,10 @@ namespace opt_utilities
 	  //std::cout<<r_cm/1e20<<"\t"<<nfw_mass_enclosed(r_cm,rho0,rs_cm)/1e45<<std::endl;
 	  //std::cout<<r_cm/1e20<<"\t"<<G*nfw_mass_enclosed(r_cm,rho0,rs_cm)*mu*mp/kT_erg/r_cm/r_cm<<std::endl;
 	}
-      
+
       std::vector<T> ydxvec(r.size()-1);
 #pragma omp parallel for schedule(dynamic)
-      for(int i=1;i<r.size();++i)
+      for(size_t i=1;i<r.size();++i)
 	{
 	  T dr=r[i]-r[i-1];
 	  T dr_cm=dr*cm_per_pixel;
@@ -183,7 +183,7 @@ namespace opt_utilities
       //construct the result
       std::vector<T> result(r.size()-1);
 #pragma omp parallel for schedule(dynamic)
-      for(int i=0;i<r.size()-1;++i)
+      for(size_t i=0;i<r.size()-1;++i)
 	{
 	  T y=-ydxvec.at(i);
 	  T kT_erg=pTfunc->eval(r[i])*k;

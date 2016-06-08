@@ -2,7 +2,7 @@
   Fitting Jy Wang's temperature profile model
   Author: Jingying Wang
   Last modification 20120819
-  
+
 */
 
 #include "wang2012_model.hpp"
@@ -34,7 +34,7 @@ int main(int argc,char* argv[])
     {
       cm_per_pixel=atof(argv[3]);
     }
-   
+
   //define the fitter
   fitter<double,double,vector<double>,double,std::string> fit;
   //define the data set
@@ -88,7 +88,7 @@ int main(int argc,char* argv[])
   fit.set_statistic(chisq_object);
   //fit.set_statistic(chisq<double,double,vector<double>,double,std::string>());
   fit.set_model(wang2012_model<double>());
-  
+
   if(argc>=3&&std::string(argv[2])!="NONE")
     {
       std::vector<std::string> freeze_list;
@@ -123,7 +123,7 @@ int main(int argc,char* argv[])
 	{
 	  freeze_param<double,double,std::vector<double>,std::string> fp(freeze_list[0]);
 	  fit.set_param_modifier(fp);
-	  for(int i=1;i<freeze_list.size();++i)
+	  for(size_t i=1;i<freeze_list.size();++i)
 	    {
 	      dynamic_cast<freeze_param<double,double,std::vector<double>,std::string>&>(fit.get_param_modifier())+=freeze_param<double,double,std::vector<double>,std::string>(freeze_list[i]);
 	    }
@@ -147,11 +147,11 @@ int main(int argc,char* argv[])
     }
 #endif
   //output parameters
-  for(int i=0;i<fit.get_num_params();++i)
+  for(size_t i=0;i<fit.get_num_params();++i)
     {
       std::string pname=fit.get_param_info(i).get_name();
       std::string pstatus=fit.get_model().report_param_status(pname);
-      
+
       if(pstatus==""||pstatus=="thawed")
 	{
 	  pstatus="T";
@@ -168,20 +168,20 @@ int main(int argc,char* argv[])
 	}
 #endif
     }
-  
+
   //cout<<"T0"<<"\t"<<fit.get_param_value("T0")<<endl;
   //cout<<"T1"<<"\t"<<fit.get_param_value("T1")<<endl;
   //cout<<"xt"<<"\t"<<fit.get_param_value("xt")<<endl;
   //cout<<"eta"<<"\t"<<fit.get_param_value("eta")<<endl;
   //dump the data for checking
   ofstream ofs_model("wang2012_dump.qdp");
-  
-  
+
+
   min_r=0;
   for(double x=min_r;x<3000;x+=10)
     {
       double model_value=fit.eval_model_raw(x,p);
-      
+
       ofs_model<<x<<"\t"<<model_value<<endl;
       if(cm_per_pixel>0)
 	{

@@ -28,13 +28,13 @@ double std_norm_rand()
   double x=0;
   double u=0;
   double v=0;
-  
+
   do
     {
       u=rand()/(double)RAND_MAX;
       rand();
       v=rand()/(double)RAND_MAX;
-      
+
       x=std::sqrt(-log(u))*cos(2*pi*v);
     }while(isnan(x));
   return x;
@@ -65,7 +65,7 @@ int main(int argc,char* argv[])
       cerr<<"Usage:"<<argv[0]<<" <a 5 column file with T -Terr +Terr L Lerr> <T lower limit>"<<endl;
       return -1;
     }
-  double T_lower_limit(atof(argv[2]));		       
+  double T_lower_limit(atof(argv[2]));
   ifstream ifs_data(argv[1]);
   default_data_set<double,double> ds;
   ofstream ofs_result("l-t_result.qdp");
@@ -91,15 +91,15 @@ int main(int argc,char* argv[])
       double L,Lerr;
       std::string line;
       getline(ifs_data,line);
-      
-      
+
+
       if(!ifs_data.good())
 	{
 	  break;
 	}
       line+=" ";
       istringstream iss(line);
-      
+
       if(line[0]=='#')
 	{
 	  if(!is_first_nonono)
@@ -163,7 +163,7 @@ int main(int argc,char* argv[])
   double Mb=sxx*sy-sx*sxy;
   double k0=Ma/M;
   double b0=Mb/M;
-  
+
   ofs_result<<"no no no"<<endl;
   fitter<double,double,vector<double>,double,std::string> fit;
   fit.set_opt_method(powell_method<double,vector<double> >());
@@ -185,7 +185,7 @@ int main(int argc,char* argv[])
       ofs_result<<i<<"\t0\t0\t"<<exp(fit.eval_model_raw(log(i),p))/yunit<<"\t0\n";
     }
 
-  
+
   double mean_A=0;
   double mean_A2=0;
   double mean_g=0;
@@ -196,7 +196,7 @@ int main(int argc,char* argv[])
       ++cnt;
       cerr<<".";
       opt_utilities::default_data_set<double,double> ds1;
-      for(int i=0;i<ds.size();++i)
+      for(size_t i=0;i<ds.size();++i)
 	{
 	  double new_x=shuffle_data(ds.get_data(i).get_x(),
 				    ds.get_data(i).get_x_lower_err(),
@@ -212,7 +212,7 @@ int main(int argc,char* argv[])
 	  //cerr<<new_x<<"\t"<<new_y<<endl;
 	}
       fit.load_data(ds1);
-      
+
       fit.fit();
       double k=fit.get_param_value("k");
       double b=fit.get_param_value("b");
@@ -234,6 +234,6 @@ int main(int argc,char* argv[])
   std::cerr<<"L=L0*T^gamma"<<endl;
   std::cout<<"L0= "<<exp(p[1])<<"+/-"<<std_A<<endl;
   std::cout<<"gamma= "<<p[0]<<"+/-"<<std_g<<endl;
-  std::cout<<"Num of sources:"<<ds.size()<<endl; 
+  std::cout<<"Num of sources:"<<ds.size()<<endl;
 
 }

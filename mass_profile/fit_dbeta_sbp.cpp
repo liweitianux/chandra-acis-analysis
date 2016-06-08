@@ -180,7 +180,7 @@ int main(int argc,char* argv[])
   for(ifstream ifs(cfg.cfunc_file.c_str());;)
     {
       assert(ifs.is_open());
-      double x,y,y1,y2;
+      double x,y;
       ifs>>x>>y;
       if(!ifs.good())
 	{
@@ -270,7 +270,7 @@ int main(int argc,char* argv[])
   double n02=0;
   double rc2=0;
   double beta=0;
-  double bkg=0;
+  double bkg_level=0;
   if(tie_beta)
     {
       f.set_param_value("beta",.7);
@@ -362,7 +362,7 @@ int main(int argc,char* argv[])
   //output the params
   ofstream param_output("dbeta_param.txt");
   //output the datasets and fitting results
-  for(int i=0;i<f.get_num_params();++i)
+  for(size_t i=0;i<f.get_num_params();++i)
     {
       if(f.get_param_info(i).get_name()=="rc1")
 	{
@@ -423,27 +423,27 @@ int main(int argc,char* argv[])
   ofs_sbp<<"log x"<<endl;
   ofs_sbp<<"log y off"<<endl;
   ofs_sbp<<"r x "<<(radii[1]+radii[0])/2*cm_per_pixel/kpc<<" "<<(radii[sbps.size()-2]+radii[sbps.size()-1])/2*cm_per_pixel/kpc<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
       double y=sbps[i-1];
       double ye=sbpe[i-1];
-      double ym=mv[i-1];
+      //double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<y<<"\t"<<ye<<endl;
     }
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
       double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<ym<<"\t"<<0<<endl;
     }
   //bkg
   ofs_sbp<<"no no no"<<endl;
-  double bkg_level=abs(f.get_param_value("bkg"));
-  for(int i=0;i<sbps.size();++i)
+  bkg_level=abs(f.get_param_value("bkg"));
+  for(size_t i=0;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<bkg_level<<"\t0"<<endl;
@@ -466,22 +466,22 @@ int main(int argc,char* argv[])
     }
   //resid
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
       double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<(ym-sbps[i-1])/sbpe[i-1]<<"\t"<<1<<endl;
     }
   //zero level in resid map
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
-      double ym=mv[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
+      //double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<0<<"\t"<<0<<endl;
     }
 
@@ -501,16 +501,16 @@ int main(int argc,char* argv[])
     }
   */
 
-  double lower,upper;
+  //double lower,upper;
   double dr=1;
   //calculate the mass profile
-  const double G=6.673E-8;//cm^3 g^-1 s^-2
+  //const double G=6.673E-8;//cm^3 g^-1 s^-2
   // Molecular weight per electron
   // Reference: Ettori et al. 2013, Space Sci. Rev., 177, 119-154; Eq.(9) below
   static const double mu=1.155;
   static const double mp=1.67262158E-24;//g
   static const double M_sun=1.98892E33;//g
-  static const double k=1.38E-16;
+  //static const double k=1.38E-16;
 
   ofstream ofs_mass("mass_int.qdp");
   ofstream ofs_mass_dat("mass_int.dat");
@@ -536,26 +536,23 @@ int main(int argc,char* argv[])
       gas_mass+=dmgas;
 
       ofs_gas_mass<<r*cm_per_pixel/kpc<<"\t"<<gas_mass<<endl;
-      double ne_beta1=dbeta_func(r,n01,rc1,beta1,
-				 0,rc2,beta2);
+      double ne_beta1=dbeta_func(r,n01,rc1,beta1, 0,rc2,beta2);
 
-      double ne_beta2=dbeta_func(r,0,rc1,beta1,
-				 n02,rc2,beta2);
+      double ne_beta2=dbeta_func(r,0,rc1,beta1, n02,rc2,beta2);
 
-      double ne1=dbeta_func(r1,n01,rc1,beta1,
-			    n02,rc2,beta2);//cm^3
+      double ne1=dbeta_func(r1,n01,rc1,beta1, n02,rc2,beta2);//cm^3
 
       double T_keV=Tprof(r);
       double T1_keV=Tprof(r1);
 
-      double T_K=T_keV*11604505.9;
-      double T1_K=T1_keV*11604505.9;
+      //double T_K=T_keV*11604505.9;
+      //double T1_K=T1_keV*11604505.9;
 
       double dlnT=log(T1_keV/T_keV);
       double dlnr=log(r+dr)-log(r);
       double dlnn=log(ne1/ne);
 
-      double r_kpc=r_cm/kpc;
+      //double r_kpc=r_cm/kpc;
       double r_Mpc=r_cm/Mpc;
       //double M=-r_cm*T_K*k/G/mu/mp*(dlnT/dlnr+dlnn/dlnr);
       //ref:http://adsabs.harvard.edu/abs/2012MNRAS.422.3503W

@@ -1,7 +1,7 @@
 /*
   Fitting nfw mass profile model
   Author: Junhua Gu
-  Last modification 20120721  
+  Last modification 20120721
 */
 
 #include "nfw.hpp"
@@ -26,7 +26,7 @@ static double calc_critical_density(double z,
 {
   const double G=6.673E-8;//cm^3 g^-1 s^2
   const double E=std::sqrt(Omega_m*(1+z)*(1+z)*(1+z)+1-Omega_m);
-  const double H=H0*E;    
+  const double H=H0*E;
   return 3*H*H/8/pi/G;
 }
 
@@ -53,14 +53,14 @@ int main(int argc,char* argv[])
   ifstream ifs(argv[1]);
   //cout<<"read serr 2"<<endl;
   ofstream ofs_fit_result("nfw_fit_result.qdp");
-  
+
   ofs_fit_result<<"read serr 1 2"<<endl;
   ofs_fit_result<<"skip single"<<endl;
   ofs_fit_result<<"line off"<<endl;
   ofs_fit_result<<"li on 2"<<endl;
   ofs_fit_result<<"li on 4"<<endl;
   ofs_fit_result<<"ls 2 on 4"<<endl;
-  
+
   ofs_fit_result<<"win 1"<<endl;
   ofs_fit_result<<"yplot 1 2"<<endl;
   ofs_fit_result<<"loc 0 0 1 1"<<endl;
@@ -108,7 +108,7 @@ int main(int argc,char* argv[])
   vector<double> p=fit.fit();
   //output parameters
   ofstream ofs_param("nfw_param.txt");
-  for(int i=0;i<fit.get_num_params();++i)
+  for(size_t i=0;i<fit.get_num_params();++i)
     {
       cout<<fit.get_param_info(i).get_name()<<"\t"<<fit.get_param_info(i).get_value()<<endl;
       ofs_param<<fit.get_param_info(i).get_name()<<"\t"<<fit.get_param_info(i).get_value()<<endl;
@@ -117,11 +117,11 @@ int main(int argc,char* argv[])
   ofs_param<<"reduced chi^2="<<fit.get_statistic_value()<<endl;
   ofstream ofs_model("nfw_dump.qdp");
   ofstream ofs_overdensity("overdensity.qdp");
-  const double G=6.673E-8;//cm^3 g^-1 s^-2
-  static const double mu=1.4074;
-  static const double mp=1.67262158E-24;//g
+  //const double G=6.673E-8;//cm^3 g^-1 s^-2
+  //static const double mu=1.4074;
+  //static const double mp=1.67262158E-24;//g
   static const double M_sun=1.98892E33;//g
-  static const double k=1.38E-16;
+  //static const double k=1.38E-16;
 
   double xmax=0;
   for(double x=std::max(rmin_kpc,ds.get_data(0).get_x());;x+=1)
@@ -141,7 +141,7 @@ int main(int argc,char* argv[])
 	}
     }
   ofs_fit_result<<"no no no"<<endl;
-  for(int i=0;i<ds.size();++i)
+  for(size_t i=0;i<ds.size();++i)
     {
       data<double,double> d=ds.get_data(i);
       double x=d.get_x();
@@ -155,5 +155,5 @@ int main(int argc,char* argv[])
     {
       ofs_fit_result<<x<<"\t"<<0<<"\t"<<0<<"\t"<<0<<endl;
     }
-  
+
 }

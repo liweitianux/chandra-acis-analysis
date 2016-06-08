@@ -30,20 +30,8 @@ const double Mpc=kpc*1000;
 double beta_func(double r,
 		 double n0,double rc,double beta)
 {
-  
+
   return abs(n0)*pow(1+r*r/rc/rc,-3./2.*abs(beta));
-}
-
-
-  //calculate critical density from z, under following cosmological constants
-static double calc_critical_density(double z,
-				    const double H0=2.3E-18,
-				      const double Omega_m=.27)
-{
-  const double G=6.673E-8;//cm^3 g^-1 s^2
-  const double E=std::sqrt(Omega_m*(1+z)*(1+z)*(1+z)+1-Omega_m);
-  const double H=H0*E;    
-  return 3*H*H/8/pi/G;
 }
 
 
@@ -61,7 +49,7 @@ public:
   {
     return spl.get_value(x);
   }
-  
+
   //we need this function, when this object is performing a clone of itself
   spline_func_obj* do_clone()const
   {
@@ -74,7 +62,7 @@ public:
   {
     spl.push_point(x,y);
   }
-  
+
   //before getting the intepolated value, the spline should be initialzied by calling this function
   void gen_spline()
   {
@@ -93,9 +81,9 @@ int main(int argc,char* argv[])
   ifstream cfg_file(argv[1]);
   assert(cfg_file.is_open());
   cfg_map cfg=parse_cfg_file(cfg_file);
-  
+
   //check the existence of following parameters
-  
+
   const double z=cfg.z;
 
   //initialize the radius list, sbp list and sbp error list
@@ -151,7 +139,7 @@ int main(int argc,char* argv[])
     {
       rmin=cfg.rmin_kpc*kpc/cm_per_pixel;
     }
-  
+
   cerr<<"rmin="<<rmin<<endl;
   std::list<double> radii_tmp,sbps_tmp,sbpe_tmp;
   radii_tmp.resize(radii.size());
@@ -184,7 +172,7 @@ int main(int argc,char* argv[])
   for(ifstream ifs(cfg.cfunc_file.c_str());;)
     {
       assert(ifs.is_open());
-      double x,y,y1,y2;
+      double x,y;
       ifs>>x>>y;
       if(!ifs.good())
 	{
@@ -199,7 +187,7 @@ int main(int argc,char* argv[])
       cf.add_point(x,y);//change with source
     }
   cf.gen_spline();
-  
+
   //read temperature profile data
   spline_func_obj Tprof;
   int tcnt=0;
@@ -224,7 +212,7 @@ int main(int argc,char* argv[])
 
 
   Tprof.gen_spline();
-  
+
   default_data_set<std::vector<double>,std::vector<double> > ds;
   ds.add_data(data<std::vector<double>,std::vector<double> >(radii,sbps,sbpe,sbpe,radii,radii));
 
@@ -247,11 +235,12 @@ int main(int argc,char* argv[])
   //optimization method
   f.set_opt_method(powell_method<double,std::vector<double> >());
   //initialize the initial values
+  /*
   double n0=0;
-  //double beta=atof(arg_map["beta"].c_str());
   double beta=0;
   double rc=0;
-  double bkg=0;
+  */
+  double bkg_level=0;
 
   for(std::map<std::string,std::vector<double> >::iterator i=cfg.param_map.begin();
       i!=cfg.param_map.end();++i)
@@ -280,12 +269,14 @@ int main(int argc,char* argv[])
   f.fit();
   f.fit();
   std::vector<double> p=f.get_all_params();
+  /*
   n0=f.get_param_value("n0");
   rc=f.get_param_value("rc");
   beta=f.get_param_value("beta");
+  */
   //output the datasets and fitting results
   ofstream param_output("lx_beta_param.txt");
-  for(int i=0;i<f.get_num_params();++i)
+  for(size_t i=0;i<f.get_num_params();++i)
     {
       if(f.get_param_info(i).get_name()=="rc")
 	{
@@ -322,7 +313,7 @@ int main(int argc,char* argv[])
       ofs_sbp<<"color 3 on 3"<<endl;
       ofs_sbp<<"color 4 on 4"<<endl;
       ofs_sbp<<"color 5 on 5"<<endl;
-      
+
       ofs_sbp<<"win 1"<<endl;
       ofs_sbp<<"yplot 1 2 3 4 5"<<endl;
       ofs_sbp<<"loc 0 0 1 1"<<endl;
@@ -356,7 +347,7 @@ int main(int argc,char* argv[])
       ofs_sbp<<"color 4 on 3"<<endl;
       ofs_sbp<<"color 5 on 4"<<endl;
       //ofs_sbp<<"ma 1 on 2"<<endl;
-      
+
       ofs_sbp<<"win 1"<<endl;
       ofs_sbp<<"yplot 1 2 3 4"<<endl;
       ofs_sbp<<"loc 0 0 1 1"<<endl;
@@ -377,7 +368,7 @@ int main(int argc,char* argv[])
 
     }
   // cout<<sbps_all.size()<<"\t"<<sbps.size()<<"\t"<<sbps_inner_cut_size<<endl;
-  for(int i=1;i<sbps_all.size();++i)
+  for(size_t i=1;i<sbps_all.size();++i)
     {
       double x=(radii_all[i]+radii_all[i-1])/2;
       double y=sbps_all[i-1];
@@ -395,7 +386,7 @@ int main(int argc,char* argv[])
 	}
     }
   ofs_sbp<<"no no no"<<endl;
-  for(int i=sbps_inner_cut_size;i<sbps_all.size();++i)
+  for(size_t i=sbps_inner_cut_size;i<sbps_all.size();++i)
     {
       double x=(radii_all[i]+radii_all[i-1])/2;
       double ym=mv[i-1];
@@ -403,8 +394,8 @@ int main(int argc,char* argv[])
     }
   ofs_sbp<<"no no no"<<endl;
   //bkg level
-  double bkg_level=abs(f.get_param_value("bkg"));
-  for(int i=0;i<sbps_all.size();++i)
+  bkg_level=abs(f.get_param_value("bkg"));
+  for(size_t i=0;i<sbps_all.size();++i)
     {
       double x=(radii_all[i]+radii_all[i-1])/2;
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<bkg_level<<"\t0"<<endl;
@@ -420,23 +411,23 @@ int main(int argc,char* argv[])
     }
   //resid
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
       double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<(ym-sbps[i-1])/sbpe[i-1]<<"\t"<<1<<endl;
     }
 
   //zero level of resid
   ofs_sbp<<"no no no"<<endl;
-  for(int i=1;i<sbps.size();++i)
+  for(size_t i=1;i<sbps.size();++i)
     {
       double x=(radii[i]+radii[i-1])/2;
-      double y=sbps[i-1];
-      double ye=sbpe[i-1];
-      double ym=mv[i-1];
+      //double y=sbps[i-1];
+      //double ye=sbpe[i-1];
+      //double ym=mv[i-1];
       ofs_sbp<<x*cm_per_pixel/kpc<<"\t"<<0<<"\t"<<0<<endl;
     }
 
@@ -457,13 +448,13 @@ int main(int argc,char* argv[])
   p.back()=0;
   radii.clear();
   double rout=atof(argv[2])*kpc;
-  
+
   for(double r=0;r<rout;r+=1*kpc)//step size=1kpc
     {
       double r_pix=r/cm_per_pixel;
       radii.push_back(r_pix);
     }
-  
+
   double Da=cm_per_pixel/(.492/3600./180.*pi);
   double Dl=Da*(1+z)*(1+z);
   cout<<"dl="<<Dl/kpc<<endl;
@@ -481,19 +472,19 @@ int main(int argc,char* argv[])
 	      break;
 	    }
 	  //cerr<<x<<"\t"<<y<<endl;
-	  
+
 	  cf_bolo_erg.add_point(x,y);//change with source
 	}
       cf_bolo_erg.gen_spline();
 
       projector<double>& pj=dynamic_cast<projector<double>&>(f.get_model());
       pj.attach_cfunc(cf_bolo_erg);
-      
-      
-  
+
+
+
       mv=f.eval_model_raw(radii,p);
       double flux_erg=0;
-      for(int i=0;i<radii.size()-1;++i)
+      for(size_t i=0;i<radii.size()-1;++i)
 	{
 	  double S=pi*(radii[i+1]+radii[i])*(radii[i+1]-radii[i]);
 	  flux_erg+=S*mv[i];

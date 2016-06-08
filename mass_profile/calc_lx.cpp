@@ -61,7 +61,7 @@ int main(int argc,char* argv[])
   //perform a 1-beta fitting////
   //////////////////////////////
   fitter<double,double,vector<double>,double,string> f;
-  
+
   f.set_statistic(chisq<double,double,vector<double>,double,string>());
   f.set_opt_method(powell_method<double,vector<double> >());
   f.set_model(beta1d<double>());
@@ -74,7 +74,7 @@ int main(int argc,char* argv[])
   double rmax=f.get_data_set().get_data(f.get_data_set().size()-1).get_x();
   ofstream lx_fit_result("lx_fit_result.qdp");
   lx_fit_result<<"read terr 1 2\nskip single\n";
-  for(int i=0;i<f.get_data_set().size();++i)
+  for(size_t i=0;i<f.get_data_set().size();++i)
     {
       lx_fit_result<<f.get_data_set().get_data(i).get_x()<<"\t"<<
 	-abs(f.get_data_set().get_data(i).get_x_lower_err())<<"\t"<<
@@ -89,13 +89,13 @@ int main(int argc,char* argv[])
     {
       lx_fit_result<<i<<"\t0\t0\t"<<f.eval_model(i,f.get_all_params())<<"\t0\t0"<<endl;
     }
-  
-  for(int i=0;i<f.get_num_params();++i)
+
+  for(size_t i=0;i<f.get_num_params();++i)
     {
       cerr<<f.get_param_info(i).get_name()<<"="<<
 	f.get_param_info(i).get_value()<<endl;
     }
-  
+
   vector<double> p=f.get_all_params();
 
   double r500kpc=atof(argv[4]);
@@ -131,7 +131,7 @@ int main(int argc,char* argv[])
       sum_flux+=cnt*ratio;
     }
   double lx=sum_flux*4*pi*d_l_cm*d_l_cm;
-  
+
   double l_mean=0;
   double l2_mean=0;
   double cnt=0;
@@ -140,7 +140,7 @@ int main(int argc,char* argv[])
       cerr<<".";
       opt_utilities::default_data_set<double,double> ds(dl.get_data_set());
       opt_utilities::default_data_set<double,double> ds1;
-      for(int i=0;i<ds.size();++i)
+      for(size_t i=0;i<ds.size();++i)
 	{
 	  double yc=ds.get_data(i).get_y();
 	  double ye=(std::abs(ds.get_data(i).get_y_lower_err())+std::abs(ds.get_data(i).get_y_lower_err()))/2;
@@ -159,7 +159,7 @@ int main(int argc,char* argv[])
       //cout<<f.get_param_value("beta")<<endl;
       double sum_cnt=0;
       double sum_flux=0;
-      
+
       for(double r=0;r<r500pixel;r+=dr)
 	{
 	  double r1=r<.2*r500pixel?.2*r500pixel:r;

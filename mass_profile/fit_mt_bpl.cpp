@@ -45,7 +45,7 @@ double shuffle_data(double xc,double xl,double xu)
   double lxc=log(xc);
   double lxl=log(xc-xl)-log(xc);
   double lxu=log(xc+xu)-log(xc);
-    
+
   if(std_norm_rand()>0)
     {
       double result=std::exp(lxc-std::abs(std_norm_rand()*lxl));
@@ -107,7 +107,7 @@ int main(int argc,char* argv[])
 	}
       line+=" ";
       istringstream iss(line);
-      
+
       if(line[0]=='#')
 	{
 	  if(!is_first_nonono)
@@ -145,7 +145,7 @@ int main(int argc,char* argv[])
 	  cerr<<line<<endl;
 	  continue;
 	}
-#endif 
+#endif
 
       if(std::abs(Mu)+std::abs(Ml)<M*.1)
 	{
@@ -204,16 +204,16 @@ int main(int argc,char* argv[])
 
   double gamma0l=k0l;
   double gamma0u=k0u;
-  
+
   double ampl0l=exp(b0l)*pow(Tb,gamma0l);
   double ampl0u=exp(b0u)*pow(Tb,gamma0u);;
 
-  
+
 
   ofs_result<<"no no no"<<endl;
   fitter<double,double,vector<double>,double,std::string> fit;
   fit.set_opt_method(powell_method<double,vector<double> >());
-  
+
   fit.set_statistic(logchisq<double,double,vector<double>,double,std::string>());
   //fit.set_statistic(leastsq<double,double,vector<double>,double,std::string>());
   fit.set_model(bpl1d<double>());
@@ -222,7 +222,7 @@ int main(int argc,char* argv[])
   cerr<<"k0l="<<k0l<<endl;
   cerr<<"k0u="<<k0u<<endl;
   cerr<<"Ampl0="<<(ampl0l+ampl0u)/2<<endl;
-  
+
   fit.set_param_value("bpx",Tb);
   fit.set_param_value("bpy",(ampl0l+ampl0u)/2);
   fit.set_param_value("gamma1",gamma0l);
@@ -239,7 +239,7 @@ int main(int argc,char* argv[])
       ofs_result<<i<<"\t0\t0\t"<<fit.eval_model_raw(i,p)<<"\t0\t0\n";
     }
 
-  
+
   std::vector<double> mean_p(p.size());
   std::vector<double> mean_p2(p.size());
   int cnt=0;
@@ -252,7 +252,7 @@ int main(int argc,char* argv[])
       double sxl=0;
       double syl=0;
       double sxyl=0;
-      
+
       double sxxu=0;
       double s1u=0;
       double sxu=0;
@@ -260,7 +260,7 @@ int main(int argc,char* argv[])
       double sxyu=0;
 
       opt_utilities::default_data_set<double,double> ds1;
-      for(int i=0;i<ds.size();++i)
+      for(size_t i=0;i<ds.size();++i)
 	{
 	  double x=ds.get_data(i).get_x();
 	  double y=ds.get_data(i).get_y();
@@ -268,14 +268,14 @@ int main(int argc,char* argv[])
 	  double xu=ds.get_data(i).get_x_upper_err();
 	  double yl=ds.get_data(i).get_y_lower_err();
 	  double yu=ds.get_data(i).get_y_upper_err();
-	  
+
 	  double new_x=shuffle_data(x,
 				    xl,
 				    xu);
 	  double new_y=shuffle_data(y,
 				    yl,
 				    yu);
-	  
+
 	  ds1.add_data(data<double,double>(new_x,new_y,
 					   yl/y*new_y,
 					   yu/y*new_y,
@@ -306,40 +306,40 @@ int main(int argc,char* argv[])
       double Mbl=sxxl*syl-sxl*sxyl;
       double k0l=Mal/Ml;
       double b0l=Mbl/Ml;
-      
+
       double Mu=sxxu*s1u-sxu*sxu;
       double Mau=sxyu*s1u-syu*sxu;
       double Mbu=sxxu*syu-sxu*sxyu;
       double k0u=Mau/Mu;
       double b0u=Mbu/Mu;
-      
+
       double gamma0l=k0l;
       double gamma0u=k0u;
-      
+
       double ampl0l=exp(b0l)*pow(Tb,gamma0l);
       double ampl0u=exp(b0u)*pow(Tb,gamma0u);;
-      
+
       fit.set_param_value("bpx",Tb);
       fit.set_param_value("bpy",(ampl0l+ampl0u)/2);
       fit.set_param_value("gamma1",gamma0l);
       fit.set_param_value("gamma2",gamma0u);
-      
-      
+
+
       fit.load_data(ds1);
-      
+
       fit.fit();
       vector<double> p=fit.fit();
-      for(int i=0;i<p.size();++i)
+      for(size_t i=0;i<p.size();++i)
 	{
 	  mean_p[i]+=p[i];
 	  mean_p2[i]+=p[i]*p[i];
 	}
       //cerr<<fit.get_param_value("gamma1")<<"\t"<<fit.get_param_value("gamma2")<<endl;
-      
+
     }
   vector<double> std_p(p.size());
   cerr<<endl;
-  for(int i=0;i<mean_p.size();++i)
+  for(size_t i=0;i<mean_p.size();++i)
     {
       mean_p[i]/=cnt;
       mean_p2[i]/=cnt;

@@ -46,7 +46,7 @@ namespace opt_utilities
     bool verb;
     bool limit_bound;
     int n;
-    
+
     statistic<Ty,Tx,Tp,Ts,Tstr>* do_clone()const
     {
       // return const_cast<statistic<Ty,Tx,Tp>*>(this);
@@ -76,15 +76,15 @@ namespace opt_utilities
     chisq()
       :verb(true),limit_bound(false)
     {}
-    
-    
+
+
 
     Ty do_eval(const Tp& p)
     {
       if(limit_bound)
 	{
 	  Tp p1=this->get_fitter().get_model().reform_param(p);
-	  for(int i=0;i<p1.size();++i)
+	  for(size_t i=0;i<p1.size();++i)
 	    {
 	      if(p1[i]>this->get_fitter().get_param_info(i).get_upper_limit()||
 		 p1[i]<this->get_fitter().get_param_info(i).get_lower_limit())
@@ -111,7 +111,7 @@ namespace opt_utilities
 	      vye2.resize(this->get_data_set().size());
 	      my.resize(this->get_data_set().size());
 	    }
-	  
+
 	}
 
       for(int i=(this->get_data_set()).size()-1;i>=0;--i)
@@ -132,7 +132,7 @@ namespace opt_utilities
 	  Ty y_model=this->eval_model(this->get_data_set().get_data(i).get_x(),p);
 	  Ty y_obs=this->get_data_set().get_data(i).get_y();
 	  Ty y_err;
-	  
+
 	  Ty errx=0;
 	  if(errx1<errx2)
 	    {
@@ -170,7 +170,7 @@ namespace opt_utilities
 	  Ty chi=(y_obs-y_model)/std::sqrt(y_err*y_err+errx*errx);
 
 	  result+=chi*chi;
-	  
+
 	  if(verb&&n%display_interval==0)
 	    {
 	      vx.at(i)=this->get_data_set().get_data(i).get_x();
@@ -178,7 +178,7 @@ namespace opt_utilities
 	      vye1.at(i)=std::abs(this->get_data_set().get_data(i).get_y_lower_err());
 	      vye2.at(i)=std::abs(this->get_data_set().get_data(i).get_y_upper_err());
 	      my.at(i)=y_model;
-	      
+
 	      xmin=std::min(vx.at(i),xmin);
 	      ymin=std::min(vy.at(i),ymin-vye1[i]);
 	      xmax=std::max(vx.at(i),xmax);
@@ -192,7 +192,7 @@ namespace opt_utilities
 	  if(n%display_interval==0)
 	    {
 	      cerr<<result<<"\t";
-	      for(int i=0;i<(int)get_size(p);++i)
+	      for(size_t i=0;i<get_size(p);++i)
 		{
 		  cerr<<get_element(p,i)<<",";
 		}
@@ -205,15 +205,13 @@ namespace opt_utilities
 	    }
 
 	}
-      
+
       return result;
     }
   };
-  
-  
+
+
 }
 
 #endif
 //EOF
-
-

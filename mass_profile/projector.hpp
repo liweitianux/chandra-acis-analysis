@@ -99,7 +99,7 @@ namespace opt_utilities
     void attach_model(const model<std::vector<T>,std::vector<T>,std::vector<T> >& m)
     {
       this->clear_param_info();
-      for(int i=0;i<m.get_num_params();++i)
+      for(size_t i=0;i<m.get_num_params();++i)
 	{
 	  this->push_param_info(m.get_param_info(i));
 	}
@@ -167,7 +167,7 @@ namespace opt_utilities
 	    }
 	}
       std::vector<T> p2(p1.size()-1);
-      for(int i=0;i<p1.size()-1;++i)
+      for(size_t i=0;i<p1.size()-1;++i)
 	{
 	  p2.at(i)=p1[i];
 	}
@@ -183,10 +183,10 @@ namespace opt_utilities
       std::vector<T> unprojected(pmodel->eval(x,p));
       std::vector<T> projected(unprojected.size());
 
-      for(int nrad=0;nrad<x.size()-1;++nrad)
+      for(size_t nrad=0;nrad<x.size()-1;++nrad)
 	{
 	  double v1=0;
-	  for(int nsph=nrad;nsph<x.size()-1;++nsph)
+	  for(size_t nsph=nrad;nsph<x.size()-1;++nsph)
 	    {
 	      double v=calc_v(x,nsph,nrad)*cm_per_pixel*cm_per_pixel*cm_per_pixel;
 	      v1+=v;
