@@ -46,34 +46,32 @@ else
 endif
 
 # NOTE:
-# Since we link against the static `libcpgplot.a` and `libpgplot.a` here,
-# we cannot separate the compilation and linkage stages, otherwise, the
-# linkage will failed with undefined reference errors.
-fit_nfw_sbp: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+# Object/source files should placed *before* libraries (order matters)
+fit_nfw_sbp: fit_nfw_sbp.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-fit_dbeta_sbp: beta_cfg.o report_error.o fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+fit_dbeta_sbp: fit_dbeta_sbp.o beta_cfg.o report_error.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-fit_beta_sbp: beta_cfg.o dump_fit_qdp.o fit_beta_sbp.cpp beta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+fit_beta_sbp: fit_beta_sbp.o beta_cfg.o dump_fit_qdp.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-fit_wang2012_model: fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp plot_reporter.cpp plot_reporter.hpp
+fit_wang2012_model: fit_wang2012_model.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-fit_nfw_mass: fit_nfw_mass.cpp nfw.hpp chisq.hpp plot_reporter.cpp plot_reporter.hpp
+fit_nfw_mass: fit_nfw_mass.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-fit_direct_beta: fit_direct_beta.o plot_reporter.cpp plot_reporter.hpp
+fit_direct_beta: fit_direct_beta.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-calc_lx: calc_lx.o calc_distance.o plot_reporter.cpp plot_reporter.hpp
+calc_lx: calc_lx.o calc_distance.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-calc_lx_dbeta: beta_cfg.o report_error.o calc_lx_dbeta.cpp constrained_dbeta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+calc_lx_dbeta: calc_lx_dbeta.o beta_cfg.o report_error.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
-calc_lx_beta: beta_cfg.o dump_fit_qdp.o calc_lx_beta.cpp beta.hpp $(HEADERS) plot_reporter.cpp plot_reporter.hpp
+calc_lx_beta: calc_lx_beta.o beta_cfg.o dump_fit_qdp.o plot_reporter.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC) $(PGPLOT_INC) $(PGPLOT_LIB)
 
 calc_distance: calc_distance_main.o calc_distance.o
@@ -95,29 +93,29 @@ cooling_time: cooling_time.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $<
 
 
-#fit_nfw_sbp.o: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS)
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#fit_dbeta_sbp.o: fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS)
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#fit_beta_sbp.o: fit_beta_sbp.cpp beta.hpp $(HEADERS)
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#fit_wang2012_model.o: fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#fit_nfw_mass.o: fit_nfw_mass.cpp nfw.hpp chisq.hpp
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#calc_lx_dbeta.o: calc_lx_dbeta.cpp constrained_dbeta.hpp $(HEADERS)
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#calc_lx_beta.o: calc_lx_beta.cpp beta.hpp $(HEADERS)
-#	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
-#
-#plot_reporter.o: plot_reporter.cpp plot_reporter.hpp
-#	$(CXX) $(CXXFLAGS) $(PGPLOT_INC) -c $<
+fit_nfw_sbp.o: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+fit_dbeta_sbp.o: fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+fit_beta_sbp.o: fit_beta_sbp.cpp beta.hpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+fit_wang2012_model.o: fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+fit_nfw_mass.o: fit_nfw_mass.cpp nfw.hpp chisq.hpp
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+calc_lx_dbeta.o: calc_lx_dbeta.cpp constrained_dbeta.hpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+calc_lx_beta.o: calc_lx_beta.cpp beta.hpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC) $(PGPLOT_INC)
+
+plot_reporter.o: plot_reporter.cpp plot_reporter.hpp
+	$(CXX) $(CXXFLAGS) -c $< $(PGPLOT_INC)
 
 beta_cfg.o: beta_cfg.cpp beta_cfg.hpp
 	$(CXX) $(CXXFLAGS) -c $<
