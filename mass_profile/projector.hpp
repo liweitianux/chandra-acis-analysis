@@ -40,47 +40,46 @@ namespace opt_utilities
     {
       attach_model(*(rhs.pmodel));
       if(rhs.pcfunc)
-	{
-	  pcfunc=rhs.pcfunc->clone();
-	}
+        {
+          pcfunc=rhs.pcfunc->clone();
+        }
       else
-	{
-	  pcfunc=NULL_PTR;
-	}
-
+        {
+          pcfunc=NULL_PTR;
+        }
     }
     //assign operator
     projector& operator=(const projector& rhs)
     {
       cm_per_pixel=rhs.cm_per_pixel;
       if(pmodel)
-	{
-	  pmodel->destroy();
-	}
+        {
+          pmodel->destroy();
+        }
       if(pcfunc)
-	{
-	  pcfunc->destroy();
-	}
+        {
+          pcfunc->destroy();
+        }
       if(rhs.pcfunc)
-	{
-	  pcfunc=rhs.pcfunc->clone();
-	}
+        {
+          pcfunc=rhs.pcfunc->clone();
+        }
       if(rhs.pmodel)
-	{
-	  pmodel=rhs.pmodel->clone();
-	}
+        {
+          pmodel=rhs.pmodel->clone();
+        }
     }
     //destr
     ~projector()
     {
       if(pmodel)
-	{
-	  pmodel->destroy();
-	}
+        {
+          pmodel->destroy();
+        }
       if(pcfunc)
-	{
-	  pcfunc->destroy();
-	}
+        {
+          pcfunc->destroy();
+        }
     }
     //used to clone self
     model<std::vector<T>,std::vector<T>,std::vector<T> >*
@@ -100,10 +99,11 @@ namespace opt_utilities
     {
       this->clear_param_info();
       for(size_t i=0;i<m.get_num_params();++i)
-	{
-	  this->push_param_info(m.get_param_info(i));
-	}
-      this->push_param_info(param_info<std::vector<T>,std::string>("bkg",0,0,1E99));
+        {
+          this->push_param_info(m.get_param_info(i));
+        }
+      this -> push_param_info(param_info<std::vector<T>,
+                              std::string>("bkg",0,0,1E99));
       pmodel=m.clone();
       pmodel->clear_param_modifier();
     }
@@ -111,9 +111,9 @@ namespace opt_utilities
     void attach_cfunc(const func_obj<T,T>& cf)
     {
       if(pcfunc)
-	{
-	  pcfunc->destroy();
-	}
+        {
+          pcfunc->destroy();
+        }
       pcfunc=cf.clone();
     }
 
@@ -131,10 +131,10 @@ namespace opt_utilities
     T calc_v_ring(T rsph,T rcyc)
     {
       if(rcyc<rsph)
-	{
-	  double a=rsph*rsph-rcyc*rcyc;
-	  return 4.*pi/3.*std::sqrt(a*a*a);
-	}
+        {
+          double a=rsph*rsph-rcyc*rcyc;
+          return 4.*pi/3.*std::sqrt(a*a*a);
+        }
       return 0;
     }
 
@@ -142,35 +142,38 @@ namespace opt_utilities
     T calc_v(const std::vector<T>& rlist,int nsph,int nrad)
     {
       if(nsph<nrad)
-	{
-	  return 0;
-	}
-      if(nsph==nrad)
-	{
-	  return calc_v_ring(rlist[nsph+1],rlist[nrad]);
-	}
-
-      return calc_v_ring(rlist[nsph+1],rlist[nrad])-calc_v_ring(rlist[nsph],rlist[nrad])-calc_v_ring(rlist[nsph+1],rlist[nrad+1])+calc_v_ring(rlist[nsph],rlist[nrad+1]);
-
+        {
+          return 0;
+        }
+      else if(nsph==nrad)
+        {
+          return calc_v_ring(rlist[nsph+1], rlist[nrad]);
+        }
+      else {
+        return (calc_v_ring(rlist[nsph+1], rlist[nrad]) -
+                calc_v_ring(rlist[nsph], rlist[nrad]) -
+                calc_v_ring(rlist[nsph+1], rlist[nrad+1]) +
+                calc_v_ring(rlist[nsph], rlist[nrad+1]));
+      }
     }
   public:
     bool do_meets_constraint(const std::vector<T>& p)const
     {
       std::vector<T> p1(this->reform_param(p));
       for(size_t i=0;i!=p1.size();++i)
-	{
-	  if(get_element(p1,i)>this->get_param_info(i).get_upper_limit()||
-	     get_element(p1,i)<this->get_param_info(i).get_lower_limit())
-	    {
-	      //	      std::cerr<<this->get_param_info(i).get_name()<<"\t"<<p1[i]<<std::endl;
-	      return false;
-	    }
-	}
+        {
+          if(get_element(p1,i)>this->get_param_info(i).get_upper_limit()||
+            get_element(p1,i)<this->get_param_info(i).get_lower_limit())
+            {
+              // std::cerr<<this->get_param_info(i).get_name()<<"\t"<<p1[i]<<std::endl;
+              return false;
+            }
+        }
       std::vector<T> p2(p1.size()-1);
       for(size_t i=0;i<p1.size()-1;++i)
-	{
-	  p2.at(i)=p1[i];
-	}
+        {
+          p2.at(i)=p1[i];
+        }
 
       return pmodel->meets_constraint(p2);
     }
@@ -183,27 +186,26 @@ namespace opt_utilities
       std::vector<T> unprojected(pmodel->eval(x,p));
       std::vector<T> projected(unprojected.size());
 
-      for(size_t nrad=0;nrad<x.size()-1;++nrad)
-	{
-	  double v1=0;
-	  for(size_t nsph=nrad;nsph<x.size()-1;++nsph)
-	    {
-	      double v=calc_v(x,nsph,nrad)*cm_per_pixel*cm_per_pixel*cm_per_pixel;
-	      v1+=v;
-	      if(pcfunc)
-		{
-		  projected[nrad] += (v / ne_np_ratio) * unprojected[nsph] * \
-			unprojected[nsph] * (*pcfunc)((x[nsph+1] + x[nsph]) / 2.0);
-		}
-	      else
-		{
-		  projected[nrad]+=v*unprojected[nsph]*unprojected[nsph];
-		}
-	    }
-	  projected[nrad]/=(pi*(x[nrad+1]*x[nrad+1]-x[nrad]*x[nrad]));
-	  projected[nrad]+=bkg;
-
-	}
+      for(size_t nrad=0; nrad<x.size()-1; ++nrad)
+        {
+          for(size_t nsph=nrad; nsph<x.size()-1; ++nsph)
+            {
+              double v = calc_v(x, nsph, nrad) * pow(cm_per_pixel, 3);
+              if(pcfunc)
+                {
+                  cfunc = (*pcfunc)((x[nsph+1] + x[nsph]) / 2.0);
+                  projected[nrad] += (unprojected[nsph] * unprojected[nsph] *
+                                      cfunc * v / ne_np_ratio);
+                }
+              else
+                {
+                  projected[nrad] += unprojected[nsph] * unprojected[nsph] * v;
+                }
+            }
+          area = pi * (x[nrad+1]*x[nrad+1] - x[nrad]*x[nrad]);
+          projected[nrad] /= area;
+          projected[nrad] += bkg;
+        }
       return projected;
     }
   };
