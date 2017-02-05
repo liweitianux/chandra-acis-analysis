@@ -3,4 +3,9 @@
 
 # C/C++
 *.o
+*.so
+
+# Python
+*.py[cod]
+**/__pycache__
 
