@@ -20,8 +20,10 @@
 
 set NAME "xspec_avg_tz.tcl"
 set DATE [ exec date ]
-# Set the error flag
-set ERR_FLAG "FALSE"
+# Flag to indicate invalid errors
+set FLAG_ERR "FALSE"
+# Flag to indicate too large reduced chisq
+set FLAG_CHI "FALSE"
 
 # Return TCL results for XSPEC commands.
 set xs_return_result 1
@@ -31,23 +33,31 @@ query yes
 
 # Get the value of the specified parameter
 proc get_value {pn} {
-    tclout param $pn
-    scan $xspec_tclout "%f" value
+    set value [ lindex [ tcloutr param $pn ] 0 ]
     return $value
 }
 
 # Calculate the error of the specified parameter
 proc get_error {pn} {
-    global ERR_FLAG
-    error 1.0 $pn
-    tclout error $pn
-    scan $xspec_tclout "%f %f" val_l val_u
-    set err [ expr {($val_u - $val_l) / 2.0} ]
+    global FLAG_ERR
+    global FLAG_CHI
+    set chisq [ tcloutr stat ]
+    set dof [ lindex [ tcloutr dof ] 0 ]
+    if {[ expr {$chisq / $dof} ] > 2.0} {
+        # reduced chisq too large; use sigma instead
+        set err [ tcloutr sigma $pn ]
+        set FLAG_CHI "TRUE"
+    } else {
+        error 1.0 $pn
+        tclout error $pn
+        scan $xspec_tclout "%f %f" val_l val_u
+        set err [ expr {($val_u - $val_l) / 2.0} ]
+    }
     # error treatment
     if {abs($err) < 1.0e-7} {
         puts "*** WARNING: invalid error value ***"
         set err "NULL"
-        set ERR_FLAG "TRUE"
+        set FLAG_ERR "TRUE"
     } elseif {$err < 0.01} {
         set err 0.01
     }
@@ -70,8 +80,7 @@ puts $tz_fd "#"
 puts $tz_fd "# Item  Value  Error"
 
 # Number of data group
-tclout datasets
-set datasets $xspec_tclout
+set datasets [ tcloutr datasets ]
 
 # Untie and thaw the temperature and abundance of the first region
 untie 5 6
@@ -104,6 +113,9 @@ puts $tz_fd "abund   $abund_val    $abund_err"
 close $tz_fd
 
 # Print a WARNING if there are any errors
-if {[ string equal $ERR_FLAG "TRUE" ]} {
+if {[ string equal $FLAG_ERR "TRUE" ]} {
     puts "*** WARNING: there are invalid error values ***"
+}
+if {[ string equal $FLAG_CHI "TRUE" ]} {
+    puts "*** WARNING: reduced chi^2 too large to calculate errors ***"
 }
