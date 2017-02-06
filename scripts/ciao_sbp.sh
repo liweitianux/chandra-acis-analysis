@@ -8,10 +8,12 @@
 ## Weitian LI <liweitianux@gmail.com>
 ## Created: 2012/08/16
 ##
-VERSION="v4.0"
-UPDATED="2015/06/03"
+VERSION="v4.1"
+UPDATED="2017-02-06"
 ##
 ## ChangeLogs:
+## v4.1, 2017-02-06, Weitian LI
+##   * Specify regions format and system for ds9
 ## v4.0, 2015/06/03, Aaron LI
 ##   * Copy needed pfiles to current working directory, and
 ##     set environment variable $PFILES to use these first.
@@ -23,9 +25,9 @@ UPDATED="2015/06/03"
 ##   * Updated this document of the script.
 ##   * Added 'SKIP SINGLE' to the generated QDP of SBP file.
 ## v3.1, 2013/02/01, Zhenghao ZHU
-##   * removes the region in ccd gap of ACIS_I 
+##   * removes the region in ccd gap of ACIS_I
 ##   * removes the region in the area of point source
-##   * provide asol file to correct offset 
+##   * provide asol file to correct offset
 ##
 
 unalias -a
@@ -78,7 +80,7 @@ DFT_EXPMAP="`\ls expmap*.fits 2> /dev/null | head -n 1`"
 # default `radial region file' to extract surface brightness
 #DFT_SBP_REG="_NOT_EXIST_"
 DFT_SBP_REG="sbprofile.reg"
-# defalut pointsource region file 
+# defalut pointsource region file
 DFT_CELL_REG="`\ls celld*.reg 2> /dev/null`"
 # defalut asol file
 DFT_ASOL_FILE="`\ls -1 pcad*asol*fits 2> /dev/null`"
@@ -185,11 +187,11 @@ else
     BKG="NULL"
 fi
 # check cell region file
-if [ -r "${cellreg}" ]; then 
+if [ -r "${cellreg}" ]; then
     CELL_REG="${cellreg}"
 elif [ -r "${DFT_CELL_REG}" ] ; then
     CELL_REG="${DFT_CELL_REG}"
-else 
+else
     read -p "> celldetect region file: " CELL_REG
     if [ ! -r "${CELL_REG}" ]; then
         printf "ERROR: cannot access given \`${CELL_REG}' region file \n"
@@ -281,7 +283,7 @@ TMP_REC="_tmp_rec.reg"
 if [ "${ACIS_TYPE}" = "S" ]; then
     # ACIS-S
     punlearn dmlist
-    dmlist infile="${SKYFOV}[ccd_id=${CCD}][cols POS]" opt="data,clean" | awk '{for (i=1;i<=NF;i++) print $i }' |sed -e ':a;N;s/\n/,/;ta' | awk -F"]," '{print "polygon("$2}' | awk -F"NaN" '{print $1}' >${TMP_LIST} 
+    dmlist infile="${SKYFOV}[ccd_id=${CCD}][cols POS]" opt="data,clean" | awk '{for (i=1;i<=NF;i++) print $i }' |sed -e ':a;N;s/\n/,/;ta' | awk -F"]," '{print "polygon("$2}' | awk -F"NaN" '{print $1}' >${TMP_LIST}
     python ${SCRIPT_DIR}/${CCDGAP_SCRIPT} ${TMP_LIST} >${TMP_REC}
     XC=` cat ${TMP_REC} | awk -F\( '{print $2}' |awk -F\) '{print $1}' |awk -F\, '{print $1}'`
     YC=` cat ${TMP_REC} | awk -F\( '{print $2}' |awk -F\) '{print $1}' |awk -F\, '{print $2}'`
@@ -296,8 +298,8 @@ if [ "${ACIS_TYPE}" = "S" ]; then
             break
         fi
     done
-    ANG=`echo "${ANG}/180*3.1415926" |bc -l` 
-    CCD_1_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1-$2*cos($3)-$2*sin($3)}' ` 
+    ANG=`echo "${ANG}/180*3.1415926" |bc -l`
+    CCD_1_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1-$2*cos($3)-$2*sin($3)}' `
     CCD_2_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1+$2*cos($3)-$2*sin($3)}' `
     CCD_3_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1-$2*cos($3)+$2*sin($3)}' `
     CCD_4_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1+$2*cos($3)+$2*sin($3)}' `
@@ -360,9 +362,9 @@ elif [ "${ACIS_TYPE}" = "I" ]; then
     # ACIS-I
     TMP_REG_FILE_CCD="_ccd_tmp.reg"
     [ -e "${TMP_REG_FILE_CCD}" ] && mv -f ${TMP_REG_FILE_CCD} ${TMP_REG_FILE_CCD}_bak
-    for i in `seq 0 3` ; do 
+    for i in `seq 0 3` ; do
     punlearn dmlist
-    dmlist infile="${SKYFOV}[ccd_id=${i}][cols POS]" opt="data,clean" | awk '{for (i=1;i<=NF;i++) print $i }' |sed -e ':a;N;s/\n/,/;ta' | awk -F"]," '{print "polygon("$2}' | awk -F"NaN" '{print $1}' >${TMP_LIST} 
+    dmlist infile="${SKYFOV}[ccd_id=${i}][cols POS]" opt="data,clean" | awk '{for (i=1;i<=NF;i++) print $i }' |sed -e ':a;N;s/\n/,/;ta' | awk -F"]," '{print "polygon("$2}' | awk -F"NaN" '{print $1}' >${TMP_LIST}
     python ${SCRIPT_DIR}/${CCDGAP_SCRIPT} ${TMP_LIST} >${TMP_REC}
     XC=` cat ${TMP_REC} | awk -F\( '{print $2}' |awk -F\) '{print $1}' |awk -F\, '{print $1}'`
     YC=` cat ${TMP_REC} | awk -F\( '{print $2}' |awk -F\) '{print $1}' |awk -F\, '{print $2}'`
@@ -377,8 +379,8 @@ elif [ "${ACIS_TYPE}" = "I" ]; then
             break
         fi
     done
-    ANG=`echo "${ANG}/180*3.1415926" |bc -l` 
-    CCD_1_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1-$2*cos($3)-$2*sin($3)}' ` 
+    ANG=`echo "${ANG}/180*3.1415926" |bc -l`
+    CCD_1_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1-$2*cos($3)-$2*sin($3)}' `
     CCD_2_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1+$2*cos($3)-$2*sin($3)}' `
     CCD_3_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1-$2*cos($3)+$2*sin($3)}' `
     CCD_4_X_RAW=` echo " ${XC}  ${ADD_L} ${ANG} "| awk '{print $1+$2*cos($3)+$2*sin($3)}' `
@@ -461,14 +463,17 @@ CELL_REG_USE=`cat ${CELL_REG} | \grep \( | sed -e ':a;N;s/\n/-/;ta'`
 
 if [ "${ACIS_TYPE}" = "S" ]; then
     \grep -iE '^(pie|annulus)' ${SBP_REG_FIX} | sed "s/$/\ \&\ `cat ${REG_FILE_CCD}`/" | sed "s/$/\ \-\ ${CELL_REG_USE}/" > ${SBP_REG_INCCD}
-    else 
+    else
     L=`cat ${SBP_REG_FIX} | wc -l `
 
-    for i in `seq 1 $L` ; do 
+    for i in `seq 1 $L` ; do
         echo "`cat ${SBP_REG_FIX} |head -n $i | tail -n 1 ` & `cat ${REG_FILE_CCD} | head -n 1 `- ${CELL_REG_USE} | `cat ${SBP_REG_FIX} |head -n $i | tail -n 1` & `cat ${REG_FILE_CCD} | head -n 2| tail -n 1 `- ${CELL_REG_USE} |`cat ${SBP_REG_FIX} |head -n $i | tail -n 1 ` & `cat ${REG_FILE_CCD} | head -n 3 | tail -n 1 `- ${CELL_REG_USE} |`cat ${SBP_REG_FIX} |head -n $i | tail -n 1 ` & `cat ${REG_FILE_CCD} | tail -n 1 `- ${CELL_REG_USE}  " >>${SBP_REG_INCCD}
     done
 fi
-# ds9 ${EVT_E} -region ${SBP_REG_INCCD}
+# ds9 ${EVT_E} -regions format ciao \
+#     -regions system physical \
+#     -regions ${SBP_REG_INCCD} \
+#     -cmap he -bin factor 4
 
 ## `surface brightness profile' related data {{{
 ## extract sbp
@@ -548,4 +553,3 @@ sed -i'' '/#.*/d' ${SBP_FLUX}
 ## main }}}
 
 exit 0
-

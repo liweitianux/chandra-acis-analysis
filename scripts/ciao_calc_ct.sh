@@ -6,9 +6,11 @@
 ## Junhua GU
 ## Created: 2012-08-22
 ## Weitian LI
-## Updated: 2016-06-08
+## Updated: 2017-02-06
 ##
 ## Change logs:
+## 2017-02-06, Weitian LI
+##   * Specify regions format and system for ds9
 ## 2016-06-08, Weitian LI
 ##   * Drop 'calc_distance' in favor of 'cosmo_calc'
 ## v2.0, 2015/06/03, Weitian LI
@@ -442,7 +444,10 @@ _EOF_
 ## open the evt file to verify or modify
 printf "## check the generated pie region ...\n"
 printf "## if modified, save with the same name \`${REG_OUT}' (overwrite)\n"
-ds9 ${EVT} -regions ${REG_OUT} -cmap he -bin factor 4
+ds9 ${EVT} -regions format ciao \
+    -regions system physical \
+    -regions ${REG_OUT} \
+    -cmap he -bin factor 4
 
 ## check the (modified) region (pie region end angle)
 printf "check the above region (for pie region end angle) ...\n"

@@ -12,7 +12,6 @@
 ##    of the outmost region
 ##
 ## Weitian LI <liweitianux@gmail.com>
-## Updated: 2016-06-08
 ##
 ## Change logs
 ## v1.1, 2012/08/26, Weitian LI
@@ -39,6 +38,8 @@
 ##     (dmgroup will add history to fits file, while grppha NOT)
 ## 2016-06-08, Weitian LI
 ##   * Drop 'calc_distance' in favor of 'cosmo_calc'
+## 2017-02-06, Weitian LI
+##   * Specify regions format and system for ds9
 ##
 
 ## error code {{{
@@ -446,7 +447,10 @@ _EOF_
 ## open the evt file to verify or modify
 printf "## check the generated pie region ...\n"
 printf "## if modified, save with the same name \`${REG_OUT}' (overwrite)\n"
-ds9 ${EVT} -region ${REG_OUT} -cmap he -bin factor 4
+ds9 ${EVT} -regions format ciao \
+    -regions system physical \
+    -regions ${REG_OUT} \
+    -cmap he -bin factor 4
 
 ## check the (modified) region (pie region end angle)
 printf "check the above region (for pie region end angle) ...\n"

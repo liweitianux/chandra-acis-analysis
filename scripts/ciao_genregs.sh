@@ -6,10 +6,12 @@
 ## Author: Weitian LI
 ## Created: 2013/10/12
 ##
-VERSION="v1.0"
-UPDATE="2013/10/12"
+VERSION="v2.1"
+UPDATED="2017-02-06"
 ##
 ## Changelogs:
+## v2.1, 2017-02-06, Weitian LI
+##   * Specify regions format and system for ds9
 ## v2.0, 2015/06/03, Aaron LI
 ##   * Updated script description
 ##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
@@ -73,7 +75,7 @@ if [ -r "${CELL_REG_FILE}" ]; then
 fi
 # }}}
 
-## default parameters {{{ 
+## default parameters {{{
 ## clean evt2 file
 DFT_EVT=`\ls evt2*_clean.fits 2> /dev/null`
 ## the repro dir
@@ -169,10 +171,10 @@ BASEDIR=`echo ${BASEDIR} | sed 's/\/*$//'`
 #background spectrum
 if [ -r "${bkgd}" ] ;then
     BKGD=${bkgd}
-elif [ -r "${DFT_BKGD}" ] ; then 
+elif [ -r "${DFT_BKGD}" ] ; then
     BKGD="${DFT_BKGD}"
     #ln -svf ${DFT_BKGD} .
-else 
+else
     read -p ">background spectrum file: " BKGD
     if [ ! -d ${BKGD} ] ; then
         printf "ERROR on background spectrum file"
@@ -251,7 +253,10 @@ CNTRD_PHY_REG="centroid_phy.reg"
 printf "## X centroid: ($X,$Y)\n"
 if [ "${F_DS9}" = "YES" ]; then
     printf "check the X centroid ...\n"
-    ds9 ${EVT_E} -regions ${CNTRD_PHY_REG} -cmap he -bin factor 4
+    ds9 ${EVT_E} -regions format ciao \
+        -regions system physical \
+        -regions ${CNTRD_PHY_REG} \
+        -cmap he -bin factor 4
 fi
 X0=$X
 Y0=$Y
@@ -279,7 +284,10 @@ printf "CMD: ${CMD}\n"
 ${SCRIPT_DIR}/${GEN_SBPREG_SCRIPT} ${EVT} ${EVT_E} ${X} ${Y} ${BKGD} ${SBP_REG}
 if [ "${F_DS9}" = "YES" ]; then
     printf "check SBP regions ...\n"
-    ds9 ${EVT_E} -regions ${SBP_REG} -cmap sls -bin factor 4
+    ds9 ${EVT_E} -regions format ciao \
+        -regions system physical \
+        -regions ${SBP_REG} \
+        -cmap he -bin factor 4
 fi
 printf "======== GENERATE SBPROFILE REGIONS FINISHED =======\n\n"
 
@@ -289,9 +297,11 @@ printf "CMD: ${CMD}\n"
 ${SCRIPT_DIR}/${GEN_SPCREG_SCRIPT} ${EVT} ${EVT_E} ${BKGD} ${X} ${Y} ${SPC_REG}
 if [ "${F_DS9}" = "YES" ]; then
     printf "check SPC regions ...\n"
-    ds9 ${EVT_E} -regions ${SPC_REG} -cmap he -bin factor 4
+    ds9 ${EVT_E} -regions format ciao \
+        -regions system physical \
+        -regions ${SPC_REG} \
+        -cmap he -bin factor 4
 fi
 printf "======== GENERATE SPECTRUM REGIONS FINISHED =======\n\n"
 
 exit 0
-

@@ -11,9 +11,11 @@
 ##
 ## Zhenghao ZHU
 ## Weitian LI
-## Updated: 2016-06-08
+## Updated: 2017-02-06
 ##
 ## Change logs:
+## 2017-02-06, Weitian LI
+##   * Specify regions format and system for ds9
 ## 2016-06-08, Weitian LI
 ##   * Add a reference
 ##   * Drop 'calc_distance' in favor of 'cosmo_calc'
@@ -221,7 +223,10 @@ _EOF_
 printf "CHECK the regions (R1=${R1}, R2=${R2}) ...\n"
 printf "modify if necessary and save with the same name: \`${TMP_REG}'\n"
 cp -fv ${TMP_REG} ${TMP_REG%.reg}_orig.reg
-ds9 ${EVT_E} -regions ${TMP_REG} -cmap he -bin factor 4
+ds9 ${EVT_E} -regions format ciao \
+    -regions system physical \
+    -regions ${TMP_REG} \
+    -cmap he -bin factor 4
 read -p "> Whether the region exceeds ccd edge?(No/yes/modified) " WR_ANS
 case "${WR_ANS}" in
     [yY]*)

@@ -19,10 +19,12 @@ export LC_COLLATE=C
 ## 2012/08/16                                            ##
 ###########################################################
 ##
-VERSION="v3.0"
-UPDATED="2015/06/02"
+VERSION="v3.1"
+UPDATED="2017-02-06"
 ##
 ## ChangeLogs:
+## v3.1, 2017-02-06, Weitian LI
+##   * Specify regions format and system for ds9
 ## v3.0, 2015/06/02, Aaron LI
 ##   * Added 'unalias -a' and 'export LC_COLLATE=C'
 ##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
@@ -156,7 +158,10 @@ celldetect infile=${EVT2_ORIG} outfile="${CELLD}.fits" \
 printf "check the result of \`celldetect' ...\n"
 printf "modify if necessary and save as the same name, \`${CELLD}.reg'\n"
 cp -fv ${CELLD}.reg ${CELLD}_orig.reg
-ds9 ${EVT2_ORIG} -region ${CELLD}.reg
+ds9 ${EVT2_ORIG} -regions format ciao \
+    -regions system physical \
+    -regions ${CELLD}.reg \
+    -cmap he -bin factor 2
 
 EVT2_RMSRCS="${ROOTNAME}_rmsrcs.fits"
 punlearn dmcopy
@@ -167,7 +172,7 @@ LC_REG="ex_bkg.reg"
 printf "filter flares ...\n"
 printf "select a big source region and save as \`${LC_REG}'\n"
 touch ${LC_REG}
-ds9 ${EVT2_RMSRCS}
+ds9 ${EVT2_RMSRCS} -cmap he -bin factor 2
 
 printf "create the lightcurve ...\n"
 LC="${LC_REG%.reg}.lc"
@@ -199,5 +204,3 @@ dmcopy infile="${EVT2_RMSRCS}[@${GTI}]" outfile=${EVT2_CLEAN} clobber=yes
 ## main process }}}
 
 printf "FINISHED\n"
-
-
