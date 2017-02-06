@@ -52,7 +52,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      xspec> fit
      xspec> cpd /xs
      xspec> pl l del
-     xspec> @<path>/xspec_bkgcorr_v2.tcl
+     xspec> @<path>/xspec_bkgcorr.tcl
 (12) $ cd ../img
      $ ln -s ../evt/evt2*_clean.fits .
      $ ln -s ../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
@@ -78,7 +78,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      xspec> @xspec_deproj.xcm
      xspec> fit
      (more tweaks when necessary)
-     xspec> @<path>/xspec_coolfunc_v2.tcl
+     xspec> @<path>/xspec_tprofile.tcl
      (input 1)
      xspec> exit
 (20) fix 'NULL' values in 'tcl_temp_profile.qdp' & 'tcl_temp_profile.txt'
