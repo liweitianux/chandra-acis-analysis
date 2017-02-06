@@ -2,20 +2,18 @@
 ## XSPEC Tcl script to extract the temperature profile from the
 ## fitted *deprojection spectra analysis* `projct*wabs*apec` results.
 ##
-## Requirements:
+## NOTE:
 ## * Spectra loaded *in order* (in order to correctly calculate radii)
 ## * Use XSPEC model `projct*wabs*apec`
-##
-## NOTES:
 ## * if error < 0.01, then assume error = 0.01
 ## * if fabs(error) < 1e-7, then set error as `NULL' in output
 ##   (this may be caused by frozen or tied parameters)
 ##
 ## Output:
-## * xspec_saveall.xcm    (save all for the current state)
-## * fitted_params.log    (log the fitted parameters)
-## * tprofile.qdp     (temp profile QDP file for graphing)
-## * tprofile.txt     (temp profile data file for later fit)
+## * xspec_saveall.xcm : save all for the current state
+## * fitted_params.log : log the fitted parameters
+## * tprofile.qdp : temp profile QDP file for graphing
+## * tprofile.txt : temp profile data file for later fit
 ##
 ## Weitian LI <liweitianux@live.com>
 ## Created: 2012-08-12
@@ -35,7 +33,7 @@
 
 
 ## basic variables {{{
-## record process date
+set NAME "xspec_avg_tz.tcl"
 set DATE [ exec date ]
 set ERR_FLAG "FALSE"
 ## basic vars }}}
