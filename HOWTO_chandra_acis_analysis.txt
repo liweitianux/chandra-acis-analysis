@@ -56,6 +56,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 (12) $ cd ../img
      $ ln -s ../evt/evt2*_clean.fits .
      $ ln -s ../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
+     $ ln -s ../pcadf*_asol1.fits .
 (13) ds9 open 'evt2*_clean.fits', select the center of cluster,
      save the region as 'center.reg'
 (14) $ ciao_genregs.sh reg_in=center.reg bkgd=<bkgd>
@@ -84,7 +85,8 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 (21) Determine the average temperature and abundance:
      $ xspec
      xspec> newpar <..>=<..> (bind all kT's and Abundanc's)
-     xspec> fit (get avarage Temp and Abund)
+     xspec> fit
+     (get average temperature and abundance)
      xspec> exit
 (22) $ cd ../../img;
      create '<NAME>_expcorr.conf' with contents:
