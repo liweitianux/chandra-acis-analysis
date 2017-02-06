@@ -30,6 +30,9 @@ def setup_pfiles(tools):
             "paccess", tool
         ]).decode("utf-8").strip()
         subprocess.check_call(["punlearn", tool])
-        shutil.copy(pfile, ".")
+        try:
+            shutil.copy(pfile, ".")
+        except shutil.SameFileError:
+            pass
     # Setup the ``PFILES`` environment variable
     os.environ["PFILES"] = "./:" + os.environ["PFILES"]
