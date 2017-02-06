@@ -1,9 +1,9 @@
 ###########################################################
 ## HOWTO
-## Processing Chandra ACIS data
+## Analyze Chandra ACIS data
 ##
 ## Weitian LI <liweitianux@gmail.com>
-## Last updated: 2014/06/18
+## Updated: 2017-02-06
 ###########################################################
 
 ### Settings: {{{
@@ -26,6 +26,7 @@ alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_simple.sh"
 alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
 ### Settings: }}}
 
+
 ### Websites: {{{
 NED: http://ned.ipac.caltech.edu/forms/byname.html
 Chandra Chaser: http://cda.harvard.edu/chaser/dispatchOcat.do
@@ -33,7 +34,8 @@ SIMBAD: http://simbad.u-strasbg.fr/simbad/
 nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 ### }}}
 
-### Process step-guide: {{{
+
+### Step-by-step guide to analyze ACIS data: {{{
  (1) $ chandra_repro indir=. outdir=repro verbose=2
  (2) $ cd repro; mkdir -p evt bkg img spc/profile mass;
  (3) $ cd evt; ln -s ../acis*evt2.fits .;
@@ -43,22 +45,24 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
  (7) ds9 open 'evt2*_clean.fits'; select edge region as the
      *local background*, save as 'lbkg.reg';
      and estimate the phonton counts:
- (8) $ dmlist "evt2_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" blocks
+ (8) $ dmlist "evt2*_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" blocks
  (9) $ ciao_bkg_spectra.sh reg="lbkg.reg" basedir=.. nh=<nh> z=<z>
 (10) $ xspec
 (11) xspec> @xspec_lbkg_model.xcm
      xspec> fit
      xspec> cpd /xs
      xspec> pl l del
-     xspec> @~/astro/scripts/xspec_bkgcorr_v2.tcl
-(12) cd ../img; ln -s ../evt/evt2*_clean.fits .;
+     xspec> @<path>/xspec_bkgcorr_v2.tcl
+(12) $ cd ../img
+     $ ln -s ../evt/evt2*_clean.fits .
+     $ ln -s ../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
 (13) ds9 open 'evt2*_clean.fits', select the center of cluster,
      save the region as 'center.reg'
 (14) $ ciao_genregs.sh reg_in=center.reg bkgd=<bkgd>
-(15) $ cd ../spc/profile;
-     $ ln -s ../../evt/evt2*_clean.fits .;
-     $ ln -s ../../bkg/bkgcorr_blanksky_lbkg.pi .; (maybe 'lbkg.pi')
-     $ ln -s ../../img/rspec.reg img_rspec.reg;
+(15) $ cd ../spc/profile
+     $ ln -s ../../evt/evt2*_clean.fits .
+     $ ln -s ../../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
+     $ ln -s ../../img/rspec.reg img_rspec.reg
 (16) ds9 open 'evt2*_clean.fits' with regs 'img_rspec.reg';
      adjust the regions and save as 'rspec.reg'
 (17) create conf file '<NAME>_spec.conf' like:
@@ -68,14 +72,17 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      nh         <nh>
      z          <redshift>
 (18) $ ciao_deproj_spectra.sh reg="rspec.reg" bkgd=<bkgd> basedir="../.." nh=<nh> z=<z>
-(19) $ xspec
+(19) Fit the radial spectra to derive the radial temperature profile:
+     $ xspec
      xspec> @xspec_deproj.xcm
      xspec> fit
-     xspec> @~/astro/scripts/xspec_coolfunc_v2.tcl
+     (more tweaks when necessary)
+     xspec> @<path>/xspec_coolfunc_v2.tcl
      (input 1)
      xspec> exit
 (20) fix 'NULL' values in 'tcl_temp_profile.qdp' & 'tcl_temp_profile.txt'
-(21) $ xspec
+(21) Determine the average temperature and abundance:
+     $ xspec
      xspec> newpar <..>=<..> (bind all kT's and Abundanc's)
      xspec> fit (get avarage Temp and Abund)
      xspec> exit
