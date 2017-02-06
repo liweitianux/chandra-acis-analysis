@@ -14,10 +14,6 @@ CHANDRA_SCRIPT_DIR="${HOME}/bin/chandra/scripts"
 MASS_PROFILE_DIR="${HOME}/bin/chandra/mass_profile"
 
 ## aliases:
-# ciao scripts
-alias chcld="${CIAO_SCRIPT_DIR}/chandra_collect_data_v3.sh"
-alias chr500="${CIAO_SCRIPT_DIR}/ciao_r500avgt_v3.sh"
-# mass_profile related
 alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
 alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
 alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
@@ -119,7 +115,7 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 (34) add 'nfw_rmin_kpc' to 'global.cfg'
 (35) $ fitmass global.cfg c    # calculate the center values
 (36) $ fitmass global.cfg 2>&1 | tee global_<date>.log    # calculate mass data
-(37) $ chandra_collect_data_v3.sh
+(37) $ collect_infodata.sh
 (38) $ cd ../img;
      $ chandra_update_xcentroid.sh
 (39) $ cd ../spc/profile;
