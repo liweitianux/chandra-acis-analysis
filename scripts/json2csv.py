@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 #
+# Copyright (c) 2012-2017 Weitian LI <liweitianux@live.com>
+# MIT license
+#
 # Convert JSON to CSV format
 #
 # References:
@@ -9,10 +12,13 @@
 # [4] http://json.parser.online.fr/
 #
 #
-# Weitian LI <liweitianux@gmail.com>
+# Weitian LI <liweitianux@live.com>
 # Created: 2012-08-31
 #
-# ChangeLogs:
+# Change logs:
+# 2017-02-06, Weitian LI
+#   * Use `argparse`
+#   * Cleanups
 # v3.5, 2015-11-09
 #   * Get column keys from the first input json block
 #   * Use python3
@@ -26,32 +32,43 @@
 #   * add key `XCNTRD_RA, XCNTRD_DEC'
 # v3.1, 2013-05-18
 #   * add key `Feature', corresponding to `collectdata_v3.1'
-#
 
-import sys
+import os
+import argparse
 import csv
 import json
 from collections import OrderedDict
 
-argc = len(sys.argv)
-if (argc != 3):
-    print("usage:")
-    print("    "+ sys.argv[0]+ " <input_json> <output_csv>")
-    sys.exit(255)
 
-infile = open(sys.argv[1], 'r')
-data = json.load(infile, object_pairs_hook=OrderedDict)
-infile.close()
+def main():
+    parser = argparse.ArgumentParser(description="Convert JSON to CSV")
+    parser.add_argument("infile", help="Input JSON file")
+    parser.add_argument("outfile", nargs="?",
+                        help="Output CSV file (default to use the same " +
+                        "basename as the input file)")
+    args = parser.parse_args()
 
-# column keys
-colkeys = list(data[0].keys())
+    with open(args.infile) as f:
+        # Use `OrderedDict` to keep the orders of keys of all json files
+        data = json.load(f, object_pairs_hook=OrderedDict)
 
-with open(sys.argv[2], 'w') as csvfile:
-    outfile_writer = csv.writer(csvfile)
-    # CSV header row
-    outfile_writer.writerow(colkeys)
-    # CSV data rows
-    for row in data:
-        outfile_writer.writerow([ row.get(key) for key in colkeys ])
+    # Column keys
+    colkeys = list(data[0].keys())
+
+    if args.outfile:
+        outfile = args.outfile
+    else:
+        outfile = os.path.splitext(args.infile)[0] + ".csv"
+    with open(outfile, "w") as csvfile:
+        outfile_writer = csv.writer(csvfile)
+        # CSV header row
+        outfile_writer.writerow(colkeys)
+        # CSV data rows
+        for row in data:
+            outfile_writer.writerow([row.get(key) for key in colkeys])
+
+
+if __name__ == "__main__":
+    main()
 
 #  vim: set ts=4 sw=4 tw=0 fenc=utf-8 ft=python: #
