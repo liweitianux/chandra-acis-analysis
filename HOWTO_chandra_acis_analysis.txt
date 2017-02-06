@@ -62,30 +62,26 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      $ ln -s ../../img/rspec.reg img_rspec.reg
 (16) ds9 open 'evt2*_clean.fits' with regs 'img_rspec.reg';
      adjust the regions and save as 'rspec.reg'
-(17) create conf file '<NAME>_spec.conf' like:
+(17) create a config file '<NAME>_spec.conf' looks like (for batch process):
      basedir    ../..
      reg        rspec.reg
      bkgd       bkgcorr_blanksky_lbkg.pi | lbkg.pi
      nh         <nh>
      z          <redshift>
 (18) $ ciao_deproj_spectra.sh reg="rspec.reg" bkgd=<bkgd> basedir="../.." nh=<nh> z=<z>
-(19) Fit the radial spectra to derive the radial temperature profile:
+(19) Fit the radial spectra to derive the radial temperature profile,
+     as well as the average temperature and abundance:
      $ xspec
      xspec> @xspec_deproj.xcm
      xspec> fit
-     (more tweaks when necessary)
+     (tweaks parameters when necessary)
      xspec> @<path>/xspec_tprofile.tcl
-     (input 1)
+     (calculate average temperature and abundance)
+     xspec> @<path>/xspec_avg_tz.tcl
      xspec> exit
-(20) fix 'NULL' values in 'tcl_temp_profile.qdp' & 'tcl_temp_profile.txt'
-(21) Determine the average temperature and abundance:
-     $ xspec
-     xspec> newpar <..>=<..> (bind all kT's and Abundanc's)
-     xspec> fit
-     (get average temperature and abundance)
-     xspec> exit
-(22) $ cd ../../img;
-     create '<NAME>_expcorr.conf' with contents:
+(20) fix 'NULL' values in 'tprofile.qdp', 'tprofile.txt' & 'tz_average.txt'
+(21) $ cd ../../img;
+(22) create config '<NAME>_expcorr.conf' (for batch process):
      basedir    ..
      reg        sbprofile.reg
      nh         <nh>
@@ -97,12 +93,16 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 
 (24) $ cd ../mass; clean_massdir.sh;
 (25) check needed linked files:
-     sbprofile.txt, flux_sbp.txt, radius_sbp.txt, tcl_temp_profile.txt
+     * sbprofile.txt
+     * flux_sbp.txt
+     * radius_sbp.txt
+     * tprofile.txt
 (26) check needed config files:
-     wang2012_param.txt,
-     fitting_mass.conf, fitting_sbp.conf,
-     fitting_dbeta_mass.conf, fitting_dbeta_sbp.conf,
-     global.cfg
+     * wang2012_param.txt
+     * fitting_mass.conf
+     * fitting_sbp.conf
+     * fitting_dbeta_mass.conf
+     * fitting_dbeta_sbp.conf
 (27) $ fitwang wang2012_param.txt
 (28) $ qdp fit_result.qdp   # check fitted temperature profile
 (29) $ fitsbp fitting_mass.conf   # single-beta sbp
@@ -112,15 +112,15 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      $ ln -s fitting_dbeta_mass.conf global.cfg   # use double-beta
 (32) $ fitnfw <z> [rmin_kpc]
 (33) $ qdp nfw_fit_result.qdp   # check fitted nfw profile, and ajust 'rmin_kpc'
-(34) add 'nfw_rmin_kpc' to 'global.cfg'
+(34) add 'nfw_rmin_kpc <rmin_kpc>' to 'global.cfg'
 (35) $ fitmass global.cfg c    # calculate the center values
 (36) $ fitmass global.cfg 2>&1 | tee global_<date>.log    # calculate mass data
 (37) $ collect_infodata.sh
 (38) $ cd ../img;
      $ chandra_update_xcentroid.sh
 (39) $ cd ../spc/profile;
-(40) $ chr500 inner=0.1 outer=0.5   # check 0.5R500 range
-     $ chr500 inner=0.2 outer=0.5
+(40) $ ciao_r500avgt.sh inner=0.1 outer=0.5   # check 0.5R500 range
+     $ ciao_r500avgt.sh inner=0.2 outer=0.5
 (41) $ xspec
      xspec> @xspec_r500avgt_0.1-0.5.xcm
      xspec> fit; fit;
