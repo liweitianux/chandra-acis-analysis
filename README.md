@@ -50,14 +50,13 @@ Installation
 ------------
 Dependencies:
 + GSL
-+ X11 libraries
-+ a working HEASoft installation (for ``libpgplot.a`` and ``libcpgplot.a``)
 
 1. ``mass_profile``
 ```
 $ cd mass_profile
-$ make cleanall
-$ heainit   # initilize HEASoft, in order to find libpgplot.a and libcpgplot.a
+$ make clean
+$ make
+(or use this to enable OpenMP)
 $ make OPENMP=yes
 ```
 

@@ -15,9 +15,10 @@
 #include <core/freeze_param.hpp>
 #include <error_estimator/error_estimator.hpp>
 #include "spline.hpp"
-#include <cpgplot.h>
+
 using namespace std;
 using namespace opt_utilities;
+
 //double s=5.63136645E20;
 const double M_sun=1.988E33;//solar mass in g
 const double kpc=3.086E21;//kpc in cm

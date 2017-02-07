@@ -6,19 +6,20 @@
 
 #ifndef VCHI_SQ_HPP
 #define VCHI_SQ_HPP
+
 #define OPT_HEADER
+
 #include <core/fitter.hpp>
 #include <iostream>
 #include <vector>
 #include <misc/optvec.hpp>
 #include <cmath>
-#include "plot_reporter.hpp"
-#include <cpgplot.h>
-using std::cerr;using std::endl;
+
+using std::cerr;
+using std::endl;
 
 namespace opt_utilities
 {
-
   template<typename T>
   class vchisq
     :public statistic<std::vector<T>,std::vector<T>,std::vector<T>,T,std::string>
@@ -59,8 +60,6 @@ namespace opt_utilities
       :verb(false),limit_bound(false)
     {}
 
-
-
     T do_eval(const std::vector<T>& p)
     {
       if(limit_bound)
@@ -71,7 +70,6 @@ namespace opt_utilities
 	    }
 	}
       T result(0);
-
       std::vector<float> vx;
       std::vector<float> vy;
       std::vector<float> vye;
@@ -80,7 +78,6 @@ namespace opt_utilities
       if(verb)
 	{
 	  n++;
-
 	  if(n%100==0)
 	    {
 	      vx.resize(this->get_data_set().get_data(0).get_y().size());
@@ -88,7 +85,6 @@ namespace opt_utilities
 	      vye.resize(this->get_data_set().get_data(0).get_y().size());
 	      my.resize(this->get_data_set().get_data(0).get_y().size());
 	    }
-
 	}
       for(int i=(this->get_data_set()).size()-1;i>=0;--i)
 	{
@@ -101,10 +97,8 @@ namespace opt_utilities
 	      result+=chi*chi;
 	    }
 
-
 	  if(verb&&n%100==0)
 	    {
-
 	      for(size_t j=0;j<y.size();++j)
 		{
 		  vx.at(j)=((this->get_data_set().get_data(i).get_x().at(j)+this->get_data_set().get_data(i).get_x().at(j+1))/2.);
@@ -119,33 +113,19 @@ namespace opt_utilities
 		  vx[j]=log10(vx[j]);
 		  vy[j]=log10(vy[j]);
 		  my[j]=log10(my[j]);
-
 		}
-
 	    }
-
 	}
       if(verb)
 	{
-
 	  if(n%100==0)
 	    {
-
 	      cerr<<result<<"\t";
 	      for(size_t i=0;i<get_size(p);++i)
 		{
 		  cerr<<get_element(p,i)<<",";
 		}
 	      cerr<<endl;
-	    }
-	  if(n%100==0)
-	    {
-	      //cpgask(1);
-	      //std::cerr<<x1<<"\t"<<y1<<std::endl;
-	      pr.init_xyrange(log10(x1/1.5),log10(x2*1.5),log10(y1/1.5),log10(y2*1.5),30);
-	      //pr.init_xyrange((x1),(x2),(y1),(y2));
-	      pr.plot_err1_dot(vx,vy,vye);
-	      pr.plot_line(vx,my);
 	    }
 	}
 

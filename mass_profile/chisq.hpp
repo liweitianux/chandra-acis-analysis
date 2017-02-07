@@ -6,15 +6,17 @@
 
 #ifndef CHI_SQ_HPP
 #define CHI_SQ_HPP
+
 #define OPT_HEADER
+
 #include <core/fitter.hpp>
 #include <iostream>
 #include <vector>
 #include <misc/optvec.hpp>
 #include <cmath>
-#include "plot_reporter.hpp"
-#include <cpgplot.h>
-using std::cerr;using std::endl;
+
+using std::cerr;
+using std::endl;
 
 namespace opt_utilities
 {
@@ -77,8 +79,6 @@ namespace opt_utilities
       :verb(true),limit_bound(false)
     {}
 
-
-
     Ty do_eval(const Tp& p)
     {
       if(limit_bound)
@@ -111,7 +111,6 @@ namespace opt_utilities
 	      vye2.resize(this->get_data_set().size());
 	      my.resize(this->get_data_set().size());
 	    }
-
 	}
 
       for(int i=(this->get_data_set()).size()-1;i>=0;--i)
@@ -157,7 +156,6 @@ namespace opt_utilities
 		}
 	    }
 
-
 	  if(y_model>y_obs)
 	    {
 	      y_err=this->get_data_set().get_data(i).get_y_upper_err();
@@ -185,7 +183,6 @@ namespace opt_utilities
 	      ymax=std::max(vy.at(i),ymax+vye2[i]);
 	    }
 
-
 	}
       if(verb)
 	{
@@ -198,20 +195,12 @@ namespace opt_utilities
 		}
 	      cerr<<endl;
 	      //cerr<<x1<<"\t"<<x2<<endl;
-	      pr.init_xyrange(xmin,xmax,ymin,ymax,0);
-	      pr.plot_err2_dot(vx,vy,vye1,vye2);
-	      pr.plot_line(vx,my);
-	      cpgask(0);
 	    }
-
 	}
 
       return result;
     }
   };
-
-
 }
 
-#endif
-//EOF
+#endif /* CHI_SQ_HPP */
