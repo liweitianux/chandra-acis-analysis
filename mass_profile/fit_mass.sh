@@ -202,7 +202,7 @@ for i in `seq 1 ${MC_TIMES}`; do
     echo "no no no"      >> summary_gas_mass_profile.qdp
     cat entropy.qdp      >> summary_entropy.qdp
     echo "no no no"      >> summary_entropy.qdp
-done  # end `while'
+done  # end of `for'
 
 # recover the files of original center values
 cp -f ${cfunc_profile_center} ${cfunc_profile}
@@ -228,10 +228,10 @@ printf "## R200:  ${R200_VAL}\n"
 printf "## R500:  ${R500_VAL}\n"
 printf "## R1500: ${R1500_VAL}\n"
 printf "## R2500: ${R2500_VAL}\n"
-L200E=`${base_path}/calc_lx  ${sbprofile} flux_cnt_ratio_center.txt $z $R200_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L500E=`${base_path}/calc_lx  ${sbprofile} flux_cnt_ratio_center.txt $z $R500_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L1500E=`${base_path}/calc_lx ${sbprofile} flux_cnt_ratio_center.txt $z $R1500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L2500E=`${base_path}/calc_lx ${sbprofile} flux_cnt_ratio_center.txt $z $R2500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L200E=`${base_path}/calc_lx  ${sbp_data} flux_cnt_ratio_center.txt $z $R200_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L500E=`${base_path}/calc_lx  ${sbp_data} flux_cnt_ratio_center.txt $z $R500_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L1500E=`${base_path}/calc_lx ${sbp_data} flux_cnt_ratio_center.txt $z $R1500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L2500E=`${base_path}/calc_lx ${sbp_data} flux_cnt_ratio_center.txt $z $R2500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
 R200E=`grep   '^r200'             ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 R500E=`grep   '^r500'             ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 R1500E=`grep  '^r1500'            ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
