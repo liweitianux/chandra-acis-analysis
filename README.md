@@ -48,9 +48,6 @@ TODO
 
 Installation
 ------------
-Dependencies:
-+ GSL
-
 1. ``mass_profile``
 ```
 $ cd mass_profile
@@ -61,7 +58,7 @@ $ make OPENMP=yes
 ```
 
 2. ``cosmo_calc``
-Get from repository [atoolbox](https://github.com/liweitianux/atoolbox),
+Get it from repository [atoolbox](https://github.com/liweitianux/atoolbox),
 under the directory ``astro/cosmo_calc``.
 
 
