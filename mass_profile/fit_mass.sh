@@ -4,7 +4,7 @@
 #
 # Output:
 #   * final_result.txt / center_only_results.txt
-#   * beta_param_center.txt / dbeta_param_center.txt
+#   * beta_param.txt / dbeta_param_center.txt
 #   * gas_mass_int_center.qdp
 #   * mass_int_center.qdp
 #   * nfw_fit_center.qdp
@@ -14,9 +14,9 @@
 #   * rho_fit_center.qdp
 #   * sbp_fit_center.qdp
 #   * entropy_center.qdp
-#   * ${t_profile_type}_param_center.txt
-#   * ${t_profile_type}_dump_center.qdp
-#   * ${t_profile_type}_fit_center.qdp
+#   * wang2012_param_center.txt
+#   * tprofile_dump_center.qdp
+#   * tprofile_fit_center.qdp
 #   * summary_mass_profile.qdp
 #   * summary_overdensity.qdp
 #   * summary_gas_mass_profile.qdp
@@ -26,15 +26,20 @@
 # Weitian LI
 # 2016-06-07
 #
+# Change logs:
+# 2017-02-07, Weitian LI
+#   * Rename from `fit_nfwmass.sh` to `fit_mass.sh`
+#   * Update to use the new style configuration files
+#
 
 if [ $# -eq 1 ] || [ $# -eq 2 ]; then
     :
 else
     echo "usage:"
-    echo "    `basename $0` <global.cfg> [c]"
+    echo "    `basename $0` <mass.conf> [c]"
     echo ""
     echo "arguments:"
-    echo "    <global.cfg>: main config file used for mass calculation"
+    echo "    <mass.conf>: config file for mass profile calculation"
     echo "    [c]: optional; if specified, do not calculate the errors"
     exit 1
 fi
@@ -50,13 +55,11 @@ if [ -z "${HEADAS}" ]; then
 fi
 
 export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
-export PGPLOT_FONT="${HEADAS}/lib/grfont.dat"
-printf "## PGPLOT_FONT: \`${PGPLOT_FONT}'\n"
 
 base_path=$(dirname $(realpath $0))
 printf "## base_path: \`${base_path}'\n"
-cfg_file="$1"
-printf "## use configuration file: \`${cfg_file}'\n"
+mass_cfg="$1"
+printf "## use configuration file: \`${mass_cfg}'\n"
 case "$2" in
     [cC])
         F_C="YES"
@@ -66,48 +69,26 @@ case "$2" in
         ;;
 esac
 
-# rmin for fit_nfw_mass
-nfw_rmin_kpc=`grep '^nfw_rmin_kpc' ${cfg_file} | awk '{ print $2 }'`
-# profile type name
-t_profile_type=`grep '^t_profile' ${cfg_file} | awk '{ print $2 }'`
-printf "## t_profile_type: \`$t_profile_type'\n"
-# data file name
-t_data_file=`grep '^t_data_file' ${cfg_file} | awk '{ print $2 }'`
-t_param_file=`grep '^t_param_file' ${cfg_file} | awk '{ print $2 }'`
+nh=`grep            '^nh'            ${mass_cfg} | awk '{ print $2 }'`
+abund=`grep         '^abund'         ${mass_cfg} | awk '{ print $2 }'`
+nfw_rmin_kpc=`grep  '^nfw_rmin_kpc'  ${mass_cfg} | awk '{ print $2 }'`
+tprofile_data=`grep '^tprofile_data' ${mass_cfg} | awk '{ print $2 }'`
+tprofile_cfg=`grep  '^tprofile_cfg'  ${mass_cfg} | awk '{ print $2 }'`
+sbp_cfg=`grep       '^sbp_cfg'       ${mass_cfg} | awk '{ print $2 }'`
+
 # sbp config file
-sbp_cfg=`grep '^sbp_cfg' ${cfg_file} | awk '{ print $2 }'`
-# temperature profile file
-T_file=`grep '^T_file' ${sbp_cfg} | awk '{ print $2 }'`
-cfunc_file=`grep '^cfunc_file' ${sbp_cfg} | awk '{ print $2 }'`
-abund=`grep '^abund' ${cfg_file} | awk '{ print $2 }'`
-nh=`grep '^nh' ${cfg_file} | awk '{ print $2 }'`
-## calc `cm_per_pixel' instead {{{
-z=`grep '^z' ${sbp_cfg} | awk '{ print $2 }'`
+sbp_data=`grep      '^sbp_data'      ${sbp_cfg} | awk '{ print $2 }'`
+tprofile=`grep      '^tprofile'      ${sbp_cfg} | awk '{ print $2 }'`
+cfunc_profile=`grep '^cfunc_profile' ${sbp_cfg} | awk '{ print $2 }'`
+z=`grep             '^z'             ${sbp_cfg} | awk '{ print $2 }'`
 cm_per_pixel=`cosmo_calc ${z} | grep 'cm/pixel' | awk -F':' '{ print $2 }'`
 sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
-printf "## redshift: ${z}, cm_per_pixel: ${cm_per_pixel}\n"
-## cm_per_pixel }}}
+
 da=`python -c "print($cm_per_pixel/(.492/3600/180*3.1415926))"`
 dl=`python -c "print($da*(1+$z)**2)"`
 printf "da= ${da}\n"
 printf "dl= ${dl}\n"
-## sbp {{{
-sbp_data_file=`grep '^sbp_file' ${sbp_cfg} | awk '{ print $2 }'`
-radius_sbp_file=`grep '^radius_sbp_file' ${cfg_file} | awk '{ print $2 }'`
 
-if [ "x${radius_sbp_file}" = "x" ]; then
-    printf "*** ERROR: radius_sbp_file not found\n"
-    exit 200
-fi
-
-TMP_RSBP="_tmp_rsbp.txt"
-[ -e "${TMP_RSBP}" ] && rm -f ${TMP_RSBP}
-cat ${radius_sbp_file} | sed 's/#.*$//' | grep -Ev '^\s*$' > ${TMP_RSBP}
-# mv -f _tmp_rsbp.txt ${radius_sbp_file}
-radius_sbp_file="${TMP_RSBP}"
-## sbp }}}
-
-## sbp model: beta/dbeta {{{
 if grep -q '^beta2' $sbp_cfg; then
     MODEL="dbeta"
     MODEL_NAME="double-beta"
@@ -115,28 +96,23 @@ else
     MODEL="beta"
     MODEL_NAME="single-beta"
 fi
-# }}}
 
-# only 'wang2012' model supported {{{
-if [ "X${t_profile_type}" != "Xwang2012" ]; then
-    printf "ERROR: invalid temperature profile model: \`${t_profile_type}'!\n"
-    exit 10
-fi
-T_param_center="${t_profile_type}_param_center.txt"
-T_fit_center="${t_profile_type}_fit_center.qdp"
-T_file_center="${t_profile_type}_dump_center.qdp"
-T_dump="${t_profile_type}_dump.qdp"
-PROG_TPROFILE="fit_${t_profile_type}_model"
-${base_path}/${PROG_TPROFILE} ${t_data_file} ${t_param_file} \
-            ${cm_per_pixel} 2> /dev/null | tee ${T_param_center}
-cp -fv ${T_dump} ${T_file}
-mv -fv ${T_dump} ${T_file_center}
-mv -fv fit_result.qdp ${T_file_center}
-# temp profile }}}
+PROG_TPROFILE="fit_wang2012_model"
+tprofile_dump="wang2012_dump.qdp"
+tprofile_param_center="wang2012_param_center.txt"
+tprofile_fit_center="tprofile_fit_center.qdp"
+tprofile_center="tprofile_dump_center.qdp"
 
-$base_path/coolfunc_calc.sh ${T_file_center} $abund $nh $z $cfunc_file cfunc_bolo.dat
-cfunc_file_center="coolfunc_data_center.txt"
-cp -f ${cfunc_file} ${cfunc_file_center}
+${base_path}/${PROG_TPROFILE} ${tprofile_data} ${tprofile_cfg} \
+            ${cm_per_pixel} 2> /dev/null | tee ${tprofile_param_center}
+cp -fv ${tprofile_dump} ${tprofile}
+mv -fv ${tprofile_dump} ${tprofile_center}
+mv -fv fit_result.qdp ${tprofile_fit_center}
+
+$base_path/coolfunc_calc.sh ${tprofile_center} \
+                            ${abund} ${nh} ${z} ${cfunc_profile} cfunc_bolo.dat
+cfunc_profile_center="coolfunc_profile_center.txt"
+cp -f ${cfunc_profile} ${cfunc_profile_center}
 mv -fv flux_cnt_ratio.txt flux_cnt_ratio_center.txt
 
 PROG_SBPFIT="fit_${MODEL}_sbp"
@@ -149,7 +125,7 @@ mv -fv sbp_fit.qdp sbp_fit_center.qdp
 mv -fv rho_fit.qdp rho_fit_center.qdp
 mv -fv rho_fit.dat rho_fit_center.dat
 mv -fv entropy.qdp entropy_center.qdp
-${base_path}/fit_nfw_mass mass_int.dat $z $nfw_rmin_kpc 2> /dev/null
+${base_path}/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null
 mv -fv nfw_param.txt      nfw_param_center.txt
 mv -fv nfw_fit_result.qdp nfw_fit_center.qdp
 mv -fv nfw_dump.qdp       mass_int_center.qdp
@@ -159,24 +135,28 @@ mv -fv gas_mass_int.qdp   gas_mass_int_center.qdp
 #exit 233
 
 ## cooling time (-> use 'ciao_calc_ct.sh')
-$base_path/cooling_time rho_fit_center.dat ${T_file_center} cfunc_bolo.dat $dl $cm_per_pixel > cooling_time.dat
+${base_path}/cooling_time rho_fit_center.dat \
+            ${tprofile_center} cfunc_bolo.dat \
+            ${dl} ${cm_per_pixel} > cooling_time.dat
 ## radius to calculate tcool, not the cooling time!
-rcool=`$base_path/analyze_mass_profile.py 500 c | grep '^r500' | awk -F'=' '{ print .048*$2 }'`
-printf "rcool= ${rcool}\n"
+rcool=`${base_path}/analyze_mass_profile.py 500 c | grep '^r500' | awk -F'=' '{ print .048*$2 }'`
+printf "rcool= ${rcool} (kpc)\n"
 
 ## only calculate central value {{{
 if [ "${F_C}" = "YES" ]; then
     RES_CENTER="center_only_results.txt"
     [ -e "${RES_CENTER}" ] && mv -f ${RES_CENTER} ${RES_CENTER}_bak
-    $base_path/analyze_mass_profile.py  200 c | tee -a ${RES_CENTER}
-    $base_path/analyze_mass_profile.py  500 c | tee -a ${RES_CENTER}
-    $base_path/analyze_mass_profile.py 1500 c | tee -a ${RES_CENTER}
-    $base_path/analyze_mass_profile.py 2500 c | tee -a ${RES_CENTER}
-    $base_path/extract_tcool.py $rcool        | tee -a ${RES_CENTER}
-    $base_path/fg_2500_500.py c               | tee -a ${RES_CENTER}
+    ${base_path}/analyze_mass_profile.py  200 c | tee -a ${RES_CENTER}
+    ${base_path}/analyze_mass_profile.py  500 c | tee -a ${RES_CENTER}
+    ${base_path}/analyze_mass_profile.py 1500 c | tee -a ${RES_CENTER}
+    ${base_path}/analyze_mass_profile.py 2500 c | tee -a ${RES_CENTER}
+    ${base_path}/fg_2500_500.py c               | tee -a ${RES_CENTER}
+    ${base_path}/extract_tcool.py cooling_time.dat ${rcool} | tee -a ${RES_CENTER}
     exit 0
 fi
 ## central value }}}
+
+## ------------------------------------------------------------------
 
 # clean previous files
 rm -f summary_overdensity.qdp
@@ -184,28 +164,25 @@ rm -f summary_mass_profile.qdp
 rm -f summary_gas_mass_profile.qdp
 rm -f summary_entropy.qdp
 
-
 # Estimate the errors of Lx and Fx by Monte Carlo simulation
 printf "\n+++++++++++++++++++ Monte Carlo +++++++++++++++++++++\n"
 MC_TIMES=100
 for i in `seq 1 ${MC_TIMES}`; do
-    $base_path/shuffle_T.py $t_data_file temp_shuffled_t.dat
-    $base_path/shuffle_sbp.py $sbp_data_file temp_shuffled_sbp.dat
+    ${base_path}/shuffle_profile.py ${tprofile_data} tmp_tprofile.txt
+    ${base_path}/shuffle_profile.py ${sbp_data} tmp_sbprofile.txt
 
     # temperature profile
-    ${base_path}/${PROG_TPROFILE} temp_shuffled_t.dat ${t_param_file} \
+    ${base_path}/${PROG_TPROFILE} tmp_tprofile.txt ${tprofile_cfg} \
                 ${cm_per_pixel} 2> /dev/null
-    mv -f ${T_dump} ${T_file}
+    mv -f ${tprofile_dump} ${tprofile}
 
-    # clear ${TMP_SBP_CFG}
-    TMP_SBP_CFG="temp_sbp.cfg"
-    # : > ${TMP_SBP_CFG}
+    TMP_SBP_CFG="tmp_sbp.cfg"
     [ -e "${TMP_SBP_CFG}" ] && rm -f ${TMP_SBP_CFG}
     cat ${sbp_cfg} | while read l; do
-        if echo "${l}" | grep -q '^sbp_file' >/dev/null; then
-            echo "sbp_file  temp_shuffled_sbp.dat" >> ${TMP_SBP_CFG}
-        elif echo "${l}" | grep -q '^T_file' >/dev/null; then
-            echo "T_file  ${T_file}" >> ${TMP_SBP_CFG}
+        if echo "${l}" | grep -q '^sbp_data' >/dev/null; then
+            echo "sbp_data  tmp_sbprofile.txt" >> ${TMP_SBP_CFG}
+        elif echo "${l}" | grep -q '^tprofile' >/dev/null; then
+            echo "tprofile  ${tprofile}" >> ${TMP_SBP_CFG}
         else
             echo "${l}" >> ${TMP_SBP_CFG}
         fi
@@ -213,10 +190,10 @@ for i in `seq 1 ${MC_TIMES}`; do
 
     printf "## ${i} / ${MC_TIMES} ##\n"
     printf "## `pwd -P` ##\n"
-    ${base_path}/coolfunc_calc.sh ${T_file} ${abund} ${nh} ${z} ${cfunc_file}
-    ${base_path}/${SBP_PROG} ${TMP_SBP_CFG} 2> /dev/null
+    ${base_path}/coolfunc_calc.sh ${tprofile} ${abund} ${nh} ${z} ${cfunc_profile}
+    ${base_path}/${PROG_SBPFIT} ${TMP_SBP_CFG} 2> /dev/null
     cat ${RES_SBPFIT}
-    $base_path/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null
+    ${base_path}/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null
     cat nfw_dump.qdp     >> summary_mass_profile.qdp
     echo "no no no"      >> summary_mass_profile.qdp
     cat overdensity.qdp  >> summary_overdensity.qdp
@@ -225,11 +202,11 @@ for i in `seq 1 ${MC_TIMES}`; do
     echo "no no no"      >> summary_gas_mass_profile.qdp
     cat entropy.qdp      >> summary_entropy.qdp
     echo "no no no"      >> summary_entropy.qdp
-
 done  # end `while'
-# recover `center_files'
-cp -f ${cfunc_file_center} ${cfunc_file}
-cp -f ${T_file_center} ${T_file}
+
+# recover the files of original center values
+cp -f ${cfunc_profile_center} ${cfunc_profile}
+cp -f ${tprofile_center} ${tprofile}
 printf "\n+++++++++++++++++ MONTE CARLO END +++++++++++++++++++\n"
 
 ## analyze results
@@ -251,10 +228,10 @@ printf "## R200:  ${R200_VAL}\n"
 printf "## R500:  ${R500_VAL}\n"
 printf "## R1500: ${R1500_VAL}\n"
 printf "## R2500: ${R2500_VAL}\n"
-L200E=`$base_path/calc_lx  $radius_sbp_file flux_cnt_ratio_center.txt $z $R200_VAL  $t_data_file | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L500E=`$base_path/calc_lx  $radius_sbp_file flux_cnt_ratio_center.txt $z $R500_VAL  $t_data_file | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L1500E=`$base_path/calc_lx $radius_sbp_file flux_cnt_ratio_center.txt $z $R1500_VAL $t_data_file | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L2500E=`$base_path/calc_lx $radius_sbp_file flux_cnt_ratio_center.txt $z $R2500_VAL $t_data_file | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L200E=`${base_path}/calc_lx  ${sbprofile} flux_cnt_ratio_center.txt $z $R200_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L500E=`${base_path}/calc_lx  ${sbprofile} flux_cnt_ratio_center.txt $z $R500_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L1500E=`${base_path}/calc_lx ${sbprofile} flux_cnt_ratio_center.txt $z $R1500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+L2500E=`${base_path}/calc_lx ${sbprofile} flux_cnt_ratio_center.txt $z $R2500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
 R200E=`grep   '^r200'             ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 R500E=`grep   '^r500'             ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 R1500E=`grep  '^r1500'            ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
@@ -273,7 +250,6 @@ FG1500E=`grep '^gas_fraction1500' ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'
 FG2500E=`grep '^gas_fraction2500' ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 
 printf "\n+++++++++++++++ RESULTS (${MODEL_NAME}) +++++++++++++++\n"
-printf "cfg: ${cfg_file}\n"                    | tee -a ${RES_FINAL}
 printf "model: ${MODEL_NAME}\n"                | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}
 cat ${RES_SBPFIT_CENTER}                       | tee -a ${RES_FINAL}
@@ -308,6 +284,6 @@ printf "gas fractho 1500= ${FG1500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "gas mass 2500= ${MG2500E} M_sun\n"     | tee -a ${RES_FINAL}
 printf "gas fractho 2500= ${FG2500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}
-$base_path/extract_tcool.py $rcool             | tee -a ${RES_FINAL}
-$base_path/fg_2500_500.py                      | tee -a ${RES_FINAL}
+${base_path}/fg_2500_500.py                    | tee -a ${RES_FINAL}
+${base_path}/extract_tcool.py cooling_time.dat ${rcool} | tee -a ${RES_FINAL}
 printf "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
