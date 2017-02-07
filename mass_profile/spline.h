@@ -1,5 +1,6 @@
-#ifndef SPLINEH
-#define SPLINEH
+#ifndef SPLINE_H
+#define SPLINE_H
+
 #include <vector>
 #include <cstdlib>
 #include <cassert>
@@ -58,7 +59,7 @@ public:
     double b=(x-x_list[n1])/h;
     return a*y_list[n1]+b*y_list[n2]+((a*a*a-a)*y2_list[n1]+
 				      (b*b*b-b)*y2_list[n2])*(h*h)/6.;
-    
+
   }
 
   void gen_spline(T y2_0,T y2_N)
@@ -95,7 +96,7 @@ public:
       {
 	qn=.5;
 	un=(3./(x_list[n-1]-x_list[n-2]))*(y2_N-(y_list[n-1]-y_list[n-2])/(x_list[n-1]-x_list[n-2]));
-	
+
       }
     y2_list[n-1]=(un-qn*u[n-2])/(qn*y2_list[n-2]+1.);
     for(int i=n-2;i>=0;--i)
@@ -106,4 +107,4 @@ public:
 
 };
 
-#endif
+#endif  /* SPLINE_H */

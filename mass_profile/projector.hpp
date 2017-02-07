@@ -193,7 +193,7 @@ namespace opt_utilities
               double v = calc_v(x, nsph, nrad) * pow(cm_per_pixel, 3);
               if(pcfunc)
                 {
-                  cfunc = (*pcfunc)((x[nsph+1] + x[nsph]) / 2.0);
+                  double cfunc = (*pcfunc)((x[nsph+1] + x[nsph]) / 2.0);
                   projected[nrad] += (unprojected[nsph] * unprojected[nsph] *
                                       cfunc * v / ne_np_ratio);
                 }
@@ -202,7 +202,7 @@ namespace opt_utilities
                   projected[nrad] += unprojected[nsph] * unprojected[nsph] * v;
                 }
             }
-          area = pi * (x[nrad+1]*x[nrad+1] - x[nrad]*x[nrad]);
+          double area = pi * (x[nrad+1]*x[nrad+1] - x[nrad]*x[nrad]);
           projected[nrad] /= area;
           projected[nrad] += bkg;
         }
