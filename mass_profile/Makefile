@@ -1,5 +1,5 @@
 #
-# Makefile for `mass_profile` tools
+# Makefile for `chandra-acis-analysis/mass_profile` tools
 #
 # Junhua GU
 # Weitian LI
@@ -29,7 +29,7 @@ TARGETS= fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp \
 		fit_direct_beta calc_distance fit_wang2012_model \
 		fit_nfw_mass calc_lx fit_mt_pl fit_lt_pl fit_mt_bpl \
 		fit_lt_bpl cooling_time calc_lx_dbeta calc_lx_beta
-HEADERS= projector.hpp spline.h vchisq.hpp
+HEADERS= projector.hpp spline.hpp vchisq.hpp
 
 all: pgplot $(TARGETS)
 

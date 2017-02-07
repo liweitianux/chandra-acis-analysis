@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include "spline.h"
+#include "spline.hpp"
 
 
 using namespace std;

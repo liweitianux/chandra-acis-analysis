@@ -1,5 +1,5 @@
 #include "calc_distance.h"
-#include "spline.h"
+#include "spline.hpp"
 #include <iostream>
 #include <string>
 #include <vector>

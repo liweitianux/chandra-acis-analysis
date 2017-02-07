@@ -1,5 +1,5 @@
-#ifndef SPLINE_H
-#define SPLINE_H
+#ifndef SPLINE_HPP
+#define SPLINE_HPP
 
 #include <vector>
 #include <cstdlib>
@@ -107,4 +107,4 @@ public:
 
 };
 
-#endif  /* SPLINE_H */
+#endif  /* SPLINE_HPP */

@@ -17,7 +17,7 @@
 #include <methods/powell/powell_method.hpp>
 #include <core/freeze_param.hpp>
 #include <error_estimator/error_estimator.hpp>
-#include "spline.h"
+#include "spline.hpp"
 
 using namespace std;
 using namespace opt_utilities;
@@ -45,9 +45,7 @@ static double calc_critical_density(double z,
 }
 
 
-//A class enclosing the spline interpolation method of cooling function
-//check spline.h for more detailed information
-//this class is a thin wrapper for the spline class defined in spline.h
+//A class enclosing the spline interpolation method
 class spline_func_obj
   :public func_obj<double,double>
 {
