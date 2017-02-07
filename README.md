@@ -48,7 +48,18 @@ TODO
 
 Installation
 ------------
-1. ``mass_profile``
+1. Clone this repository with ``opt_utilities``:
+```
+$ git clone --recursive https://github.com/liweitianux/chandra-acis-analysis.git
+```
+or in this way:
+```
+$ git clone https://github.com/liweitianux/chandra-acis-analysis.git
+$ cd chandra-acis-analysis
+$ git submodule update --init --recursive
+```
+
+2. Build ``mass_profile``
 ```
 $ cd mass_profile
 $ make clean
@@ -57,7 +68,7 @@ $ make
 $ make OPENMP=yes
 ```
 
-2. ``cosmo_calc``
+3. Get and build ``cosmo_calc``
 Get it from repository [atoolbox](https://github.com/liweitianux/atoolbox),
 under the directory ``astro/cosmo_calc``.
 
