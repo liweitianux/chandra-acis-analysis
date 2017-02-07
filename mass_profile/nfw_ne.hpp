@@ -157,7 +157,9 @@ namespace opt_utilities
       std::vector<T> yvec(r.size());
       const T kT_erg0=pTfunc->eval((r.at(0)+r.at(1))/2)*k;
       //calculate the integration
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
+#endif
       for(size_t i=0;i<r.size();++i)
 	{
 	  T r_cm=r[i]*cm_per_pixel;
@@ -172,7 +174,9 @@ namespace opt_utilities
 	}
 
       std::vector<T> ydxvec(r.size()-1);
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
+#endif
       for(size_t i=1;i<r.size();++i)
 	{
 	  T dr=r[i]-r[i-1];
@@ -182,7 +186,9 @@ namespace opt_utilities
       std::partial_sum(ydxvec.begin(),ydxvec.end(),ydxvec.begin());
       //construct the result
       std::vector<T> result(r.size()-1);
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
+#endif
       for(size_t i=0;i<r.size()-1;++i)
 	{
 	  T y=-ydxvec.at(i);
