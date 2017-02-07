@@ -70,19 +70,16 @@ Settings
 Add the following settings to your shell's initialization file
 (e.g., ``~/.bashrc`` or ``~/.zshrc``).
 ```
-# environment variables:
-export MASS_PROFILE_DIR="/path/to/mass_profile"
-export CHANDRA_SCRIPT_DIR="/path/to/script"
-# aliaes
-# ciao scripts
-alias chcld="${CIAO_SCRIPT_DIR}/chandra_collect_data_v3.sh"
-alias chr500="${CIAO_SCRIPT_DIR}/ciao_r500avgt_v3.sh"
-# mass_profile related
-alias fitmass="${MASS_PROFILE_DIR}/fit_nfwmass.sh"
+# Environment variables:
+export MASS_PROFILE_DIR="<path>/chandra-acis-analysis/mass_profile"
+export CHANDRA_SCRIPT_DIR="<path>/chandra-acis-analysis/scripts"
+
+# Handy aliases:
+alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
 alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
 alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
-alias fitwang="${MASS_PROFILE_DIR}/fit_wang2012_model tcl_temp_profile.txt"
-alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_wrapper.sh"
+alias fittp="${MASS_PROFILE_DIR}/fit_wang2012_model"
+alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_simple.sh"
 alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
 ```
 
@@ -92,7 +89,15 @@ Usage
 See the doc ``HOWTO_chandra_acis_analysis.txt``
 
 
+Useful Links
+------------
+* [Chandra Chaser](http://cda.harvard.edu/chaser/)
+* [NED search by name](http://ned.ipac.caltech.edu/forms/byname.html)
+* [SIMBAD](http://simbad.u-strasbg.fr/simbad/)
+* [HEASARC nH tool](https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl)
+
+
 License
 -------
-The tools are distributed under the **MIT license** unless otherwise declared.
-The documents are distributed under the ??? License (coming...).
+* The tools are distributed under the **MIT license** unless otherwise declared.
+* The documents are distributed under the ??? License (TBD).

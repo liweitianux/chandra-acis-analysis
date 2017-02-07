@@ -1,37 +1,14 @@
-###########################################################
+##
 ## HOWTO
 ## Analyze Chandra ACIS data
 ##
 ## Weitian LI <liweitianux@gmail.com>
-## Updated: 2017-02-06
-###########################################################
-
-### Settings: {{{
-## directory:
-# chandra scripts:
-CHANDRA_SCRIPT_DIR="${HOME}/bin/chandra/scripts"
-# mass program dir:
-MASS_PROFILE_DIR="${HOME}/bin/chandra/mass_profile"
-
-## aliases:
-alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
-alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
-alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
-alias fittp="${MASS_PROFILE_DIR}/fit_wang2012_model"
-alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_simple.sh"
-alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
-### Settings: }}}
+## Updated: 2017-02-07
+##
 
 
-### Websites: {{{
-NED: http://ned.ipac.caltech.edu/forms/byname.html
-Chandra Chaser: http://cda.harvard.edu/chaser/dispatchOcat.do
-SIMBAD: http://simbad.u-strasbg.fr/simbad/
-nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
-### }}}
+Step-by-step guide to analyze ACIS data:
 
-
-### Step-by-step guide to analyze ACIS data: {{{
  (1) $ chandra_repro indir=. outdir=repro verbose=2
  (2) $ cd repro; mkdir -p evt bkg img spc/profile mass;
  (3) $ cd evt; ln -s ../acis*evt2.fits .;
@@ -147,7 +124,3 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
      check the region whether exceeds ccd edge, and answer y/n
      check results in file 'cooling_results.txt' and 'csb_results.txt'
      ---
-### process }}}
-
-
-# vim: set ts=8 sw=4 tw=0 fenc=utf-8 ft=txt: #
