@@ -7,12 +7,22 @@
 # Weitian LI
 # 2013-02-20
 #
+# Change logs:
+# 2017-02-07, Weitian LI
+#   * Use `sbp_cfg` from command line argument, instead of the one specified
+#     in the `mass.conf`
+#   * Update the variable names according to the updated config files
+#   * Some cleanups
+#
 
-if [ $# -ne 1 ]; then
-    printf "usage: $0 <mass_conf>\n"
+if [ $# -ne 2 ]; then
+    echo "usage: $0 <sbp.conf> <mass.conf>"
     exit 1
 fi
-cfg_file=$1
+
+sbp_cfg="$1"
+mass_cfg="$2"
+
 if [ "$0" = `basename $0` ]; then
     script_path=`which $0`
     base_path=`dirname ${script_path}`
@@ -20,18 +30,18 @@ else
     base_path=`dirname $0`
 fi
 
-sbp_cfg=`grep '^sbp_cfg' $cfg_file | awk '{ print $2 }'`
-t_data_file=`grep '^t_data_file' $cfg_file | awk '{ print $2 }'`
-t_param_file=`grep '^t_param_file' $cfg_file | awk '{ print $2 }'`
-nh=`grep '^nh' $cfg_file | awk '{ print $2 }'`
-abund=`grep '^abund' $cfg_file | awk '{ print $2 }'`
-z=`grep '^z' $sbp_cfg | awk '{ print $2 }'`
+nh=`grep '^nh' ${mass_cfg} | awk '{ print $2 }'`
+abund=`grep '^abund' ${mass_cfg} | awk '{ print $2 }'`
+tprofile_data=`grep '^tprofile_data' ${mass_cfg} | awk '{ print $2 }'`
+tprofile_cfg=`grep '^tprofile_cfg' ${mass_cfg} | awk '{ print $2 }'`
+
+z=`grep '^z' ${sbp_cfg} | awk '{ print $2 }'`
 cm_per_pixel=`cosmo_calc ${z} | grep 'cm/pixel' | awk -F':' '{ print $2 }'`
 sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
-cfunc_file=`grep '^cfunc_file' $sbp_cfg | awk '{ print $2 }'`
-T_file=`grep '^T_file' $sbp_cfg | awk '{ print $2 }'`
+cfunc_profile=`grep '^cfunc_profile' ${sbp_cfg} | awk '{ print $2 }'`
+tprofile=`grep '^tprofile' ${sbp_cfg} | awk '{ print $2 }'`
 
-if grep -q '^beta2' $sbp_cfg; then
+if grep -q '^beta2' ${sbp_cfg}; then
     MODEL="double-beta"
     PROG=fit_dbeta_sbp
 else
@@ -39,11 +49,13 @@ else
     PROG=fit_beta_sbp
 fi
 
-$base_path/fit_wang2012_model $t_data_file $t_param_file $cm_per_pixel 2> /dev/null
-cp wang2012_dump.qdp $T_file
-if [ ! -f ${cfunc_file} ]; then
-    $base_path/coolfunc_calc.sh $T_file $abund $nh $z $cfunc_file
+${base_path}/fit_wang2012_model ${tprofile_data} ${tprofile_cfg} \
+            ${cm_per_pixel} 2> /dev/null
+cp wang2012_dump.qdp ${tprofile}
+if [ ! -f ${cfunc_profile} ]; then
+    ${base_path}/coolfunc_calc.sh ${tprofile} ${abund} ${nh} ${z} \
+                ${cfunc_profile}
 fi
-$base_path/$PROG $sbp_cfg
-printf "## MODEL: ${MODEL}\n"
-printf "## z: ${z}\n"
+${base_path}/${PROG} ${sbp_cfg}
+echo "## MODEL: ${MODEL}"
+echo "## z: ${z}"
