@@ -43,7 +43,7 @@ proc get_error {pn} {
     global FLAG_CHI
     set chisq [ tcloutr stat ]
     set dof [ lindex [ tcloutr dof ] 0 ]
-    if {[ expr {$chisq / $dof} ] > 2.0} {
+    if {[ expr {$chisq / $dof} ] >= 1.99} {
         # reduced chisq too large; use sigma instead
         set err [ tcloutr sigma $pn ]
         set FLAG_CHI "TRUE"
