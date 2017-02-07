@@ -20,29 +20,23 @@ cfg_map parse_cfg_file(std::istream& is)
       string key;
       istringstream iss(line);
       iss>>key;
-      if(key=="radius_file")
+      if(key=="sbp_data")
 	{
 	  string value;
 	  iss>>value;
-	  result.radius_file=value;
+	  result.sbp_data=value;
 	}
-      else if(key=="sbp_file")
+      else if(key=="cfunc_profile")
 	{
 	  string value;
 	  iss>>value;
-	  result.sbp_file=value;
+	  result.cfunc_profile=value;
 	}
-      else if(key=="cfunc_file")
+      else if(key=="tprofile")
 	{
 	  string value;
 	  iss>>value;
-	  result.cfunc_file=value;
-	}
-      else if(key=="T_file")
-	{
-	  string value;
-	  iss>>value;
-	  result.T_file=value;
+	  result.tprofile=value;
 	}
       else if(key=="z")
 	{

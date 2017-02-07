@@ -5,12 +5,11 @@
   This code is distributed with no warrant
 */
 
-#include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <list>
 #include <algorithm>
-using namespace std;
 #include "beta_cfg.hpp"
 #include "dump_fit_qdp.hpp"
 #include "report_error.hpp"
@@ -23,19 +22,19 @@ using namespace std;
 #include <core/freeze_param.hpp>
 #include <error_estimator/error_estimator.hpp>
 #include "spline.h"
+
+using namespace std;
 using namespace opt_utilities;
 //double s=5.63136645E20;
 const double kpc=3.086E21;//kpc in cm
 const double Mpc=kpc*1000;
-double beta_func(double r,
-		 double n0,double rc,double beta)
-{
 
-  return abs(n0)*pow(1+r*r/rc/rc,-3./2.*abs(beta));
+double beta_func(double r, double n0, double rc, double beta)
+{
+  return abs(n0) * pow(1+r*r/rc/rc, -3./2.*abs(beta));
 }
 
-
-  //calculate critical density from z, under following cosmological constants
+//calculate critical density from z, under following cosmological constants
 static double calc_critical_density(double z,
 				    const double H0=2.3E-18,
 				      const double Omega_m=.27)
@@ -94,8 +93,6 @@ int main(int argc,char* argv[])
   assert(cfg_file.is_open());
   cfg_map cfg=parse_cfg_file(cfg_file);
 
-  //check the existence of following parameters
-
   const double z=cfg.z;
 
   //initialize the radius list, sbp list and sbp error list
@@ -105,44 +102,50 @@ int main(int argc,char* argv[])
   std::vector<double> radii_all;
   std::vector<double> sbps_all;
   std::vector<double> sbpe_all;
+  //prepend the zero point to radius list
+  radii.push_back(0.0);
+  radii_all.push_back(0.0);
   //read sbp and sbp error data
-  for(ifstream ifs(cfg.sbp_file.c_str());;)
+  cerr << "Read surface brightness profile data ..." << endl;
+  ifstream ifs(cfg.sbp_data.c_str());
+  std::string line;
+  if (ifs.is_open())
     {
-      assert(ifs.is_open());
-      double x,xe;
-      ifs>>x>>xe;
-      if(!ifs.good())
-	{
-	  break;
-	}
-      if(x/xe<2)
-	{
-	  break;
-	}
-      cerr<<x<<"\t"<<xe<<endl;
-      sbps.push_back(x);
-      sbpe.push_back(xe);
-      sbps_all.push_back(x);
-      sbpe_all.push_back(xe);
+      while(std::getline(ifs, line))
+        {
+          if (line.empty())
+            continue;
+
+          std::istringstream iss(line);
+          double x, xe, y, ye;
+          if ((iss >> x >> xe >> y >> ye))
+            {
+              std::cerr << "sbprofile data: "
+                        << x << ", " << xe << ", " << y << ", " << ye
+                        << std::endl;
+              radii.push_back(x+xe);  /* NOTE: use outer radii of regions */
+              radii_all.push_back(x+xe);
+              sbps.push_back(y);
+              sbps_all.push_back(y);
+              sbpe.push_back(ye);
+              sbpe_all.push_back(ye);
+            }
+          else
+            {
+              std::cerr << "skipped line: " << line << std::endl;
+            }
+        }
+    }
+  else
+    {
+      std::cerr << "ERROR: cannot open file: " << cfg.sbp_data.c_str()
+                << std::endl;
+      return 1;
     }
 
-  //read radius data
-  for(ifstream ifs(cfg.radius_file.c_str());;)
-    {
-      assert(ifs.is_open());
-      double x;
-      ifs>>x;
-      if(!ifs.good())
-	{
-	  break;
-	}
-      cerr<<x<<endl;
-      radii.push_back(x);
-      radii_all.push_back(x);
-    }
   //initialize the cm/pixel value
   double cm_per_pixel=cfg.cm_per_pixel;
-  double rmin=5*kpc/cm_per_pixel;
+  double rmin;
   if(cfg.rmin_pixel>0)
     {
       rmin=cfg.rmin_pixel;
@@ -152,7 +155,7 @@ int main(int argc,char* argv[])
       rmin=cfg.rmin_kpc*kpc/cm_per_pixel;
     }
 
-  cerr<<"rmin="<<rmin<<endl;
+  cerr<<"rmin="<<rmin<<" (pixel)"<<endl;
   std::list<double> radii_tmp,sbps_tmp,sbpe_tmp;
   radii_tmp.resize(radii.size());
   sbps_tmp.resize(sbps.size());
@@ -180,8 +183,9 @@ int main(int argc,char* argv[])
   copy(sbpe_tmp.begin(),sbpe_tmp.end(),sbpe.begin());
 
   //read cooling function data
+  cerr << "Read cooling function profile data ..." << endl;
   spline_func_obj cf;
-  for(ifstream ifs(cfg.cfunc_file.c_str());;)
+  for(ifstream ifs(cfg.cfunc_profile.c_str());;)
     {
       assert(ifs.is_open());
       double x,y;
@@ -193,17 +197,18 @@ int main(int argc,char* argv[])
       cerr<<x<<"\t"<<y<<endl;
       if(x>radii.back())
 	{
+      cerr << "radius_max: " << radii.back() << endl;
 	  break;
 	}
-      //cf.add_point(x,y*2.1249719395939022e-68);//change with source
-      cf.add_point(x,y);//change with source
+      cf.add_point(x,y);
     }
   cf.gen_spline();
 
   //read temperature profile data
+  cerr << "Read temperature profile data ..." << endl;
   spline_func_obj Tprof;
   int tcnt=0;
-  for(ifstream ifs1(cfg.T_file.c_str());;++tcnt)
+  for(ifstream ifs1(cfg.tprofile.c_str());;++tcnt)
     {
       assert(ifs1.is_open());
       double x,y;
@@ -221,8 +226,6 @@ int main(int argc,char* argv[])
 #endif
       Tprof.add_point(x,y);
     }
-
-
   Tprof.gen_spline();
 
   default_data_set<std::vector<double>,std::vector<double> > ds;
@@ -295,8 +298,8 @@ int main(int argc,char* argv[])
       cerr<<f.get_param_info(i).get_name()<<"\t"<<abs(f.get_param_info(i).get_value())<<endl;
       param_output<<f.get_param_info(i).get_name()<<"\t"<<abs(f.get_param_info(i).get_value())<<endl;
     }
-  cerr<<"chi square="<<f.get_statistic_value()/(radii.size()-f.get_model().get_num_free_params())<<endl;
-  param_output<<"chi square="<<f.get_statistic_value()/(radii.size()-f.get_model().get_num_free_params())<<endl;
+  cerr<<"reduced_chi^2="<<f.get_statistic_value()/(radii.size()-f.get_model().get_num_free_params())<<endl;
+  param_output<<"reduced_chi^2="<<f.get_statistic_value()/(radii.size()-f.get_model().get_num_free_params())<<endl;
 
   std::vector<double> mv=f.eval_model_raw(radii_all,p);
   int sbps_inner_cut_size=int(sbps_all.size()-sbps.size());

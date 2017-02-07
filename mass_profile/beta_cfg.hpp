@@ -8,10 +8,9 @@
 
 struct cfg_map
 {
-  std::string radius_file;
-  std::string sbp_file;
-  std::string cfunc_file;
-  std::string T_file;
+  std::string sbp_data;
+  std::string cfunc_profile;
+  std::string tprofile;
   double z;
   double cm_per_pixel;
   double rmin_kpc;
