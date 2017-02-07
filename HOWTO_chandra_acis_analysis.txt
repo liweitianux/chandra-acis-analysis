@@ -17,7 +17,7 @@ MASS_PROFILE_DIR="${HOME}/bin/chandra/mass_profile"
 alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
 alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
 alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
-alias fitwang="${MASS_PROFILE_DIR}/fit_wang2012_model tcl_temp_profile.txt"
+alias fittp="${MASS_PROFILE_DIR}/fit_wang2012_model"
 alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_simple.sh"
 alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
 ### Settings: }}}
@@ -94,27 +94,25 @@ nH tool: https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl
 (24) $ cd ../mass; clean_massdir.sh;
 (25) check needed linked files:
      * sbprofile.txt
-     * flux_sbp.txt
-     * radius_sbp.txt
      * tprofile.txt
 (26) check needed config files:
+     * mass.conf
      * wang2012_param.txt
-     * fitting_mass.conf
-     * fitting_sbp.conf
-     * fitting_dbeta_mass.conf
-     * fitting_dbeta_sbp.conf
-(27) $ fitwang wang2012_param.txt
-(28) $ qdp fit_result.qdp   # check fitted temperature profile
-(29) $ fitsbp fitting_mass.conf   # single-beta sbp
-     $ fitsbp fitting_dbeta_mass.conf    # double-beta sbp
+     * sbp_sbeta.conf
+     * sbp_dbeta.conf
+(27) $ fittp tprofile.txt wang2012_param.txt
+(28) $ qdp fit_result.qdp
+     (check fitted temperature profile, and adjust parameter accordingly)
+(29) $ fitsbp sbp_sbeta.conf mass.conf   # single-beta sbp
+     $ fitsbp sbp_dbeta.conf mass.conf   # double-beta sbp
 (30) $ qdp sbp_fit.qdp   # check fitted sbp
-(31) $ ln -s fitting_mass.conf global.cfg   # use single-beta
-     $ ln -s fitting_dbeta_mass.conf global.cfg   # use double-beta
+(31) $ ln -s sbp_sbeta.conf sbp.cfg   # use single-beta
+     $ ln -s sbp_dbeta.conf sbp.cfg   # use double-beta
 (32) $ fitnfw <z> [rmin_kpc]
 (33) $ qdp nfw_fit_result.qdp   # check fitted nfw profile, and ajust 'rmin_kpc'
-(34) add 'nfw_rmin_kpc <rmin_kpc>' to 'global.cfg'
-(35) $ fitmass global.cfg c    # calculate the center values
-(36) $ fitmass global.cfg 2>&1 | tee global_<date>.log    # calculate mass data
+(34) add 'nfw_rmin_kpc <rmin_kpc>' to 'mass.conf
+(35) $ fitmass mass.conf c    # calculate the center values
+(36) $ fitmass mass.conf 2>&1 | tee mass_<date>.log    # calculate mass data
 (37) $ collect_infodata.sh
 (38) $ cd ../img;
      $ chandra_update_xcentroid.sh
