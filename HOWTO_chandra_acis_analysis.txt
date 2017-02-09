@@ -66,17 +66,18 @@ Step-by-step guide to analyze ACIS data:
      temp       <avg_temp>
      abund      <avg_abund>
 (23) $ ciao_expcorr_sbp.sh basedir=.. nh=<nh> z=<redshift> temp=<avg_temp> abund=<avg_abund>
-## --------------------------------------------------------
 
-(24) $ cd ../mass; clean_massdir.sh;
-(25) check needed linked files:
-     * sbprofile.txt
-     * tprofile.txt
-(26) check needed config files:
+## --------------------------------------------------------
+(24) $ cd ../mass
+     $ ln -s ../img/sbprofile.txt .
+     $ ln -s ../spc/profile/tprofile.txt .
+(25) Copy the sample config files located at 'files' directory:
      * mass.conf
      * wang2012_param.txt
      * sbp_sbeta.conf
      * sbp_dbeta.conf
+(26) Fill 'nH', 'abund' in 'mass.conf';
+     and 'z' in 'sbp_sbeta.conf' and 'sbp_dbeta.conf'
 (27) $ fittp tprofile.txt wang2012_param.txt
 (28) $ qdp fit_result.qdp
      (check fitted temperature profile, and adjust parameter accordingly)
@@ -87,32 +88,36 @@ Step-by-step guide to analyze ACIS data:
      $ ln -s sbp_dbeta.conf sbp.cfg   # use double-beta
 (32) $ fitnfw <z> [rmin_kpc]
 (33) $ qdp nfw_fit_result.qdp   # check fitted nfw profile, and ajust 'rmin_kpc'
-(34) add 'nfw_rmin_kpc <rmin_kpc>' to 'mass.conf
-(35) $ fitmass mass.conf c    # calculate the center values
+(34) Update 'nfw_rmin_kpc' in 'mass.conf
+(35) $ fitmass mass.conf c    # calculate the central values
 (36) $ fitmass mass.conf 2>&1 | tee mass_<date>.log    # calculate mass data
 (37) $ collect_infodata.sh
-(38) $ cd ../img;
+(38) $ cd ../img
      $ chandra_update_xcentroid.sh
-(39) $ cd ../spc/profile;
+(39) $ cd ../spc/profile
 (40) $ ciao_r500avgt.sh inner=0.1 outer=0.5   # check 0.5R500 range
      $ ciao_r500avgt.sh inner=0.2 outer=0.5
 (41) $ xspec
      xspec> @xspec_r500avgt_0.1-0.5.xcm
-     xspec> fit; fit;
-     xspec> cpd /xs; pl l del;
-     xspec> error 1. 2 3    # calc errors (68%) of kT and Abundanc
-(42) update the data of 'T(0.1-0.5 R500)', 'Z(0.1-0.5 R500)' ...
+     xspec> fit; cpd /xs; pl l del;
+     xspec> error 1.0 2 3
+     (calculate the 1 sigma errors for temperature and abundance)
+(42) update the following values in the INFO.json file:
+     * 'T(0.1-0.5 R500)'
+     * 'Z(0.1-0.5 R500)'
+(43) repeat the above two steps for region "0.2-0.5 R500", and update
+     the values of 'T(0.2-0.5 R500)' and 'Z(0.2-0.5 R500)'.
 
 ## --------------------------------------------------------
-(43) $ cd ../..;  # in 'repro' dir
+(44) $ cd ../..;  # in 'repro' dir
      $ cp -a mass lxfx; cd lxfx;
-(44) $ calclxfx global.cfg c 500 200  # 'c' for center values
+(45) $ calclxfx global.cfg c 500 200  # 'c' for center values
      $ calclxfx global.cfg 500 200  # calc 'errors'
-(45) $ getlxfx . c 500 200  # for center results
+(46) $ getlxfx . c 500 200  # for center results
      $ getlxfx . 500 200  # for all results (with errors)
 
 ## --------------------------------------------------------
-(46) $ cd ..; cd spc/profile;
+(47) $ cd ..; cd spc/profile;
      calculate cooling time and Csb value:
      $ ciao_calc_ct_csb.sh
      check the region whether exceeds ccd edge, and answer y/n

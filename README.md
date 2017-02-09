@@ -94,7 +94,7 @@ alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
 alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
 alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
 alias fittp="${MASS_PROFILE_DIR}/fit_wang2012_model"
-alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_simple.sh"
+alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_wrapper.sh"
 alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
 ```
 
