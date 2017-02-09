@@ -101,7 +101,10 @@ alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
 
 Usage
 -----
-See the doc [``HOWTO_chandra_acis_analysis.txt``](HOWTO_chandra_acis_analysis.txt)
+See the documentations located in the ``doc`` directory,
+especially the [``HOWTO_chandra_acis_analysis.txt``](doc/HOWTO_chandra_acis_analysis.txt)
+
+NOTE: complete and detailed documentations are badly needed!
 
 
 Useful Links
