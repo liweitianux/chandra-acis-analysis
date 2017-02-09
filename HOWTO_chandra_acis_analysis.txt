@@ -10,18 +10,26 @@
 Step-by-step guide to analyze ACIS data:
 
  (1) $ chandra_repro indir=. outdir=repro verbose=2
- (2) $ cd repro; mkdir -p evt bkg img spc/profile mass;
- (3) $ cd evt; ln -s ../acis*evt2.fits .;
+ (2) $ cd repro
+     $ mkdir -p evt bkg img spc/profile mass
+ (3) $ cd evt
+     $ ln -s ../*_repro_evt2.fits .
  (4) $ ciao_procevt.sh
- (5) $ cd ../bkg; ln -s ../evt/evt2*_clean.fits .;
+ (5) $ cd ../bkg
+     $ ln -s ../evt/evt2*_clean.fits .
  (6) $ ciao_blanksky.sh
- (7) ds9 open 'evt2*_clean.fits'; select edge region as the
-     *local background*, save as 'lbkg.reg';
-     and estimate the phonton counts:
- (8) $ dmlist "evt2*_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" blocks
- (9) $ ciao_bkg_spectra.sh reg="lbkg.reg" basedir=.. nh=<nh> z=<z>
-(10) $ xspec
-(11) xspec> @xspec_lbkg_model.xcm
+ (7) $ ds9 evt2*_clean.fits
+     Select some region on the CCD edges that are as far from the
+     extended source as possible as the *local background*, then
+     save to a region file: 'lbkg.reg'.
+ (8) Estimate the total photon counts within the local background region:
+     $ dmlist "evt2*_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" blocks
+     Enlarge the regions if the total photon counts are too small
+     (e.g., say 2,000).
+ (9) Query the redshift from NED and nH from the HEASARC nH tool
+(10) $ ciao_bkg_spectra.sh reg="lbkg.reg" basedir=.. nh=<nh> z=<z>
+(11) $ xspec
+     xspec> @xspec_lbkg_model.xcm
      xspec> fit
      xspec> cpd /xs
      xspec> pl l del
@@ -30,9 +38,12 @@ Step-by-step guide to analyze ACIS data:
      $ ln -s ../evt/evt2*_clean.fits .
      $ ln -s ../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
      $ ln -s ../pcadf*_asol1.fits .
-(13) ds9 open 'evt2*_clean.fits', select the center of cluster,
-     save the region as 'center.reg'
+(13) $ ds9 evt2*_clean.fits
+     Roughly select the source center and save the region as 'center.reg'
 (14) $ ciao_genregs.sh reg_in=center.reg bkgd=<bkgd>
+     Check whether the calculated centroid is OK; if not, manually
+     adjust the centroid position, and save & overwrite the
+     'centroid_phy.reg'.
 (15) $ cd ../spc/profile
      $ ln -s ../../evt/evt2*_clean.fits .
      $ ln -s ../../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
@@ -56,7 +67,7 @@ Step-by-step guide to analyze ACIS data:
      (calculate average temperature and abundance)
      xspec> @<path>/xspec_avg_tz.tcl
      xspec> exit
-(20) fix 'NULL' values in 'tprofile.qdp', 'tprofile.txt' & 'tz_average.txt'
+(20) Fix 'NULL' values in 'tprofile.qdp', 'tprofile.txt' & 'tz_average.txt'
 (21) $ cd ../../img;
 (22) create config '<NAME>_expcorr.conf' (for batch process):
      basedir    ..
@@ -91,7 +102,8 @@ Step-by-step guide to analyze ACIS data:
 (34) Update 'nfw_rmin_kpc' in 'mass.conf
 (35) $ fitmass mass.conf c    # calculate the central values
 (36) $ fitmass mass.conf 2>&1 | tee mass_<date>.log    # calculate mass data
-(37) $ collect_infodata.sh
+(37) Update the INFO.json with calculated values from 'final_result.txt':
+     $ collect_infodata.sh
 (38) $ cd ../img
      $ chandra_update_xcentroid.sh
 (39) $ cd ../spc/profile
