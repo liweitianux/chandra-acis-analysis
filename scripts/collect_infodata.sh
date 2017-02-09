@@ -1,41 +1,37 @@
 #!/bin/sh
 ##
-unalias -a
-export LC_COLLATE=C
-# fix path for python
-export PATH=/usr/bin:/usr/local/bin:$PATH
-#########################################################################
-## Collect the calculated mass data and write to the JSON file.
+## Collect the calculated mass data and update them to the INFO json file.
+##
+## JSON parser: http://json.parser.online.fr/
 ##
 ## Weitian LI <liweitianux@gmail.com>
 ## August 31, 2012
 ##
-## ChangeLogs:
-##   check JSON syntax, modify output to agree with the syntax
-##   Ref: http://json.parser.online.fr/
-## v1.1, 2012/09/05, Weitian LI
-##   add `T_avg(0.2-0.5 R500)' and `T_err'
-## v2.0, 2012/10/14, Weitian LI
-##   add parameters
-## v2.1, 2012/11/07, Weitian LI
-##   account for `fitting_dbeta'
-## v2.2, 2012/12/18, Weitian LI
-##   add `beta' and `cooling time' parameters
-## v3.0, 2013/02/09, Weitian LI
-##   modified for `new sample info format'
-## v3.1, 2013/05/18, Weitian LI
-##   add key `Feature'
-## v3.2, 2013/05/29, Weitian LI
-##   add key `XCNTRD_RA, XCNTRD_DEC'
-## v3.3, 2013/10/14, Weitian LI
-##   add key `Unified Name'
-## v3.4, 2015/06/03, Aaron LI
+## Change logs:
+## 2017-02-09, Weitian LI
+##   * Update to use the new style config files
+##   * Some cleanups
+## v3.4, 2015/06/03, Weitian LI
 ##   * Copy needed pfiles to current working directory, and
 ##     set environment variable $PFILES to use these first.
 ##   * Replaced 'grep' with '\grep', 'ls' with '\ls'
+## v3.3, 2013/10/14, Weitian LI
+##   add key `Unified Name'
+## v3.2, 2013/05/29, Weitian LI
+##   add key `XCNTRD_RA, XCNTRD_DEC'
+## v3.1, 2013/05/18, Weitian LI
+##   add key `Feature'
+## v3.0, 2013/02/09, Weitian LI
+##   modified for `new sample info format'
+## v2.2, 2012/12/18, Weitian LI
+##   add `beta' and `cooling time' parameters
+## v2.1, 2012/11/07, Weitian LI
+##   account for `fitting_dbeta'
+## v2.0, 2012/10/14, Weitian LI
+##   add parameters
+## v1.1, 2012/09/05, Weitian LI
+##   add `T_avg(0.2-0.5 R500)' and `T_err'
 ##
-VERSION="v3.4"
-UPDATED="2015/06/03"
 
 ## error code {{{
 ERR_USG=1
@@ -56,8 +52,6 @@ case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
         printf "    `basename $0` json=<info_json> cfg=<main_cfg> res=<final_result> basedir=<repro_dir> massdir=<mass_dir>\n"
-        printf "\nversion:\n"
-        printf "${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -71,19 +65,13 @@ DFT_MASSDIR="mass"
 # default pattern for json info file
 DFT_JSON_PAT="*_INFO.json"
 # main config file
-DFT_CFG_PAT="global.cfg"
+DFT_CFG_PAT="mass.conf"
 # default result file
 DFT_RES_FINAL_PAT="final_result.txt"
 # default sbprofile region file
 DFT_SBPROFILE_REG="sbprofile.reg"
 # default radial spectra region file
 DFT_RSPEC_REG="rspec.reg"
-# default CMD to determine the `spc/profile' dir
-DFT_SPC_DIR_CMD='dirname `readlink ${T_DATA_FILE}`'
-# default CMD to determine the `img' dir
-DFT_IMG_DIR_CMD='dirname `readlink ${RADIUS_SBP_FILE}`'
-# default config file pattern for `expcorr'
-DFT_EXPCORR_CONF_PAT="*_expcorr.conf"
 ## default parameters }}}
 
 ## functions {{{
@@ -189,13 +177,7 @@ printf "## use final result file: \`${RES_FINAL}'\n"
 ## directory & file {{{
 BASE_PATH=`dirname $0`
 printf "## BASE_PATH: ${BASE_PATH}\n"
-COSMO_CALC="${BASE_PATH}/cosmo_calc"
-if [ ! -x "${COSMO_CALC}" ]; then
-    printf "*** ERROR: \`${COSMO_CALC}' not executable\n"
-    exit ${ERR_COSC}
-fi
 EVT_DIR="${BASEDIR}/evt"
-IMG_DIR="${BASEDIR}/img"
 SPEC_DIR="${BASEDIR}/spc/profile"
 ## dir & file }}}
 
@@ -230,6 +212,7 @@ elif echo ${DETNAM} | \grep -q 'ACIS-[0-6]*7'; then
 else
     printf "*** ERROR: unknown detector type: ${DETNAM}\n"
     ACIS_TYPE="UNKNOWN"
+    exit 1
 fi
 ## dir `repro' }}}
 
@@ -244,31 +227,23 @@ cd ${MASS_DIR}
 
 # misc {{{
 N_H=`\grep '^nh' ${CFG_FILE} | awk '{ print $2 }'`
-Z=`\grep '^z' ${SBP_CFG} | awk '{ print $2 }'`
-T_DATA_FILE=`\grep '^t_data_file' ${CFG_FILE} | awk '{ print $2 }'`
+ABUND=`\grep '^abund' ${CFG_FILE} | awk '{ print $2 }'`
+TPROFILE_DATA=`\grep '^tprofile_data' ${CFG_FILE} | awk '{ print $2 }'`
 NFW_RMIN_KPC=`\grep '^nfw_rmin_kpc' ${CFG_FILE} | awk '{ print $2 }'`
-E_Z=`${COSMO_CALC} ${Z} | \grep -i 'Hubble_parameter' | awk '{ print $3 }'`
-KPC_PER_PIXEL=`${COSMO_CALC} ${Z} | \grep 'kpc/pixel' | awk '{ print $3 }'`
-RADIUS_SBP_FILE=`\grep '^radius_sbp_file' ${CFG_FILE} | awk '{ print $2 }'`
-RMAX_SBP_PIX=`tail -n 1 ${RADIUS_SBP_FILE} | awk '{ print $1+$2 }'`
+Z=`\grep '^z' ${SBP_CFG} | awk '{ print $2 }'`
+E_Z=`cosmo_calc ${Z} | \grep -i 'Hubble_parameter' | awk '{ print $3 }'`
+KPC_PER_PIXEL=`cosmo_calc ${Z} | \grep 'kpc/pixel' | awk '{ print $3 }'`
+SBP_DATA=`\grep '^sbp_data' ${SBP_CFG} | awk '{ print $2 }'`
+RMAX_SBP_PIX=`tail -n 1 ${SBP_DATA} | awk '{ print $1+$2 }'`
 RMAX_SBP_KPC=`echo "${RMAX_SBP_PIX} ${KPC_PER_PIXEL}" | awk '{ printf("%.2f", $1*$2) }'`
-SPC_DIR=`eval ${DFT_SPC_DIR_CMD}`
+SPC_DIR="$(dirname $(readlink ${TPROFILE_DATA}))"
 if [ -f "${SPC_DIR}/${DFT_RSPEC_REG}" ]; then
     RMAX_TPRO_PIX=`\grep -iE '(pie|annulus)' ${SPC_DIR}/${DFT_RSPEC_REG} | tail -n 1 | awk -F',' '{ print $4 }'`
     RMAX_TPRO_KPC=`echo "${RMAX_TPRO_PIX} ${KPC_PER_PIXEL}" | awk '{ printf("%.2f", $1*$2) }'`
 fi
-IMG_DIR=`eval ${DFT_IMG_DIR_CMD}`
-EXPCORR_CONF=`\ls ${IMG_DIR}/${DFT_EXPCORR_CONF_PAT} 2> /dev/null`
-echo "EXPCORR_CONF: ${EXPCORR_CONF}"
-if [ -f "${EXPCORR_CONF}" ]; then
-    T_REF=`\grep '^temp' ${EXPCORR_CONF} | awk '{ print $2 }'`
-    Z_REF=`\grep '^abund' ${EXPCORR_CONF} | awk '{ print $2 }'`
-fi
 [ -z "${NFW_RMIN_KPC}" ] && NFW_RMIN_KPC="null"
 [ -z "${RMAX_SBP_PIX}" ] && RMAX_SBP_PIX="null"
 [ -z "${RMAX_SBP_KPC}" ] && RMAX_SBP_KPC="null"
-[ -z "${T_REF}" ]        && T_REF="null"
-[ -z "${Z_REF}" ]        && Z_REF="null"
 # misc }}}
 
 ## determine single/double beta {{{
@@ -448,8 +423,8 @@ FGRR_ERR_U=`\grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//
 ## mrl }}}
 
 ## rcool & cooling time {{{
-RCOOL=`\grep '^cooling' ${RES_FINAL} | awk '{ print $4 }'`
-COOLING_TIME=`\grep '^cooling' ${RES_FINAL} | awk -F'=' '{ print $2 }' | tr -d ' Gyr'`
+RCOOL=`\grep '^cooling_radius=' ${RES_FINAL} | awk '{ print $2 }'`
+COOLING_TIME=`\grep '^cooling_time=' ${RES_FINAL} | awk -F'=' '{ print $2 }' | tr -d ' Gyr'`
 [ -z "${RCOOL}" ] && RCOOL="null"
 [ -z "${COOLING_TIME}" ] && COOLING_TIME="null"
 ## cooling time }}}
@@ -525,8 +500,8 @@ cat > ${JSON_FILE} << _EOF_
     "nH (10^22 cm^-2)": ${N_H},
     "redshift": ${REDSHIFT},
     "E(z)": ${E_Z},
-    "T_ref (keV)": ${T_REF},
-    "Z_ref (solar)": ${Z_REF},
+    "T_ref (keV)": null,
+    "Z_ref (solar)": ${ABUND},
     "Rmax_SBP (pixel)": ${RMAX_SBP_PIX},
     "Rmax_Tpro (pixel)": ${RMAX_TPRO_PIX},
     "Rmax_SBP (kpc)": ${RMAX_SBP_KPC},
@@ -627,4 +602,3 @@ _EOF_
 ## output JSON }}}
 
 exit 0
-
