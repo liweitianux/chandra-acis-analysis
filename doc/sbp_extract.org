@@ -1,13 +1,15 @@
-#+TITLE: Surface Brightness Profile Extraction
+#+TITLE: Surface Brightness Profile (SBP) Extraction
 #+AUTHOR: Weitian LI <liweitianux@live.com>
 #+DATE: 2016-06-05
 
-* TODO sbp extraction procedure
+* TODO SBP extraction procedures
 
-* NOTE: how =dmextract= calculate the area of extraction region
+TODO
+
+* How =dmextract= calculate the area of extraction region
 The =dmextract= can take either *events* file or binned *image* file as the input file.  However, the extracted SBP may be *different*, mainly due to the area calculation.
 
-Above all, let's have a look at how the SBP quantities are calculated ([fn:dmextract]):
+Above all, let's have a look at how the SBP quantities are calculated ([[dmextract]]):
 #+BEGIN_EXAMPLE
 MEAN_SRC_EXP = TOTAL_SRC_EXP / EXP_AREA
 SUR_BRI = COUNTS / AREA ~ AREA^{-1}
@@ -71,4 +73,4 @@ Therefore, using the events file as the input file for SBP extraction is *not* r
 
 
 * References
-[fn:dmextract] CIAO =dmextract= help: http://cxc.cfa.harvard.edu/ciao/ahelp/dmextract.html
++ <<dmextract>> CIAO =dmextract= help: http://cxc.cfa.harvard.edu/ciao/ahelp/dmextract.html
