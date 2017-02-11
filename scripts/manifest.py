@@ -31,6 +31,8 @@ class Manifest:
         self.filepath = filepath
         self.manifest = ruamel.yaml.load(
             open(filepath), Loader=ruamel.yaml.RoundTripLoader)
+        if self.manifest is None:
+            self.manifest = ruamel.yaml.comments.CommentedMap()
 
     def save(self):
         with open(self.filepath, "w") as f:
@@ -43,9 +45,9 @@ class Manifest:
 
         If the specified item doesn't exist, raise a ``KeyError``.
         """
-        try:
+        if key in self.manifest:
             return self.manifest[key]
-        except KeyError:
+        else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
 
     def set(self, key, value):
