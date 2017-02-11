@@ -55,7 +55,7 @@ class Manifest:
         Set the value of the specified item in the manifest.
         (Will add a new item or update an existing item.)
         """
-        self.manifest[key] = value
+        self.manifest[key] = self.parse_value(value)
         self.save()
 
     def add(self, key, value):
@@ -67,7 +67,7 @@ class Manifest:
         if key in self.manifest:
             raise KeyError("manifest already has item: '%s'" % key)
         else:
-            self.manifest[key] = value
+            self.manifest[key] = self.parse_value(value)
             self.save()
 
     def update(self, key, value):
@@ -77,7 +77,7 @@ class Manifest:
         If the specified item doesn't exist, raise a ``KeyError``.
         """
         if key in self.manifest:
-            self.manifest[key] = value
+            self.manifest[key] = self.parse_value(value)
             self.save()
         else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
@@ -88,6 +88,20 @@ class Manifest:
         """
         del self.manifest[key]
         self.save()
+
+    @staticmethod
+    def parse_value(value):
+        """
+        Try to parse the value from string to integer or float.
+        """
+        try:
+            v = int(value)
+        except ValueError:
+            try:
+                v = float(value)
+            except ValueError:
+                v = value
+        return v
 
 
 def find_manifest(filename="manifest.yaml"):
