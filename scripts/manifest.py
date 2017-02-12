@@ -20,6 +20,8 @@ and other structures in the YAML file.
 
 import os
 import argparse
+from collections import OrderedDict
+
 import ruamel.yaml
 
 
@@ -49,12 +51,42 @@ class Manifest:
         """
         Get the value of the specified item in the manifest.
 
-        If the specified item doesn't exist, raise a ``KeyError``.
+        Parameters
+        ----------
+        key : str
+            The key of the item to be requested.
+
+        Raises
+        ------
+        KeyError :
+            If the specified item doesn't exist.
         """
         if key in self.manifest:
             return self.manifest[key]
         else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
+
+    def gets(self, keys, default=None):
+        """
+        Get the value of the specified item in the manifest.
+
+        Parameters
+        ----------
+        keys : list[str]
+            A list of keys specifying the items to be requested.
+
+        Returns
+        -------
+        data : `~OrderedDict`
+            Ordered dictionary containing the requested items.
+
+        Returns
+        -------
+        """
+        data = OrderedDict([
+            (key, self.manifest.get(key, default)) for key in keys
+        ])
+        return data
 
     def set(self, key, value):
         """
