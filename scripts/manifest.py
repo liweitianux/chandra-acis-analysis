@@ -34,10 +34,16 @@ class Manifest:
         if self.manifest is None:
             self.manifest = ruamel.yaml.comments.CommentedMap()
 
+    def dump(self):
+        return ruamel.yaml.dump(self.manifest,
+                                Dumper=ruamel.yaml.RoundTripDumper)
+
     def save(self):
         with open(self.filepath, "w") as f:
-            f.write(ruamel.yaml.dump(
-                self.manifest, Dumper=ruamel.yaml.RoundTripDumper))
+            f.write(self.dump())
+
+    def show(self):
+        print(self.dump())
 
     def get(self, key):
         """
@@ -136,6 +142,13 @@ def find_manifest(filename="manifest.yaml"):
     raise FileNotFoundError("cannot found manifest file: %s" % filename)
 
 
+def cmd_show(args, manifest):
+    """
+    Default sub-command "show": Show manifest contents.
+    """
+    manifest.show()
+
+
 def cmd_get(args, manifest):
     """
     Sub-command "get": Get the value of an item in the manifest.
@@ -195,6 +208,9 @@ def main(description="Manage the observation manifest (YAML format)",
     subparsers = parser.add_subparsers(dest="cmd_name",
                                        title="sub-commands",
                                        help="additional help")
+    # sub-command: show
+    parser_show = subparsers.add_parser("show", help="Show manifest contents")
+    parser_show.set_defaults(func=cmd_show)
     # sub-command: get
     parser_get = subparsers.add_parser("get", help="Get an item from manifest")
     parser_get.add_argument("key", help="key of the item")
@@ -232,8 +248,11 @@ def main(description="Manage the observation manifest (YAML format)",
 
     manifest = Manifest(manifest_file)
 
-    # Dispatch sub-commands to call its specified function
-    args.func(args, manifest)
+    if args.cmd_name:
+        # Dispatch sub-commands to call its specified function
+        args.func(args, manifest)
+    else:
+        cmd_show(None, manifest)
 
 
 if __name__ == "__main__":
