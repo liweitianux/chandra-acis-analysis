@@ -38,9 +38,9 @@ def main():
     args = parser.parse_args()
 
     try:
-        keys = list(map(str.strip, open(args.keys).readlines()))
+        keys = [k.strip() for k in open(args.keys).readlines()]
     except FileNotFoundError:
-        keys = list(map(str.strip, args.keys.split(",")))
+        keys = [k.strip() for k in args.keys.split(",")]
 
     if args.verbose:
         print("keys:", keys, file=sys.stderr)
