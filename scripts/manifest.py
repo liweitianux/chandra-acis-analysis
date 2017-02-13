@@ -237,6 +237,8 @@ def main(description="Manage the observation manifest (YAML format)",
                         help="Manifest file (default: %s)" % default_file)
     parser.add_argument("-b", "--brief", dest="brief",
                         action="store_true", help="Be brief")
+    parser.add_argument("-C", "--directory", dest="directory",
+                        help="Change to the given directory at first")
     subparsers = parser.add_subparsers(dest="cmd_name",
                                        title="sub-commands",
                                        help="additional help")
@@ -272,6 +274,9 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_delete.set_defaults(func=cmd_delete)
     #
     args = parser.parse_args()
+
+    if args.directory:
+        os.chdir(args.directory)
 
     if os.path.exists(args.file):
         manifest_file = args.file
