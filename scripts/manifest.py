@@ -30,7 +30,7 @@ class Manifest:
     Manage the observational products manifest.
     """
     def __init__(self, filepath):
-        self.filepath = filepath
+        self.filepath = os.path.abspath(filepath)
         self.manifest = ruamel.yaml.load(
             open(filepath), Loader=ruamel.yaml.RoundTripLoader)
         if self.manifest is None:
@@ -87,6 +87,14 @@ class Manifest:
             (key, self.manifest.get(key, default)) for key in keys
         ])
         return data
+
+    def getpath(self, key):
+        """
+        Get the absolute path to the specified item by joining
+        with the location of this manifest file.
+        """
+        value = self.get(key)
+        return os.path.join(os.path.dirname(self.filepath), value)
 
     def set(self, key, value):
         """
@@ -190,6 +198,16 @@ def cmd_get(args, manifest):
     print(manifest.get(args.key))
 
 
+def cmd_getpath(args, manifest):
+    """
+    Sub-command "getpath": Get the absolute path to the specified file
+    item in the manifest.
+    """
+    if not args.brief:
+        print("%s:" % args.key, end=" ")
+    print(manifest.getpath(args.key))
+
+
 def cmd_set(args, manifest):
     """
     Sub-command "set": Set the value of an item in the manifest.
@@ -249,6 +267,11 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_get = subparsers.add_parser("get", help="Get an item from manifest")
     parser_get.add_argument("key", help="key of the item")
     parser_get.set_defaults(func=cmd_get)
+    # sub-command: getpath
+    parser_getpath = subparsers.add_parser(
+        "getpath", help="Get absolute path to a file item from manifest")
+    parser_getpath.add_argument("key", help="key of the file item")
+    parser_getpath.set_defaults(func=cmd_getpath)
     # sub-command: set
     parser_set = subparsers.add_parser(
         "set", help="Set (add/update) an item in manifest")
