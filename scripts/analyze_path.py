@@ -68,6 +68,7 @@ def main():
                         help="Path to the data directory " +
                         "(default: current working directory)")
     args = parser.parse_args()
+    path = os.path.abspath(args.path)
 
     b_get_name = False if args.obsid else True
     b_get_obsid = False if args.name else True
@@ -75,11 +76,11 @@ def main():
     if b_get_name:
         if not args.brief:
             print("Name:", end=" ")
-        print(get_name(args.path))
+        print(get_name(path))
     if b_get_obsid:
         if not args.brief:
             print("ObsID:", end=" ")
-        print(get_obsid(args.path))
+        print(get_obsid(path))
 
 
 if __name__ == "__main__":
