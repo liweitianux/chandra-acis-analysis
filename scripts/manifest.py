@@ -113,8 +113,7 @@ class Manifest:
         if key in self.manifest:
             raise KeyError("manifest already has item: '%s'" % key)
         else:
-            self.manifest[key] = self.parse_value(value)
-            self.save()
+            self.set(key, value)
 
     def update(self, key, value):
         """
@@ -123,8 +122,7 @@ class Manifest:
         If the specified item doesn't exist, raise a ``KeyError``.
         """
         if key in self.manifest:
-            self.manifest[key] = self.parse_value(value)
-            self.save()
+            self.set(key, value)
         else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
 
@@ -136,18 +134,29 @@ class Manifest:
         self.save()
 
     @staticmethod
-    def parse_value(value):
+    def parse_value(values):
         """
-        Try to parse the value from string to integer or float.
+        Try to parse the given (list of) value(s) from string to
+        integer or float.
         """
-        try:
-            v = int(value)
-        except ValueError:
+        if not isinstance(values, list):
+            values = [values]
+        #
+        parsed_values = []
+        for value in values:
             try:
-                v = float(value)
+                v = int(value)
             except ValueError:
-                v = value
-        return v
+                try:
+                    v = float(value)
+                except ValueError:
+                    v = value
+            parsed_values.append(v)
+        #
+        if len(parsed_values) == 1:
+            return parsed_values[0]
+        else:
+            return parsed_values
 
 
 def find_manifest(filename="manifest.yaml"):
@@ -195,7 +204,11 @@ def cmd_get(args, manifest):
     """
     if not args.brief:
         print("%s:" % args.key, end=" ")
-    print(manifest.get(args.key))
+    value = manifest.get(args.key)
+    if isinstance(value, list) and args.field:
+        print(value[args.field-1])
+    else:
+        print(value)
 
 
 def cmd_getpath(args, manifest):
@@ -215,7 +228,7 @@ def cmd_set(args, manifest):
     """
     manifest.set(args.key, args.value)
     if not args.brief:
-        print("Set item '%s': '%s'" % (args.key, args.value))
+        print("Set item '{0}': {1}".format(args.key, manifest.get(args.key)))
 
 
 def cmd_add(args, manifest):
@@ -224,7 +237,7 @@ def cmd_add(args, manifest):
     """
     manifest.add(args.key, args.value)
     if not args.brief:
-        print("Added item '%s': '%s'" % (args.key, args.value))
+        print("Added item '{0}': {1}".format(args.key, manifest.get(args.key)))
 
 
 def cmd_update(args, manifest):
@@ -235,8 +248,8 @@ def cmd_update(args, manifest):
     value_old = manifest.get(args.key)
     manifest.update(args.key, args.value)
     if not args.brief:
-        print("Updated item '%s': '%s' -> '%s'" %
-              (args.key, value_old, args.value))
+        print("Updated item '{0}': {1} -> {2}".format(
+              args.key, value_old, manifest.get(args.key)))
 
 
 def cmd_delete(args, manifest):
@@ -251,7 +264,7 @@ def cmd_delete(args, manifest):
 def main(description="Manage the observation manifest (YAML format)",
          default_file="manifest.yaml"):
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-f", "--file", dest="file", default=default_file,
+    parser.add_argument("-F", "--file", dest="file", default=default_file,
                         help="Manifest file (default: %s)" % default_file)
     parser.add_argument("-b", "--brief", dest="brief",
                         action="store_true", help="Be brief")
@@ -265,6 +278,8 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_show.set_defaults(func=cmd_show)
     # sub-command: get
     parser_get = subparsers.add_parser("get", help="Get an item from manifest")
+    parser_get.add_argument("-f", "--field", dest="field", type=int,
+                            help="which field to get (default: all fields)")
     parser_get.add_argument("key", help="key of the item")
     parser_get.set_defaults(func=cmd_get)
     # sub-command: getpath
@@ -276,19 +291,22 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_set = subparsers.add_parser(
         "set", help="Set (add/update) an item in manifest")
     parser_set.add_argument("key", help="key of the item")
-    parser_set.add_argument("value", help="value of the item")
+    parser_set.add_argument("value", nargs="+",
+                            help="value of the item")
     parser_set.set_defaults(func=cmd_set)
     # sub-command: add
     parser_add = subparsers.add_parser(
         "add", help="Add a new item to manifest")
     parser_add.add_argument("key", help="key of the item")
-    parser_add.add_argument("value", help="value of the item")
+    parser_add.add_argument("value", nargs="+",
+                            help="value of the item")
     parser_add.set_defaults(func=cmd_add)
     # sub-command: update
     parser_update = subparsers.add_parser(
         "update", help="Update an existing item in manifest")
     parser_update.add_argument("key", help="key of the item")
-    parser_update.add_argument("value", help="new value of the item")
+    parser_update.add_argument("value", nargs="+",
+                               help="new value of the item")
     parser_update.set_defaults(func=cmd_update)
     # sub-command: delete
     parser_delete = subparsers.add_parser(
