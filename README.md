@@ -22,10 +22,10 @@ Therefore, there are many assumptions and hacks in these tools, and many
 cleanups are needed.  Last but not least, documents are badly needed.
 
 These tools are tested with:
-+ CIAO v4.4 (support will be dropped)
 + CIAO v4.6
-+ HEASoft v6.12
++ CIAO v4.9 (testing ...)
 + HEASoft v6.16
++ HEASoft v6.19
 
 
 WARNING
