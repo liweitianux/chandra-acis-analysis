@@ -109,9 +109,16 @@ NOTE: complete and detailed documentations are badly needed!
 
 Useful Links
 ------------
+* [CIAO](http://cxc.cfa.harvard.edu/ciao/)
+* [Chandra CALDB](http://cxc.cfa.harvard.edu/ciao/download/caldb.html)
 * [Chandra Data Archive](http://cda.harvard.edu/chaser/)
 * [NED search by name](http://ned.ipac.caltech.edu/forms/byname.html)
+* [NED search near position](https://ned.ipac.caltech.edu/forms/nearposn.html)
 * [SIMBAD](http://simbad.u-strasbg.fr/simbad/)
+* [HEASoft](https://heasarc.gsfc.nasa.gov/lheasoft/)
+* [XSPEC](https://heasarc.gsfc.nasa.gov/lheasoft/xanadu/xspec/index.html)
+* [QDP/PLT User's Guide](https://heasarc.gsfc.nasa.gov/ftools/others/qdp/qdp.html)
+* [FTOOLS](https://heasarc.gsfc.nasa.gov/ftools/)
 * [HEASARC nH tool](https://heasarc.gsfc.nasa.gov/cgi-bin/Tools/w3nh/w3nh.pl)
 
 
