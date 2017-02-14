@@ -66,14 +66,21 @@ class Manifest:
         else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
 
-    def gets(self, keys, default=None):
+    def gets(self, keys, default=None, splitlist=False):
         """
         Get the value of the specified item in the manifest.
+
+        TODO: splitlist
 
         Parameters
         ----------
         keys : list[str]
             A list of keys specifying the items to be requested.
+        default : optional
+            The default value to return if the item not exists.
+        splitlist : bool, optional
+            Split the item value if it is a list, making it is easier
+            to export as CSV format.
 
         Returns
         -------
@@ -86,6 +93,16 @@ class Manifest:
         data = OrderedDict([
             (key, self.manifest.get(key, default)) for key in keys
         ])
+        if splitlist:
+            ds = OrderedDict()
+            for k, v in data.items():
+                if isinstance(v, list):
+                    for i, vi in enumerate(v):
+                        ki = "{0}[{1}]".format(k, i)
+                        ds[ki] = vi
+                else:
+                    ds[k] = v
+            data = ds
         return data
 
     def getpath(self, key):
@@ -155,7 +172,13 @@ class Manifest:
                 try:
                     v = float(value)
                 except ValueError:
-                    v = value
+                    # string/boolean
+                    if value.lower() in ["true", "yes"]:
+                        v = True
+                    elif value.lower() in ["false", "no"]:
+                        v = False
+                    else:
+                        v = value  # string
             parsed_values.append(v)
         #
         if len(parsed_values) == 1:

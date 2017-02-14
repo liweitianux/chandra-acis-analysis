@@ -50,7 +50,7 @@ def main():
     results = []
     for fp in args.infile:
         manifest = Manifest(fp)
-        res = manifest.gets(keys)
+        res = manifest.gets(keys, splitlist=True)
         if args.verbose:
             print("FILE:{0}: {1}".format(fp, list(res.values())),
                   file=sys.stderr)
