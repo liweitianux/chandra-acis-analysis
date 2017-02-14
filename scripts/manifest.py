@@ -219,6 +219,23 @@ def find_manifest(filename="manifest.yaml"):
     raise FileNotFoundError("cannot found manifest file: %s" % filename)
 
 
+def get_manifest(filename="manifest.yaml"):
+    """
+    Find the manifest file and return the Manifest instance of it.
+
+    Parameters
+    ----------
+    filename : str, optional
+        Filename of the manifest file (default: ``manifest.yaml``)
+
+    Returns
+    -------
+    manifest : `~Manifest`
+        Manifest instance of the found manifest file.
+    """
+    return Manifest(find_manifest(filename))
+
+
 def cmd_show(args, manifest):
     """
     Default sub-command "show": Show manifest contents.
