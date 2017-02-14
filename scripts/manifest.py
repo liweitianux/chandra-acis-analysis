@@ -316,12 +316,11 @@ def main(description="Manage the observation manifest (YAML format)",
     #
     args = parser.parse_args()
 
-    if args.directory:
-        os.chdir(args.directory)
-
     if os.path.exists(args.file):
         manifest_file = args.file
     else:
+        if args.directory:
+            os.chdir(args.directory)
         manifest_file = find_manifest(args.file)
 
     manifest = Manifest(manifest_file)
