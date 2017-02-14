@@ -94,7 +94,12 @@ class Manifest:
         with the location of this manifest file.
         """
         value = self.get(key)
-        return os.path.join(os.path.dirname(self.filepath), value)
+        if isinstance(value, list):
+            path = [os.path.join(os.path.dirname(self.filepath), f)
+                    for f in value]
+        else:
+            path = os.path.join(os.path.dirname(self.filepath), value)
+        return path
 
     def set(self, key, value):
         """
@@ -177,7 +182,7 @@ def find_manifest(filename="manifest.yaml"):
     Raises
     ------
     FileNotFoundError :
-        The specified manifest
+        Cannot found the specified manifest
     """
     dirname = os.getcwd()
     filepath = os.path.join(dirname, filename)
@@ -205,8 +210,11 @@ def cmd_get(args, manifest):
     if not args.brief:
         print("%s:" % args.key, end=" ")
     value = manifest.get(args.key)
-    if isinstance(value, list) and args.field:
-        print(value[args.field-1])
+    if isinstance(value, list):
+        if args.field:
+            print(value[args.field-1])
+        else:
+            print(args.separator.join(value))
     else:
         print(value)
 
@@ -218,7 +226,11 @@ def cmd_getpath(args, manifest):
     """
     if not args.brief:
         print("%s:" % args.key, end=" ")
-    print(manifest.getpath(args.key))
+    path = manifest.getpath(args.key)
+    if isinstance(path, list):
+        print(args.separator.join(path))
+    else:
+        print(path)
 
 
 def cmd_set(args, manifest):
@@ -270,6 +282,9 @@ def main(description="Manage the observation manifest (YAML format)",
                         action="store_true", help="Be brief")
     parser.add_argument("-C", "--directory", dest="directory",
                         help="Change to the given directory at first")
+    parser.add_argument("-s", "--separator", dest="separator", default=" ",
+                        help="separator to join output list values " +
+                        "(default: whitespace)")
     subparsers = parser.add_subparsers(dest="cmd_name",
                                        title="sub-commands",
                                        help="additional help")
