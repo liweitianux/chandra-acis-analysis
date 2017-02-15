@@ -105,17 +105,22 @@ class Manifest:
             data = ds
         return data
 
-    def getpath(self, key):
+    def getpath(self, key, relative=False):
         """
         Get the absolute path to the specified item by joining
         with the location of this manifest file.
         """
         value = self.get(key)
+        cwd = os.getcwd()
         if isinstance(value, list):
             path = [os.path.join(os.path.dirname(self.filepath), f)
                     for f in value]
+            if relative:
+                path = [os.path.relpath(p, start=cwd) for p in path]
         else:
             path = os.path.join(os.path.dirname(self.filepath), value)
+            if relative:
+                path = os.path.relpath(path, start=cwd)
         return path
 
     def set(self, key, value):
@@ -282,7 +287,7 @@ def cmd_getpath(args, manifest):
     """
     if not args.brief:
         print("%s:" % args.key, end=" ")
-    path = manifest.getpath(args.key)
+    path = manifest.getpath(args.key, relative=args.relative)
     if isinstance(path, list):
         print(args.separator.join(path))
     else:
@@ -366,7 +371,11 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_get.set_defaults(func=cmd_get)
     # sub-command: getpath
     parser_getpath = subparsers.add_parser(
-        "getpath", help="Get absolute path to a file item from manifest")
+        "getpath", help="Get the path to a file item from manifest")
+    parser_getpath.add_argument("-r", "--relative", dest="relative",
+                                action="store_true",
+                                help="Return relative path w.r.t. current " +
+                                "working directory instead of absolute path")
     parser_getpath.add_argument("key", help="key of the file item")
     parser_getpath.set_defaults(func=cmd_getpath)
     # sub-command: set
