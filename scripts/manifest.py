@@ -203,7 +203,7 @@ class Manifest:
             return parsed_values
 
 
-def find_manifest(filename="manifest.yaml"):
+def find_manifest(filename="manifest.yaml", startdir=os.getcwd()):
     """
     Find the specified manifest file in current directory and
     the upper-level directories.
@@ -223,7 +223,7 @@ def find_manifest(filename="manifest.yaml"):
     FileNotFoundError :
         Cannot found the specified manifest
     """
-    dirname = os.getcwd()
+    dirname = startdir
     filepath = os.path.join(dirname, filename)
     while dirname != "/":
         if os.path.exists(filepath):
@@ -347,10 +347,10 @@ def main(description="Manage the observation manifest (YAML format)",
                         help="Manifest file (default: %s)" % default_file)
     parser.add_argument("-b", "--brief", dest="brief",
                         action="store_true", help="Be brief")
-    parser.add_argument("-C", "--directory", dest="directory",
-                        help="Change to the given directory at first")
+    parser.add_argument("-C", "--directory", dest="directory", default=".",
+                        help="From where to find the manifest file")
     parser.add_argument("-s", "--separator", dest="separator", default=" ",
-                        help="separator to join output list values " +
+                        help="Separator to join output list values " +
                         "(default: whitespace)")
     subparsers = parser.add_subparsers(dest="cmd_name",
                                        title="sub-commands",
@@ -408,9 +408,8 @@ def main(description="Manage the observation manifest (YAML format)",
     if os.path.exists(args.file):
         manifest_file = args.file
     else:
-        if args.directory:
-            os.chdir(args.directory)
-        manifest_file = find_manifest(args.file)
+        manifest_file = find_manifest(
+            args.file, startdir=os.path.abspath(args.directory))
 
     manifest = Manifest(manifest_file)
 
