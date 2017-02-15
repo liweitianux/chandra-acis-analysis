@@ -79,6 +79,13 @@ Installation
    Then place the built binary to where can be searched by shell
    (e.g., ``~/bin``, and add ``~/bin`` to ``$PATH``).
 
+4. Install the following runtime dependencies:
+
+   * Python (>=3.5)
+   * [ruamel.yaml](https://bitbucket.org/ruamel/yaml)
+   * [numpy](http://numpy.org/)
+   * [scipy](https://scipy.org/)
+
 
 Settings
 --------
