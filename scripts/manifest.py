@@ -126,6 +126,22 @@ class Manifest:
         self.manifest[key] = self.parse_value(value)
         self.save()
 
+    def setpath(self, key, path):
+        """
+        Get the relative path of the given file w.r.t. this manifest file,
+        and set it to be the value of the specified item.
+        (Will add a new item or update an existing item.)
+        """
+        dirname = os.path.dirname(self.filepath)
+        if isinstance(path, list):
+            abspath = [os.path.abspath(p) for p in path]
+            relpath = [os.path.relpath(p, start=dirname) for p in abspath]
+        else:
+            abspath = os.path.abspath(path)
+            relpath = os.path.relpath(abspath, start=dirname)
+        self.manifest[key] = relpath
+        self.save()
+
     def add(self, key, value):
         """
         Add the specified new item in the manifest.
@@ -283,6 +299,17 @@ def cmd_set(args, manifest):
         print("Set item '{0}': {1}".format(args.key, manifest.get(args.key)))
 
 
+def cmd_setpath(args, manifest):
+    """
+    Sub-command "setpath": Set the specified file item in the manifest
+    to be the relative path of the given file w.r.t. the manifest file.
+    """
+    manifest.setpath(args.key, args.value)
+    if not args.brief:
+        print("Set file item '{0}': {1}".format(args.key,
+                                                manifest.get(args.key)))
+
+
 def cmd_add(args, manifest):
     """
     Sub-command "add": Add a new item to the manifest.
@@ -349,6 +376,13 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_set.add_argument("value", nargs="+",
                             help="value of the item")
     parser_set.set_defaults(func=cmd_set)
+    # sub-command: setpath
+    parser_setpath = subparsers.add_parser(
+        "setpath", help="Set a file item using relative path of given files")
+    parser_setpath.add_argument("key", help="key of the file item")
+    parser_setpath.add_argument("value", nargs="+",
+                                help="paths to the files")
+    parser_setpath.set_defaults(func=cmd_setpath)
     # sub-command: add
     parser_add = subparsers.add_parser(
         "add", help="Add a new item to manifest")
