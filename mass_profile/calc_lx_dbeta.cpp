@@ -1,10 +1,10 @@
-/*
-  Perform a double-beta density model fitting to the surface brightness data
-  Author: Junhua Gu
-  Last modified: 2011.01.01
-  This code is distributed with no warrant
-*/
-
+/**
+ * Calculate the total luminosity and flux within the specified radius.
+ *
+ * Base on 'fit_dbeta_sbp.cpp' and supersede 'calc_lx.cpp'
+ *
+ * Author: Junhua Gu
+ */
 
 #include <iostream>
 #include <fstream>
@@ -71,7 +71,7 @@ int main(int argc,char* argv[])
 {
   if(argc<4)
     {
-      cerr<<argv[0]<<" <configure file> <rout in kpc> <bolo erg cfunc file> "<<endl;
+      cerr<<argv[0]<<" <sbp.conf> <rout_kpc> <cfunc_erg> [cfunc2_erg ...]"<<endl;
       return -1;
     }
   //initialize the parameters list
@@ -514,7 +514,7 @@ int main(int argc,char* argv[])
   cout<<"dl="<<Dl/kpc<<endl;
   for(int n=3;n<argc;++n)
     {
-      spline_func_obj cf_bolo_erg;
+      spline_func_obj cf_erg;
       for(ifstream ifs(argv[n]);;)
 	{
 	  assert(ifs.is_open());
@@ -526,12 +526,12 @@ int main(int argc,char* argv[])
 	    }
 	  //cerr<<x<<"\t"<<y<<endl;
 
-	  cf_bolo_erg.add_point(x,y);//change with source
+	  cf_erg.add_point(x,y);//change with source
 	}
-      cf_bolo_erg.gen_spline();
+      cf_erg.gen_spline();
 
       projector<double>& pj=dynamic_cast<projector<double>&>(f.get_model());
-      pj.attach_cfunc(cf_bolo_erg);
+      pj.attach_cfunc(cf_erg);
 
       mv=f.eval_model_raw(radii,p);
       double flux_erg=0;
