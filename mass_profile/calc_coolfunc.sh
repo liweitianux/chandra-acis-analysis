@@ -9,6 +9,7 @@
 ##
 ## Change logs:
 ## 2017-02-17, Weitian LI
+##   * Rename from 'coolfunc_calc.sh' to 'calc_coolfunc.sh'
 ##   * Clean up that do not calculate and output <coolfunc_bolo>
 ## 2017-02-16, Weitian LI
 ##   * Do not calculate and output 'flux_cnt_ratio.txt'
@@ -36,7 +37,7 @@ fi
 
 ## specify variable name outside while loop
 ## otherwise the inside vars invisible
-XSPEC_CF_XCM="_coolfunc_calc.xcm"
+XSPEC_CF_XCM="_calc_coolfunc.xcm"
 [ -e "${XSPEC_CF_XCM}" ] && rm -f ${XSPEC_CF_XCM}
 
 ## generate xspec script {{{

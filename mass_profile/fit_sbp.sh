@@ -53,7 +53,7 @@ ${base_path}/fit_wang2012_model ${tprofile_data} ${tprofile_cfg} \
             ${cm_per_pixel} 2> /dev/null
 cp wang2012_dump.qdp ${tprofile}
 if [ ! -f ${cfunc_profile} ]; then
-    ${base_path}/coolfunc_calc.sh ${tprofile} ${abund} ${nh} ${z} \
+    ${base_path}/calc_coolfunc.sh ${tprofile} ${abund} ${nh} ${z} \
                 ${cfunc_profile}
 fi
 ${base_path}/${PROG} ${sbp_cfg}

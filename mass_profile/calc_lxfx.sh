@@ -17,12 +17,6 @@
 # Weitian LI
 # 2016-06-07
 #
-# Change logs:
-# 2017-02-17, Weitian LI
-#   * Remove useless call of 'coolfunc_calc.sh'
-# 2017-02-07, Weitian LI
-#   * Update to use the new style configuration files
-#
 
 if [ $# -eq 2 ] || [ $# -eq 3 ]; then
     :
@@ -85,7 +79,7 @@ bolo
 0.1 2.4
 _EOF_
 
-${base_path}/coolfunc_calc_erg.sh ${tprofile} ${abund} \
+${base_path}/calc_coolfunc_bands.sh ${tprofile} ${abund} \
             ${nh} ${z} "cfunc_" ${BLIST}
 
 PROG="calc_lx_${MODEL}"
@@ -144,7 +138,7 @@ for i in `seq 1 ${MC_TIMES}`; do
 
     echo "### `pwd -P`"
     echo "### ${i} / ${MC_TIMES} ###"
-    ${base_path}/coolfunc_calc_erg.sh ${tprofile} ${abund} \
+    ${base_path}/calc_coolfunc_bands.sh ${tprofile} ${abund} \
                 ${nh} ${z} "cfunc_" ${BLIST}
     ${base_path}/${PROG} ${TMP_SBP_CFG} ${rout} \
                 cfunc_bolo.dat \

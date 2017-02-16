@@ -94,8 +94,8 @@ cp -fv ${tprofile_dump} ${tprofile}
 mv -fv ${tprofile_dump} ${tprofile_center}
 mv -fv fit_result.qdp ${tprofile_fit_center}
 
-$base_path/coolfunc_calc.sh ${tprofile_center} \
-                            ${abund} ${nh} ${z} ${cfunc_profile}
+${base_path}/calc_coolfunc.sh ${tprofile_center} \
+            ${abund} ${nh} ${z} ${cfunc_profile}
 cfunc_profile_center="coolfunc_profile_center.txt"
 cp -f ${cfunc_profile} ${cfunc_profile_center}
 
@@ -163,7 +163,7 @@ for i in `seq 1 ${MC_TIMES}`; do
 
     printf "## ${i} / ${MC_TIMES} ##\n"
     printf "## `pwd -P` ##\n"
-    ${base_path}/coolfunc_calc.sh ${tprofile} ${abund} ${nh} ${z} ${cfunc_profile}
+    ${base_path}/calc_coolfunc.sh ${tprofile} ${abund} ${nh} ${z} ${cfunc_profile}
     ${base_path}/${PROG_SBPFIT} ${TMP_SBP_CFG} 2> /dev/null
     cat ${RES_SBPFIT}
     ${base_path}/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null
