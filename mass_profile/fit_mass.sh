@@ -224,14 +224,7 @@ R200_VAL=`grep  '^r200'  ${RES_TMP} | awk '{ print $2 }'`
 R500_VAL=`grep  '^r500'  ${RES_TMP} | awk '{ print $2 }'`
 R1500_VAL=`grep '^r1500' ${RES_TMP} | awk '{ print $2 }'`
 R2500_VAL=`grep '^r2500' ${RES_TMP} | awk '{ print $2 }'`
-printf "## R200:  ${R200_VAL}\n"
-printf "## R500:  ${R500_VAL}\n"
-printf "## R1500: ${R1500_VAL}\n"
-printf "## R2500: ${R2500_VAL}\n"
-L200E=`${base_path}/calc_lx  ${sbp_data} flux_cnt_ratio_center.txt $z $R200_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L500E=`${base_path}/calc_lx  ${sbp_data} flux_cnt_ratio_center.txt $z $R500_VAL  ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L1500E=`${base_path}/calc_lx ${sbp_data} flux_cnt_ratio_center.txt $z $R1500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
-L2500E=`${base_path}/calc_lx ${sbp_data} flux_cnt_ratio_center.txt $z $R2500_VAL ${tprofile_data} | grep '^Lx' | awk '{ print $2,$3,$4 }'`
+
 R200E=`grep   '^r200'             ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 R500E=`grep   '^r500'             ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
 R1500E=`grep  '^r1500'            ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'`
@@ -256,22 +249,18 @@ cat ${RES_SBPFIT_CENTER}                       | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}
 printf "r200= ${R200E} kpc\n"                  | tee -a ${RES_FINAL}
 printf "m200= ${M200E} M_sun\n"                | tee -a ${RES_FINAL}
-printf "L200= ${L200E} erg/s\n"                | tee -a ${RES_FINAL}
 printf "gas_m200= ${MG200E} M_sun\n"           | tee -a ${RES_FINAL}
 printf "gas_fraction200= ${FG200E} x100%%\n"   | tee -a ${RES_FINAL}
 printf "r500= ${R500E} kpc\n"                  | tee -a ${RES_FINAL}
 printf "m500= ${M500E} M_sun\n"                | tee -a ${RES_FINAL}
-printf "L500= ${L500E} erg/s\n"                | tee -a ${RES_FINAL}
 printf "gas_m500= ${MG500E} M_sun\n"           | tee -a ${RES_FINAL}
 printf "gas_fraction500= ${FG500E} x100%%\n"   | tee -a ${RES_FINAL}
 printf "r1500= ${R1500E} kpc\n"                | tee -a ${RES_FINAL}
 printf "m1500= ${M1500E} M_sun\n"              | tee -a ${RES_FINAL}
-printf "L1500= ${L1500E} erg/s\n"              | tee -a ${RES_FINAL}
 printf "gas_m1500= ${MG1500E} M_sun\n"         | tee -a ${RES_FINAL}
 printf "gas_fraction1500= ${FG1500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "r2500= ${R2500E} kpc\n"                | tee -a ${RES_FINAL}
 printf "m2500= ${M2500E} M_sun\n"              | tee -a ${RES_FINAL}
-printf "L2500= ${L2500E} erg/s\n"              | tee -a ${RES_FINAL}
 printf "gas_m2500= ${MG2500E} M_sun\n"         | tee -a ${RES_FINAL}
 printf "gas_fraction2500= ${FG2500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}

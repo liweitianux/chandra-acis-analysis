@@ -8,6 +8,8 @@
 ## August 31, 2012
 ##
 ## Change logs:
+## 2017-02-16, Weitian LI
+##   * Remove luminosity results calculated by 'calc_lx'
 ## 2017-02-09, Weitian LI
 ##   * Update to use the new style config files
 ##   * Some cleanups
@@ -293,7 +295,7 @@ else
 fi
 ## single/double beta }}}
 
-## get `mass/virial_radius/luminosity' {{{
+## get `mass/virial_radius' {{{
 # 200 data {{{
 R200_VAL=`\grep '^r200' ${RES_FINAL} | awk '{ print $2 }'`
 R200_ERR_L=`\grep '^r200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
@@ -301,8 +303,6 @@ R200_ERR_U=`\grep '^r200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print
 M200_VAL=`\grep '^m200' ${RES_FINAL} | awk '{ print $2 }'`
 M200_ERR_L=`\grep '^m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 M200_ERR_U=`\grep '^m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L200_VAL=`\grep '^L200' ${RES_FINAL} | awk '{ print $2 }'`
-L200_ERR=`\grep '^L200' ${RES_FINAL} | awk '{ print $4 }'`
 MGAS200_VAL=`\grep '^gas_m200' ${RES_FINAL} | awk '{ print $2 }'`
 MGAS200_ERR_L=`\grep '^gas_m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 MGAS200_ERR_U=`\grep '^gas_m200' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
@@ -315,8 +315,6 @@ FGAS200_ERR_U=`\grep '^gas_fraction200' ${RES_FINAL} | awk '{ print $3 }' | awk 
 [ -z "${M200_VAL}" ]       && M200_VAL="null"
 [ -z "${M200_ERR_L}" ]     && M200_ERR_L="null"
 [ -z "${M200_ERR_U}" ]     && M200_ERR_U="null"
-[ -z "${L200_VAL}" ]       && L200_VAL="null"
-[ -z "${L200_ERR}" ]       && L200_ERR="null"
 [ -z "${MGAS200_VAL}" ]    && MGAS200_VAL="null"
 [ -z "${MGAS200_ERR_L}" ]  && MGAS200_ERR_L="null"
 [ -z "${MGAS200_ERR_U}" ]  && MGAS200_ERR_U="null"
@@ -331,8 +329,6 @@ R500_ERR_U=`\grep '^r500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print
 M500_VAL=`\grep '^m500' ${RES_FINAL} | awk '{ print $2 }'`
 M500_ERR_L=`\grep '^m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 M500_ERR_U=`\grep '^m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L500_VAL=`\grep '^L500' ${RES_FINAL} | awk '{ print $2 }'`
-L500_ERR=`\grep '^L500' ${RES_FINAL} | awk '{ print $4 }'`
 MGAS500_VAL=`\grep '^gas_m500' ${RES_FINAL} | awk '{ print $2 }'`
 MGAS500_ERR_L=`\grep '^gas_m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 MGAS500_ERR_U=`\grep '^gas_m500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
@@ -345,8 +341,6 @@ FGAS500_ERR_U=`\grep '^gas_fraction500' ${RES_FINAL} | awk '{ print $3 }' | awk 
 [ -z "${M500_VAL}" ]       && M500_VAL="null"
 [ -z "${M500_ERR_L}" ]     && M500_ERR_L="null"
 [ -z "${M500_ERR_U}" ]     && M500_ERR_U="null"
-[ -z "${L500_VAL}" ]       && L500_VAL="null"
-[ -z "${L500_ERR}" ]       && L500_ERR="null"
 [ -z "${MGAS500_VAL}" ]    && MGAS500_VAL="null"
 [ -z "${MGAS500_ERR_L}" ]  && MGAS500_ERR_L="null"
 [ -z "${MGAS500_ERR_U}" ]  && MGAS500_ERR_U="null"
@@ -361,8 +355,6 @@ R1500_ERR_U=`\grep '^r1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ pri
 M1500_VAL=`\grep '^m1500' ${RES_FINAL} | awk '{ print $2 }'`
 M1500_ERR_L=`\grep '^m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 M1500_ERR_U=`\grep '^m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L1500_VAL=`\grep '^L1500' ${RES_FINAL} | awk '{ print $2 }'`
-L1500_ERR=`\grep '^L1500' ${RES_FINAL} | awk '{ print $4 }'`
 MGAS1500_VAL=`\grep '^gas_m1500' ${RES_FINAL} | awk '{ print $2 }'`
 MGAS1500_ERR_L=`\grep '^gas_m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 MGAS1500_ERR_U=`\grep '^gas_m1500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
@@ -375,8 +367,6 @@ FGAS1500_ERR_U=`\grep '^gas_fraction1500' ${RES_FINAL} | awk '{ print $3 }' | aw
 [ -z "${M1500_VAL}" ]      && M1500_VAL="null"
 [ -z "${M1500_ERR_L}" ]    && M1500_ERR_L="null"
 [ -z "${M1500_ERR_U}" ]    && M1500_ERR_U="null"
-[ -z "${L1500_VAL}" ]      && L1500_VAL="null"
-[ -z "${L1500_ERR}" ]      && L1500_ERR="null"
 [ -z "${MGAS1500_VAL}" ]   && MGAS1500_VAL="null"
 [ -z "${MGAS1500_ERR_L}" ] && MGAS1500_ERR_L="null"
 [ -z "${MGAS1500_ERR_U}" ] && MGAS1500_ERR_U="null"
@@ -391,8 +381,6 @@ R2500_ERR_U=`\grep '^r2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ pri
 M2500_VAL=`\grep '^m2500' ${RES_FINAL} | awk '{ print $2 }'`
 M2500_ERR_L=`\grep '^m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 M2500_ERR_U=`\grep '^m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
-L2500_VAL=`\grep '^L2500' ${RES_FINAL} | awk '{ print $2 }'`
-L2500_ERR=`\grep '^L2500' ${RES_FINAL} | awk '{ print $4 }'`
 MGAS2500_VAL=`\grep '^gas_m2500' ${RES_FINAL} | awk '{ print $2 }'`
 MGAS2500_ERR_L=`\grep '^gas_m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $1 }'`
 MGAS2500_ERR_U=`\grep '^gas_m2500' ${RES_FINAL} | awk '{ print $3 }' | awk -F'/' '{ print $2 }' | tr -d '+'`
@@ -405,8 +393,6 @@ FGAS2500_ERR_U=`\grep '^gas_fraction2500' ${RES_FINAL} | awk '{ print $3 }' | aw
 [ -z "${M2500_VAL}" ]      && M2500_VAL="null"
 [ -z "${M2500_ERR_L}" ]    && M2500_ERR_L="null"
 [ -z "${M2500_ERR_U}" ]    && M2500_ERR_U="null"
-[ -z "${L2500_VAL}" ]      && L2500_VAL="null"
-[ -z "${L2500_ERR}" ]      && L2500_ERR="null"
 [ -z "${MGAS2500_VAL}" ]   && MGAS2500_VAL="null"
 [ -z "${MGAS2500_ERR_L}" ] && MGAS2500_ERR_L="null"
 [ -z "${MGAS2500_ERR_U}" ] && MGAS2500_ERR_U="null"
@@ -523,8 +509,6 @@ cat > ${JSON_FILE} << _EOF_
     "M200 (M_sun)": ${M200_VAL},
     "M200_err_lower (1sigma)": ${M200_ERR_L},
     "M200_err_upper (1sigma)": ${M200_ERR_U},
-    "L200 (erg/s)": ${L200_VAL},
-    "L200_err (1sigma)": ${L200_ERR},
     "M_gas200 (M_sun)": ${MGAS200_VAL},
     "M_gas200_err_lower (1sigma)": ${MGAS200_ERR_L},
     "M_gas200_err_upper (1sigma)": ${MGAS200_ERR_U},
@@ -537,8 +521,6 @@ cat > ${JSON_FILE} << _EOF_
     "M500 (M_sun)": ${M500_VAL},
     "M500_err_lower (1sigma)": ${M500_ERR_L},
     "M500_err_upper (1sigma)": ${M500_ERR_U},
-    "L500 (erg/s)": ${L500_VAL},
-    "L500_err (1sigma)": ${L500_ERR},
     "M_gas500 (M_sun)": ${MGAS500_VAL},
     "M_gas500_err_lower (1sigma)": ${MGAS500_ERR_L},
     "M_gas500_err_upper (1sigma)": ${MGAS500_ERR_U},
@@ -551,8 +533,6 @@ cat > ${JSON_FILE} << _EOF_
     "M1500": ${M1500_VAL},
     "M1500_err_lower": ${M1500_ERR_L},
     "M1500_err_upper": ${M1500_ERR_U},
-    "L1500": ${L1500_VAL},
-    "L1500_err": ${L1500_ERR},
     "M_gas1500": ${MGAS1500_VAL},
     "M_gas1500_err_lower": ${MGAS1500_ERR_L},
     "M_gas1500_err_upper": ${MGAS1500_ERR_U},
@@ -565,8 +545,6 @@ cat > ${JSON_FILE} << _EOF_
     "M2500": ${M2500_VAL},
     "M2500_err_lower": ${M2500_ERR_L},
     "M2500_err_upper": ${M2500_ERR_U},
-    "L2500": ${L2500_VAL},
-    "L2500_err": ${L2500_ERR},
     "M_gas2500": ${MGAS2500_VAL},
     "M_gas2500_err_lower": ${MGAS2500_ERR_L},
     "M_gas2500_err_upper": ${MGAS2500_ERR_U},
