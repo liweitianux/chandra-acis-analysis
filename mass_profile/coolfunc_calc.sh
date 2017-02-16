@@ -21,7 +21,7 @@ else
     exit 1
 fi
 TPROFILE=$1
-ABUND_VAL=$2
+ABUNDANCE=$2
 N_H=$3
 REDSHIFT=$4
 COOLFUNC_DAT=$5
@@ -55,7 +55,7 @@ set xs_echo_script 0
 ## set basic data {{{
 set nh ${N_H}
 set redshift ${REDSHIFT}
-set abund_val ${ABUND_VAL}
+set abundance ${ABUNDANCE}
 set norm ${NORM}
 ## basic }}}
 
@@ -67,7 +67,7 @@ query yes
 abund grsa
 dummyrsp 0.01 100.0 4096 linear
 # load model 'wabs*apec' to calc cooling function
-model wabs*apec & \${nh} & 1.0 & \${abund_val} & \${redshift} & \${norm} & /*
+model wabs*apec & \${nh} & 1.0 & \${abundance} & \${redshift} & \${norm} & /*
 ## xspec }}}
 
 ## set input and output filename & open files
@@ -103,28 +103,25 @@ fi
 cat >> ${XSPEC_CF_XCM} << _EOF_
 ## read data from tprofile line by line
 while { [ gets \${tpro_fd} tpro_line ] != -1 } {
-    # gets one line
-    scan \${tpro_line} "%f %f" radius temp_val
-    #puts "radius: \${radius}, temperature: \${temp_val}"
+    scan \${tpro_line} "%f %f" radius temperature
+    #puts "radius: \${radius}, temperature: \${temperature}"
     # set temperature value
-    newpar 2 \${temp_val}
+    newpar 2 \${temperature}
     # calc flux & tclout
     flux 0.7 7.0
     tclout flux 1
-    scan \${xspec_tclout} "%f %f %f %f" holder holder holder cf_data
-    #puts "cf_data: \${cf_data}"
-    puts \${cf_fd} "\${radius}    \${cf_data}"
+    scan \${xspec_tclout} "%f %f %f %f" _ _ _ cf_photon
+    #puts "cf: \${cf_photon}"
+    puts \${cf_fd} "\${radius}    \${cf_photon}"
     flux 0.01 100.0
     tclout flux 1
-    scan \${xspec_tclout} "%f %f %f %f" cff_data holder holder holder
-    puts \${cff_fd} "\${radius}   [expr \${cff_data}/\${cf_data}]"
+    scan \${xspec_tclout} "%f" cff_erg
+    puts \${cff_fd} "\${radius}   [expr \${cff_erg}/\${cf_photon}]"
 _EOF_
 if  [ ! -z "${COOLFUNC_BOLO}" ]; then
     cat >> ${XSPEC_CF_XCM} << _EOF_
     # coolfunc bolometric
-    set cfbolo_data \$cff_data
-    #puts "cfbolo_data: \${cfbolo_data}"
-    puts \${cfbolo_fd} "\${radius}    \${cfbolo_data}"
+    puts \${cfbolo_fd} "\${radius}    \${cff_erg}"
 _EOF_
 fi
 cat >> ${XSPEC_CF_XCM} << _EOF_

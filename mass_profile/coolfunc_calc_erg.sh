@@ -16,7 +16,7 @@ if [ $# -ne 6 ]; then
     exit 1
 fi
 TPROFILE=$1
-ABUND_VAL=$2
+ABUNDANCE=$2
 N_H=$3
 REDSHIFT=$4
 COOLFUNC_PREFIX=$5
@@ -49,7 +49,7 @@ set xs_echo_script 0
 ## set basic data {{{
 set nh ${N_H}
 set redshift ${REDSHIFT}
-set abund_val ${ABUND_VAL}
+set abundance ${ABUNDANCE}
 set norm ${NORM}
 ## basic }}}
 
@@ -62,7 +62,7 @@ abund grsa
 dummyrsp 0.01 100.0 4096 linear
 # load model 'wabs*apec' to calc cooling function
 # (nh=0.0: do not consider aborption ???)
-model wabs*apec & 0.0 & 1.0 & \${abund_val} & \${redshift} & \${norm} &
+model wabs*apec & 0.0 & 1.0 & \${abundance} & \${redshift} & \${norm} &
 ## xspec }}}
 
 ## set input and output filename
@@ -91,17 +91,16 @@ while { [ gets \${blist_fd} blist_line ] != -1 } {
 
     ## read data from tprofile line by line
     while { [ gets \${tpro_fd} tpro_line ] != -1 } {
-        # gets one line
-        scan \${tpro_line} "%f %f" radius temp_val
-        #puts "radius: \${radius}, temperature: \${temp_val}"
+        scan \${tpro_line} "%f %f" radius temperature
+        #puts "radius: \${radius}, temperature: \${temperature}"
         # set temperature value
-        newpar 2 \${temp_val}
+        newpar 2 \${temperature}
         # calc flux & tclout
         flux \${e1} \${e2}
         tclout flux 1
-        scan \${xspec_tclout} "%f %f %f %f" cf_data holder holder holder
-        #puts "cf_data: \${cf_data}"
-        puts \${cf_fd} "\${radius}    \${cf_data}"
+        scan \${xspec_tclout} "%f" cf_erg
+        #puts "cf: \${cf_erg}"
+        puts \${cf_fd} "\${radius}    \${cf_erg}"
     }
     close \${tpro_fd}
     close \${cf_fd}
