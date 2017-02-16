@@ -18,6 +18,8 @@
 # 2016-06-07
 #
 # Change logs:
+# 2017-02-17, Weitian LI
+#   * Remove useless call of 'coolfunc_calc.sh'
 # 2017-02-07, Weitian LI
 #   * Update to use the new style configuration files
 #
@@ -59,7 +61,6 @@ sbp_cfg=`grep       '^sbp_cfg'       ${mass_cfg} | awk '{ print $2 }'`
 
 sbp_data=`grep      '^sbp_data'      ${sbp_cfg} | awk '{ print $2 }'`
 tprofile=`grep      '^tprofile'      ${sbp_cfg} | awk '{ print $2 }'`
-cfunc_profile=`grep '^cfunc_profile' ${sbp_cfg} | awk '{ print $2 }'`
 z=`grep             '^z'             ${sbp_cfg} | awk '{ print $2 }'`
 cm_per_pixel=`grep  '^cm_per_pixel'  ${sbp_cfg} | awk '{ print $2 }'`
 
@@ -84,8 +85,6 @@ bolo
 0.1 2.4
 _EOF_
 
-${base_path}/coolfunc_calc.sh ${tprofile} ${abund} \
-            ${nh} ${z} ${cfunc_profile}
 ${base_path}/coolfunc_calc_erg.sh ${tprofile} ${abund} \
             ${nh} ${z} "cfunc_" ${BLIST}
 
@@ -145,8 +144,6 @@ for i in `seq 1 ${MC_TIMES}`; do
 
     echo "### `pwd -P`"
     echo "### ${i} / ${MC_TIMES} ###"
-    ${base_path}/coolfunc_calc.sh ${tprofile} ${abund} \
-                ${nh} ${z} ${cfunc_profile}
     ${base_path}/coolfunc_calc_erg.sh ${tprofile} ${abund} \
                 ${nh} ${z} "cfunc_" ${BLIST}
     ${base_path}/${PROG} ${TMP_SBP_CFG} ${rout} \
