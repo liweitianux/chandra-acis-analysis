@@ -26,7 +26,7 @@ OPT_UTIL_INC ?= -I../opt_utilities
 TARGETS= fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp \
 		fit_direct_beta fit_wang2012_model \
 		fit_nfw_mass fit_mt_pl fit_lt_pl fit_mt_bpl \
-		fit_lt_bpl cooling_time calc_lx_dbeta calc_lx_beta
+		fit_lt_bpl calc_lx_dbeta calc_lx_beta
 HEADERS= projector.hpp spline.hpp vchisq.hpp
 
 all: $(TARGETS)
@@ -68,9 +68,6 @@ fit_mt_bpl: fit_mt_bpl.cpp
 
 fit_lt_bpl: fit_lt_bpl.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
-
-cooling_time: cooling_time.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $<
 
 
 fit_nfw_sbp.o: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS)
