@@ -6,7 +6,10 @@
 ##
 ## Weitian LI
 ## Created: 2012-08-17
-## Updated: 2016-06-08
+##
+## Change logs:
+## 2017-02-16, Weitian LI
+##   * Do not calculate and output 'flux_cnt_ratio.txt'
 ##
 
 ## cmdline arguments {{{
@@ -25,7 +28,6 @@ ABUNDANCE=$2
 N_H=$3
 REDSHIFT=$4
 COOLFUNC_DAT=$5
-COOLFUNC_DAT_RATIO="flux_cnt_ratio.txt"
 NORM=`cosmo_calc ${REDSHIFT} | grep 'norm.*cooling_function' | awk -F':' '{ print $2 }'`
 
 if [ ! -r "${TPROFILE}" ]; then
@@ -33,7 +35,6 @@ if [ ! -r "${TPROFILE}" ]; then
     exit 2
 fi
 [ -e "${COOLFUNC_DAT}" ] && rm -f ${COOLFUNC_DAT}
-[ -e "${COOLFUNC_DAT_RATIO}" ] && rm -f ${COOLFUNC_DAT_RATIO}
 ## arguments }}}
 
 ## specify variable name outside while loop
@@ -73,18 +74,13 @@ model wabs*apec & \${nh} & 1.0 & \${abundance} & \${redshift} & \${norm} & /*
 ## set input and output filename & open files
 set tpro_fn "${TPROFILE}"
 set cf_fn "${COOLFUNC_DAT}"
-set cff_fn "${COOLFUNC_DAT_RATIO}"
 if { [ file exists \${cf_fn} ] } {
     exec rm -fv \${cf_fn}
-}
-if { [ file exists \${cff_fn} ] } {
-    exec rm -fv \${cff_fn}
 }
 
 ## open files
 set tpro_fd [ open \${tpro_fn} r ]
 set cf_fd [ open \${cf_fn} w ]
-set cff_fd [ open \${cff_fn} w ]
 
 _EOF_
 
@@ -113,15 +109,14 @@ while { [ gets \${tpro_fd} tpro_line ] != -1 } {
     scan \${xspec_tclout} "%f %f %f %f" _ _ _ cf_photon
     #puts "cf: \${cf_photon}"
     puts \${cf_fd} "\${radius}    \${cf_photon}"
-    flux 0.01 100.0
-    tclout flux 1
-    scan \${xspec_tclout} "%f" cff_erg
-    puts \${cff_fd} "\${radius}   [expr \${cff_erg}/\${cf_photon}]"
 _EOF_
 if  [ ! -z "${COOLFUNC_BOLO}" ]; then
     cat >> ${XSPEC_CF_XCM} << _EOF_
     # coolfunc bolometric
-    puts \${cfbolo_fd} "\${radius}    \${cff_erg}"
+    flux 0.01 100.0
+    tclout flux 1
+    scan \${xspec_tclout} "%f" cfbolo_erg
+    puts \${cfbolo_fd} "\${radius}    \${cfbolo_erg}"
 _EOF_
 fi
 cat >> ${XSPEC_CF_XCM} << _EOF_

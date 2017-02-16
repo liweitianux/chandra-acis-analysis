@@ -88,7 +88,6 @@ ${base_path}/coolfunc_calc.sh ${tprofile} ${abund} \
             ${nh} ${z} ${cfunc_profile}
 ${base_path}/coolfunc_calc_erg.sh ${tprofile} ${abund} \
             ${nh} ${z} "cfunc_" ${BLIST}
-mv -fv flux_cnt_ratio.txt flux_cnt_ratio_center.txt
 
 PROG="calc_lx_${MODEL}"
 LXF_RES="lx_${MODEL}_param.txt"

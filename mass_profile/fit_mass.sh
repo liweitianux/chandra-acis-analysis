@@ -113,7 +113,6 @@ $base_path/coolfunc_calc.sh ${tprofile_center} \
                             ${abund} ${nh} ${z} ${cfunc_profile} cfunc_bolo.dat
 cfunc_profile_center="coolfunc_profile_center.txt"
 cp -f ${cfunc_profile} ${cfunc_profile_center}
-mv -fv flux_cnt_ratio.txt flux_cnt_ratio_center.txt
 
 PROG_SBPFIT="fit_${MODEL}_sbp"
 RES_SBPFIT="${MODEL}_param.txt"
@@ -244,34 +243,24 @@ FG2500E=`grep '^gas_fraction2500' ${RES_TMP} | tail -n 1 | awk '{ print $2,$3 }'
 
 printf "\n+++++++++++++++ RESULTS (${MODEL_NAME}) +++++++++++++++\n"
 printf "model: ${MODEL_NAME}\n"                | tee -a ${RES_FINAL}
-printf "\n"                                    | tee -a ${RES_FINAL}
 cat ${RES_SBPFIT_CENTER}                       | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}
 printf "r200= ${R200E} kpc\n"                  | tee -a ${RES_FINAL}
-printf "m200= ${M200E} M_sun\n"                | tee -a ${RES_FINAL}
-printf "gas_m200= ${MG200E} M_sun\n"           | tee -a ${RES_FINAL}
+printf "m200= ${M200E} Msun\n"                 | tee -a ${RES_FINAL}
+printf "gas_m200= ${MG200E} Msun\n"            | tee -a ${RES_FINAL}
 printf "gas_fraction200= ${FG200E} x100%%\n"   | tee -a ${RES_FINAL}
 printf "r500= ${R500E} kpc\n"                  | tee -a ${RES_FINAL}
-printf "m500= ${M500E} M_sun\n"                | tee -a ${RES_FINAL}
-printf "gas_m500= ${MG500E} M_sun\n"           | tee -a ${RES_FINAL}
+printf "m500= ${M500E} Msun\n"                 | tee -a ${RES_FINAL}
+printf "gas_m500= ${MG500E} Msun\n"            | tee -a ${RES_FINAL}
 printf "gas_fraction500= ${FG500E} x100%%\n"   | tee -a ${RES_FINAL}
 printf "r1500= ${R1500E} kpc\n"                | tee -a ${RES_FINAL}
-printf "m1500= ${M1500E} M_sun\n"              | tee -a ${RES_FINAL}
-printf "gas_m1500= ${MG1500E} M_sun\n"         | tee -a ${RES_FINAL}
+printf "m1500= ${M1500E} Msun\n"               | tee -a ${RES_FINAL}
+printf "gas_m1500= ${MG1500E} Msun\n"          | tee -a ${RES_FINAL}
 printf "gas_fraction1500= ${FG1500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "r2500= ${R2500E} kpc\n"                | tee -a ${RES_FINAL}
-printf "m2500= ${M2500E} M_sun\n"              | tee -a ${RES_FINAL}
-printf "gas_m2500= ${MG2500E} M_sun\n"         | tee -a ${RES_FINAL}
+printf "m2500= ${M2500E} Msun\n"               | tee -a ${RES_FINAL}
+printf "gas_m2500= ${MG2500E} Msun\n"          | tee -a ${RES_FINAL}
 printf "gas_fraction2500= ${FG2500E} x100%%\n" | tee -a ${RES_FINAL}
-printf "\n"                                    | tee -a ${RES_FINAL}
-printf "gas mass 200= ${MG200E} M_sun\n"       | tee -a ${RES_FINAL}
-printf "gas fractho 200= ${FG200E} x100%%\n"   | tee -a ${RES_FINAL}
-printf "gas mass 500= ${MG500E} M_sun\n"       | tee -a ${RES_FINAL}
-printf "gas fractho 500= ${FG500E} x100%%\n"   | tee -a ${RES_FINAL}
-printf "gas mass 1500= ${MG1500E} M_sun\n"     | tee -a ${RES_FINAL}
-printf "gas fractho 1500= ${FG1500E} x100%%\n" | tee -a ${RES_FINAL}
-printf "gas mass 2500= ${MG2500E} M_sun\n"     | tee -a ${RES_FINAL}
-printf "gas fractho 2500= ${FG2500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}
 ${base_path}/fg_2500_500.py                    | tee -a ${RES_FINAL}
 ${base_path}/extract_tcool.py cooling_time.dat ${rcool} | tee -a ${RES_FINAL}
