@@ -8,6 +8,8 @@
 ## August 31, 2012
 ##
 ## Change logs:
+## 2017-02-17, Weitian LI
+##   * Remove cooling time and radius results calculated by 'cooling_time'
 ## 2017-02-16, Weitian LI
 ##   * Remove luminosity results calculated by 'calc_lx'
 ## 2017-02-09, Weitian LI
@@ -407,13 +409,6 @@ FGRR_ERR_U=`\grep '^gas_fraction.*r2500.*r500=' ${RES_FINAL} | sed 's/^.*r500=//
 [ -z "${FGRR_ERR_L}" ] && FGRR_ERR_L="null"
 [ -z "${FGRR_ERR_U}" ] && FGRR_ERR_U="null"
 ## mrl }}}
-
-## rcool & cooling time {{{
-RCOOL=`\grep '^cooling_radius=' ${RES_FINAL} | awk '{ print $2 }'`
-COOLING_TIME=`\grep '^cooling_time=' ${RES_FINAL} | awk -F'=' '{ print $2 }' | tr -d ' Gyr'`
-[ -z "${RCOOL}" ] && RCOOL="null"
-[ -z "${COOLING_TIME}" ] && COOLING_TIME="null"
-## cooling time }}}
 ## repro/mass }}}
 
 cd ${BASEDIR}
@@ -570,8 +565,6 @@ cat > ${JSON_FILE} << _EOF_
     "F_gas(R2500-R500)": ${FGRR},
     "F_gas_err_l(R2500-R500)": ${FGRR_ERR_L},
     "F_gas_err_u(R2500-R500)": ${FGRR_ERR_U},
-    "R_cool (kpc)": ${RCOOL},
-    "Cooling_time (Gyr)": ${COOLING_TIME},
     "Cool_core": ${COOLCORE},
     "Feature": "${OBJ_FEATURE}",
     "NOTE": "${OBJ_NOTE}"

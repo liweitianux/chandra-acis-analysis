@@ -95,8 +95,6 @@
     "F_gas(R2500-R500)": ,
     "F_gas_err_l(R2500-R500)": ,
     "F_gas_err_u(R2500-R500)": ,
-    "R_cool (kpc)": ,
-    "Cooling_time (Gyr)": ,
     "Cool_core": ,
     "NOTE": ""
 }

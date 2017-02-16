@@ -26,11 +26,6 @@
 # Weitian LI
 # 2016-06-07
 #
-# Change logs:
-# 2017-02-07, Weitian LI
-#   * Rename from `fit_nfwmass.sh` to `fit_mass.sh`
-#   * Update to use the new style configuration files
-#
 
 if [ $# -eq 1 ] || [ $# -eq 2 ]; then
     :
@@ -44,14 +39,9 @@ else
     exit 1
 fi
 
-if ! which xspec > /dev/null; then
+if ! which xspec > /dev/null 2>&1; then
     printf "*** ERROR: please initialize HEASOFT first\n"
     exit 2
-fi
-
-if [ -z "${HEADAS}" ]; then
-    printf "*** ERROR: variable \`HEADAS' not properly set\n"
-    exit 3
 fi
 
 export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -84,11 +74,6 @@ z=`grep             '^z'             ${sbp_cfg} | awk '{ print $2 }'`
 cm_per_pixel=`cosmo_calc ${z} | grep 'cm/pixel' | awk -F':' '{ print $2 }'`
 sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
 
-da=`python -c "print($cm_per_pixel/(.492/3600/180*3.1415926))"`
-dl=`python -c "print($da*(1+$z)**2)"`
-printf "da= ${da}\n"
-printf "dl= ${dl}\n"
-
 if grep -q '^beta2' $sbp_cfg; then
     MODEL="dbeta"
     MODEL_NAME="double-beta"
@@ -110,7 +95,7 @@ mv -fv ${tprofile_dump} ${tprofile_center}
 mv -fv fit_result.qdp ${tprofile_fit_center}
 
 $base_path/coolfunc_calc.sh ${tprofile_center} \
-                            ${abund} ${nh} ${z} ${cfunc_profile} cfunc_bolo.dat
+                            ${abund} ${nh} ${z} ${cfunc_profile}
 cfunc_profile_center="coolfunc_profile_center.txt"
 cp -f ${cfunc_profile} ${cfunc_profile_center}
 
@@ -131,16 +116,6 @@ mv -fv nfw_dump.qdp       mass_int_center.qdp
 mv -fv overdensity.qdp    overdensity_center.qdp
 mv -fv gas_mass_int.qdp   gas_mass_int_center.qdp
 
-#exit 233
-
-## cooling time (-> use 'ciao_calc_ct.sh')
-${base_path}/cooling_time rho_fit_center.dat \
-            ${tprofile_center} cfunc_bolo.dat \
-            ${dl} ${cm_per_pixel} > cooling_time.dat
-## radius to calculate tcool, not the cooling time!
-rcool=`${base_path}/analyze_mass_profile.py 500 c | grep '^r500' | awk -F'=' '{ print .048*$2 }'`
-printf "rcool= ${rcool} (kpc)\n"
-
 ## only calculate central value {{{
 if [ "${F_C}" = "YES" ]; then
     RES_CENTER="center_only_results.txt"
@@ -150,7 +125,6 @@ if [ "${F_C}" = "YES" ]; then
     ${base_path}/analyze_mass_profile.py 1500 c | tee -a ${RES_CENTER}
     ${base_path}/analyze_mass_profile.py 2500 c | tee -a ${RES_CENTER}
     ${base_path}/fg_2500_500.py c               | tee -a ${RES_CENTER}
-    ${base_path}/extract_tcool.py cooling_time.dat ${rcool} | tee -a ${RES_CENTER}
     exit 0
 fi
 ## central value }}}
@@ -263,5 +237,4 @@ printf "gas_m2500= ${MG2500E} Msun\n"          | tee -a ${RES_FINAL}
 printf "gas_fraction2500= ${FG2500E} x100%%\n" | tee -a ${RES_FINAL}
 printf "\n"                                    | tee -a ${RES_FINAL}
 ${base_path}/fg_2500_500.py                    | tee -a ${RES_FINAL}
-${base_path}/extract_tcool.py cooling_time.dat ${rcool} | tee -a ${RES_FINAL}
 printf "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
