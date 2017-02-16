@@ -8,19 +8,16 @@
 ## Created: 2012-08-17
 ##
 ## Change logs:
+## 2017-02-17, Weitian LI
+##   * Clean up that do not calculate and output <coolfunc_bolo>
 ## 2017-02-16, Weitian LI
 ##   * Do not calculate and output 'flux_cnt_ratio.txt'
 ##
 
 ## cmdline arguments {{{
-if [ $# -eq 5 ]; then
-    :
-elif [ $# -eq 6 ]; then
-    COOLFUNC_BOLO="$6"
-    [ -e "${COOLFUNC_BOLO}" ] && rm -f ${COOLFUNC_BOLO}
-else
+if [ $# -ne 5 ]; then
     printf "usage:\n"
-    printf "    `basename $0` <tprofile> <avg_abund> <nH> <redshift> <coolfunc_outfile> [coolfunc_bolo]\n"
+    printf "    `basename $0` <tprofile> <avg_abund> <nH> <redshift> <coolfunc_outfile>\n"
     exit 1
 fi
 TPROFILE=$1
@@ -84,18 +81,6 @@ set cf_fd [ open \${cf_fn} w ]
 
 _EOF_
 
-if  [ ! -z "${COOLFUNC_BOLO}" ]; then
-    cat >> ${XSPEC_CF_XCM} << _EOF_
-# coolfunc bolometric
-set cfbolo_fn "${COOLFUNC_BOLO}"
-if { [ file exists \${cfbolo_fn} ] } {
-    exec rm -fv \${cfbolo_fn}
-}
-set cfbolo_fd [ open \${cfbolo_fn} w ]
-
-_EOF_
-fi
-
 cat >> ${XSPEC_CF_XCM} << _EOF_
 ## read data from tprofile line by line
 while { [ gets \${tpro_fd} tpro_line ] != -1 } {
@@ -109,33 +94,12 @@ while { [ gets \${tpro_fd} tpro_line ] != -1 } {
     scan \${xspec_tclout} "%f %f %f %f" _ _ _ cf_photon
     #puts "cf: \${cf_photon}"
     puts \${cf_fd} "\${radius}    \${cf_photon}"
-_EOF_
-if  [ ! -z "${COOLFUNC_BOLO}" ]; then
-    cat >> ${XSPEC_CF_XCM} << _EOF_
-    # coolfunc bolometric
-    flux 0.01 100.0
-    tclout flux 1
-    scan \${xspec_tclout} "%f" cfbolo_erg
-    puts \${cfbolo_fd} "\${radius}    \${cfbolo_erg}"
-_EOF_
-fi
-cat >> ${XSPEC_CF_XCM} << _EOF_
 }
 
 ## close opened files
 close \${tpro_fd}
 close \${cf_fd}
-_EOF_
 
-if  [ ! -z "${COOLFUNC_BOLO}" ]; then
-    cat >> ${XSPEC_CF_XCM} << _EOF_
-# coolfunc bolometric
-close \${cfbolo_fd}
-
-_EOF_
-fi
-
-cat >> ${XSPEC_CF_XCM} << _EOF_
 ## exit
 tclexit
 _EOF_
