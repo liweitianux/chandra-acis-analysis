@@ -85,6 +85,7 @@ Installation
    * [ruamel.yaml](https://bitbucket.org/ruamel/yaml)
    * [numpy](http://numpy.org/)
    * [scipy](https://scipy.org/)
+   * [astropy](http://www.astropy.org/)
 
 
 Settings
