@@ -24,7 +24,7 @@ endif
 OPT_UTIL_INC ?= -I../opt_utilities
 
 TARGETS= fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp \
-		fit_direct_beta calc_distance fit_wang2012_model \
+		fit_direct_beta fit_wang2012_model \
 		fit_nfw_mass fit_mt_pl fit_lt_pl fit_mt_bpl \
 		fit_lt_bpl cooling_time calc_lx_dbeta calc_lx_beta
 HEADERS= projector.hpp spline.hpp vchisq.hpp
@@ -56,9 +56,6 @@ calc_lx_dbeta: calc_lx_dbeta.o beta_cfg.o report_error.o
 
 calc_lx_beta: calc_lx_beta.o beta_cfg.o dump_fit_qdp.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
-
-calc_distance: calc_distance_main.o calc_distance.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
 
 fit_mt_pl: fit_mt_pl.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
@@ -105,9 +102,6 @@ report_error.o: report_error.cpp report_error.hpp
 
 dump_fit_qdp.o: dump_fit_qdp.cpp dump_fit_qdp.hpp
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
-
-calc_distance.o: calc_distance.cc calc_distance.h adapt_trapezoid.h
-	$(CXX) $(CXXFLAGS) -c $<
 
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
