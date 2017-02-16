@@ -51,10 +51,10 @@ def make_image(infile, outfile, chips, erange, fov, clobber=False):
 def main():
     parser = argparse.ArgumentParser(
         description="Make image by binning the event file")
-    parser.add_argument("--elow", dest="elow", type=int, default=700,
+    parser.add_argument("-L", "--elow", dest="elow", type=int, default=700,
                         help="lower energy limit [eV] of the output image " +
                         "(default: 700 [eV])")
-    parser.add_argument("--ehigh", dest="ehigh", type=int,
+    parser.add_argument("-H", "--ehigh", dest="ehigh", type=int,
                         help="upper energy limit [eV] of the output image " +
                         "(default: 7000 [eV])")
     parser.add_argument("-i", "--infile", dest="infile",
@@ -80,7 +80,7 @@ def main():
         outfile = args.outfile
     else:
         outfile = "img_c{chips}_e{erange}.fits".format(
-            chips=chips, elow=erange)
+            chips=chips, erange=erange)
     if args.verbose:
         print("infile:", infile, file=sys.stderr)
         print("outfile:", outfile, file=sys.stderr)
