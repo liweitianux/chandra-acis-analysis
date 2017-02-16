@@ -15,13 +15,16 @@ def ds9_view(filename, regfile=None, regformat="ciao", regsystem="physical",
     """
     cmd = [
         "ds9", filename,
-        "-regions", "format", regformat,
-        "-regions", "system", regsystem,
-        "-regions", regfile,
         "-cmap", cmap,
-        "-bin", "factor", binfactor,
+        "-bin", "factor", str(binfactor),
         "-scale", scale,
     ]
+    if regfile:
+        cmd += [
+            "-regions", "format", regformat,
+            "-regions", "system", regsystem,
+            "-regions", regfile,
+        ]
     if smooth:
-        cmd += ["-smooth", "yes", "-smooth", "radius", smooth]
+        cmd += ["-smooth", "yes", "-smooth", "radius", str(smooth)]
     subprocess.check_call(cmd)

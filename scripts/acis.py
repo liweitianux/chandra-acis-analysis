@@ -63,6 +63,7 @@ class ACIS:
         else:
             raise ValueError("unknown chip combination: %s" % detnam)
 
+    @classmethod
     def get_chips_str(self, filepath, sep=":"):
         """
         Return a string of the chips of interest according to the

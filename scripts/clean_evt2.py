@@ -87,8 +87,7 @@ def remove_sources(infile, outfile, srcfile, clobber=False):
     logger.info("Done!\n")
 
 
-def extract_lightcurve(infile, outfile, elow=300, ehigh=10000,
-                       bintime=200, clobber=False):
+def extract_lightcurve(infile, outfile, bintime=200, clobber=False):
     """
     Extract the light curve from regions away from the object.
     """
@@ -101,13 +100,12 @@ def extract_lightcurve(infile, outfile, elow=300, ehigh=10000,
     logger.warning("Select a large region containing most of the object, " +
                    "but also leaving enough area outside as background; " +
                    "and save as file: %s" % regfile)
+    ds9_view(infile)
     fsky = "exclude sky=region(%s)" % regfile
-    fenergy = "energy=%s:%s" % (elow, ehigh)
     fbintime = "bin time=::%s" % bintime
     subprocess.check_call(["punlearn", "dmextract"])
     subprocess.check_call([
-        "dmextract",
-        "infile=%s[%s][%s][%s]" % (infile, fsky, fenergy, fbintime),
+        "dmextract", "infile=%s[%s][%s]" % (infile, fsky, fbintime),
         "outfile=%s" % outfile, "opt=ltc1", "clobber=%s" % clobber
     ])
     logger.info("Done!\n")
@@ -121,15 +119,16 @@ def make_gti(infile, outfile, scale=1.2, clobber=False):
     logger.info("Outfile: %s" % outfile)
 
     chipsfile = os.path.splitext(outfile)[0] + ".chips"
-    if clobber and (os.path.exists(outfile) or os.path.exists(chipsfile)):
+    if (not clobber) and (os.path.exists(outfile) or
+                          os.path.exists(chipsfile)):
         raise OSError("'%s' or '%s' already exists" % (outfile, chipsfile))
 
     outimg = os.path.splitext(outfile)[0] + "_lc.jpg"
     lines = [
         "from lightcurves import lc_clean",
-        "lc_clean(%s)" % infile,
-        "lc_clean(%s, scale=%s, outfile=%s)" % (infile, scale, outfile),
-        "print_window(%s, ['format', 'jpg', 'clobber', 'True'])" % outimg
+        "lc_clean('%s')" % infile,
+        "lc_clean('%s', scale=%s, outfile='%s')" % (infile, scale, outfile),
+        "print_window('%s', ['format', 'jpg', 'clobber', 'True'])" % outimg
     ]
     open(chipsfile, "w").write("\n".join(lines) + "\n")
     subprocess.check_call(["chips", "-x", chipsfile])
@@ -171,7 +170,10 @@ def main():
     setup_pfiles(["dmkeypar", "dmcopy", "celldetect", "dmextract"])
 
     manifest = get_manifest()
-    infile = args.infile if args.infile else manifest.getpath("evt2")
+    if args.infile:
+        infile = args.infile
+    else:
+        infile = manifest.getpath("evt2", relative=True)
     chips = ACIS.get_chips_str(infile, sep="-")
     logger.info("infile: %s" % infile)
     logger.info("chips: %s" % chips)
@@ -179,7 +181,7 @@ def main():
     evt2_chips = "evt2_c{chips}_orig.fits".format(chips=chips)
     evt2_rmsrc = "evt2_c{chips}_rmsrc.fits".format(chips=chips)
     evt2_clean = "evt2_c{chips}_clean.fits".format(chips=chips)
-    srcfile = "sources_celldetect.reg"
+    srcfile = "sources_celld.reg"
     lcfile = "ex_bkg.lc"
     gtifile = os.path.splitext(lcfile)[0] + ".gti"
 
@@ -191,7 +193,9 @@ def main():
     filter_gti(evt2_rmsrc, evt2_clean, gtifile, clobber=args.clobber)
 
     # Add cleaned evt2 to manifest
-    manifest.setpath("evt2_clean", evt2_clean)
+    key = "evt2_clean"
+    manifest.setpath(key, evt2_clean)
+    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
 
     # Remove useless intermediate files
     os.remove(evt2_chips)
