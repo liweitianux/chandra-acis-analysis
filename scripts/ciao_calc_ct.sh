@@ -1,12 +1,11 @@
 #!/bin/sh
 #
-## Calculate the cooling time within the (0.-0.048 r500) region.
+## Calculate the cooling time within the core region (0-0.048 r500).
 ## Based on `ciao_r500avgt.sh'
 ##
 ## Junhua GU
-## Created: 2012-08-22
 ## Weitian LI
-## Updated: 2017-02-06
+## Created: 2012-08-22
 ##
 ## Change logs:
 ## 2017-02-06, Weitian LI
@@ -599,7 +598,6 @@ tclexit
 _EOF_
 ## xspec script }}}
 
-## invoke xspec to calc
 if [ "x${F_WC}" = "xtrue" ]; then
     printf "\n*** WC: LOW_COUNTS ***\n"
     printf "*** WARNING: counts_in_0.048R500=${CNT_RC} < 500 ***\n"
@@ -616,5 +614,3 @@ else
     printf "# OBS_ID,OBJ_NAME,CT_gyr\n" | tee -a ${CT_RES}
     printf "# $OBS_ID,$OBJ_NAME,$CT\n" | tee -a ${CT_RES}
 fi
-
-exit 0
