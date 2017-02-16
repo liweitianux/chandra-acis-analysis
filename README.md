@@ -30,20 +30,15 @@ These tools are tested with:
 
 WARNING
 -------
-Our Chandra sample has been finished for a period of time, and we at the moment
-have no plan to re-process/update the results.
-In consequence, these tools/scripts are currently **untested** and very likely have
-some **bugs**.
+These tools are currently under **heavy development**, therefore may have
+**various bugs**.
 
 
 TODO
 ----
-+ drop ``calc_distance`` in favor of ``cosmo_calc``
-+ use JSON as the output format (for easier parse and conversion)
-+ use python (instead of shell) to manipulate JSON data files
-+ add arguments to control the ``cosmo_calc`` output for easier use in scripts
-+ integrate the memos/docs for Chandra data analysis
-+ integrate the ``chandra_guide`` doc
++ rewrite most scripts using Python
++ rewrite ``cosmo_calc`` using Python and Astropy with fine-tuning arguments
++ write memos/docs for Chandra data analysis
 
 
 Installation
