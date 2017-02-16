@@ -15,7 +15,7 @@ import subprocess
 
 from manifest import get_manifest
 from setup_pfiles import setup_pfiles
-from chandra_acis import get_chips
+from acis import ACIS
 
 
 def make_image(infile, outfile, chips, erange, fov, clobber=False):
@@ -74,7 +74,7 @@ def main():
     manifest = get_manifest()
     fov = manifest.getpath("fov")
     infile = args.infile if args.infile else manifest.getpath("evt2_clean")
-    chips = get_chips(infile, sep="-")
+    chips = ACIS.get_chips_str(infile, sep="-")
     erange = "{elow}-{ehigh}".format(elow=args.elow, ehigh=args.ehigh)
     if args.outfile:
         outfile = args.outfile
