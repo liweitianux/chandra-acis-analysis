@@ -72,10 +72,15 @@ def main():
     setup_pfiles(["dmkeypar", "dmcopy"])
 
     manifest = get_manifest()
-    fov = manifest.getpath("fov")
-    infile = args.infile if args.infile else manifest.getpath("evt2_clean")
+    fov = manifest.getpath("fov", relative=True)
+    if args.infile:
+        infile = args.infile
+    else:
+        infile = manifest.getpath("evt2_clean", relative=True)
     chips = ACIS.get_chips_str(infile, sep="-")
     erange = "{elow}-{ehigh}".format(elow=args.elow, ehigh=args.ehigh)
+    if args.elow >= args.ehigh:
+        raise ValueError("invalid energy range: %s" % erange)
     if args.outfile:
         outfile = args.outfile
     else:
