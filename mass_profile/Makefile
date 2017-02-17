@@ -23,10 +23,8 @@ endif
 
 OPT_UTIL_INC ?= -I../opt_utilities
 
-TARGETS= fit_dbeta_sbp fit_beta_sbp \
-		fit_wang2012_model \
-		fit_nfw_mass fit_mt_pl fit_lt_pl fit_mt_bpl \
-		fit_lt_bpl calc_lx_dbeta calc_lx_beta
+TARGETS= fit_dbeta_sbp fit_beta_sbp fit_wang2012_model \
+		fit_nfw_mass calc_lx_dbeta calc_lx_beta
 HEADERS= projector.hpp spline.hpp vchisq.hpp
 
 all: $(TARGETS)
@@ -51,18 +49,6 @@ calc_lx_dbeta: calc_lx_dbeta.o beta_cfg.o report_error.o
 
 calc_lx_beta: calc_lx_beta.o beta_cfg.o dump_fit_qdp.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
-
-fit_mt_pl: fit_mt_pl.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
-
-fit_lt_pl: fit_lt_pl.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
-
-fit_mt_bpl: fit_mt_bpl.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
-
-fit_lt_bpl: fit_lt_bpl.cpp
-	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
 
 
 fit_dbeta_sbp.o: fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS)
