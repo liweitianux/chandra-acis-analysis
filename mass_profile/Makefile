@@ -51,7 +51,7 @@ calc_lx_beta: calc_lx_beta.o beta_cfg.o dump_fit_qdp.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
 
 
-fit_dbeta_sbp.o: fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS)
+fit_dbeta_sbp.o: fit_dbeta_sbp.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
 
 fit_beta_sbp.o: fit_beta_sbp.cpp beta.hpp $(HEADERS)
@@ -63,7 +63,7 @@ fit_wang2012_model.o: fit_wang2012_model.cpp wang2012_model.hpp chisq.hpp
 fit_nfw_mass.o: fit_nfw_mass.cpp nfw.hpp chisq.hpp
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
 
-calc_lx_dbeta.o: calc_lx_dbeta.cpp constrained_dbeta.hpp $(HEADERS)
+calc_lx_dbeta.o: calc_lx_dbeta.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
 
 calc_lx_beta.o: calc_lx_beta.cpp beta.hpp $(HEADERS)
