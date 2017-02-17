@@ -47,7 +47,6 @@ esac
 base_path=$(dirname $(realpath $0))
 
 ## Extract settings/values from the config file
-nh=`grep            '^nh'            ${mass_cfg} | awk '{ print $2 }'`
 abund=`grep         '^abund'         ${mass_cfg} | awk '{ print $2 }'`
 tprofile_data=`grep '^tprofile_data' ${mass_cfg} | awk '{ print $2 }'`
 tprofile_cfg=`grep  '^tprofile_cfg'  ${mass_cfg} | awk '{ print $2 }'`
@@ -79,8 +78,11 @@ bolo
 0.1 2.4
 _EOF_
 
+# NOTE:
+# Set 'nh=0' when calculating the cooling function values, and use the
+# value given by 'flux' with unit 'erg/s/cm^2'.
 ${base_path}/calc_coolfunc_bands.sh ${tprofile} ${abund} \
-            ${nh} ${z} "cfunc_" ${BLIST}
+            0 ${z} "cfunc_" ${BLIST}
 
 PROG="calc_lx_${MODEL}"
 LXF_RES="lx_${MODEL}_param.txt"
@@ -139,7 +141,7 @@ for i in `seq 1 ${MC_TIMES}`; do
     echo "### `pwd -P`"
     echo "### ${i} / ${MC_TIMES} ###"
     ${base_path}/calc_coolfunc_bands.sh ${tprofile} ${abund} \
-                ${nh} ${z} "cfunc_" ${BLIST}
+                0 ${z} "cfunc_" ${BLIST}
     ${base_path}/${PROG} ${TMP_SBP_CFG} ${rout} \
                 cfunc_bolo.dat \
                 cfunc_0.7-7.dat \

@@ -5,8 +5,14 @@
 ## and the average abundance, redshift, and column density nH, using the
 ## XSPEC model 'wabs*apec'.
 ##
+## NOTE:
+## To calculate the luminosity and flux from the source using the
+## 'calc_lx_{beta,dbeta}', set 'nH=0'.
+## Also the output cooling function values should be the 'flux' values
+## with unit 'erg/s/cm^2'.
+##
 ## Weitian LI
-## Updated: 2016-06-08
+## Updated: 2017-02-17
 ##
 
 ## cmdline arguments {{{
@@ -29,13 +35,11 @@ if [ ! -r "${TPROFILE}" ]; then
 fi
 ## arguments }}}
 
-## specify variable name outside while loop
-## otherwise the inside vars invisible
 XSPEC_CF_XCM="_calc_coolfunc_bands.xcm"
 [ -e "${XSPEC_CF_XCM}" ] && rm -f ${XSPEC_CF_XCM}
 
 ## generate xspec script {{{
-cat >> ${XSPEC_CF_XCM} << _EOF_
+cat > ${XSPEC_CF_XCM} << _EOF_
 ## XSPEC Tcl script
 ## Calculate the cooling function profile w.r.t the temperature profile,
 ## for each specified energy band.
@@ -61,8 +65,7 @@ query yes
 abund grsa
 dummyrsp 0.01 100.0 4096 linear
 # load model 'wabs*apec' to calc cooling function
-# (nh=0.0: do not consider aborption ???)
-model wabs*apec & 0.0 & 1.0 & \${abundance} & \${redshift} & \${norm} &
+model wabs*apec & \${nh} & 1.0 & \${abundance} & \${redshift} & \${norm} &
 ## xspec }}}
 
 ## set input and output filename

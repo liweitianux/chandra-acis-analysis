@@ -4,6 +4,13 @@
 ## given 'temperature profile' and the average abundance, redshift,
 ## and column density nH, using the XSPEC model 'wabs*apec'.
 ##
+## NOTE:
+## The output cooling function values should be the 'flux' values
+## with unit 'photon/s/cm^2' (different to 'calc_coolfunc_bands.sh').
+## These results will be used by 'fit_{beta,dbeta}_sbp' to derive the
+## (3D) gas density profile from (2D) surface brightness profile,
+## whose values have unit 'photon/cm^2/pixel/s'.
+##
 ## Weitian LI
 ## Created: 2012-08-17
 ##
@@ -35,13 +42,11 @@ fi
 [ -e "${COOLFUNC_DAT}" ] && rm -f ${COOLFUNC_DAT}
 ## arguments }}}
 
-## specify variable name outside while loop
-## otherwise the inside vars invisible
 XSPEC_CF_XCM="_calc_coolfunc.xcm"
 [ -e "${XSPEC_CF_XCM}" ] && rm -f ${XSPEC_CF_XCM}
 
 ## generate xspec script {{{
-cat >> ${XSPEC_CF_XCM} << _EOF_
+cat > ${XSPEC_CF_XCM} << _EOF_
 ## XSPEC Tcl script
 ## Calculate the cooling function profile w.r.t the temperature profile.
 ##
@@ -80,9 +85,6 @@ if { [ file exists \${cf_fn} ] } {
 set tpro_fd [ open \${tpro_fn} r ]
 set cf_fd [ open \${cf_fn} w ]
 
-_EOF_
-
-cat >> ${XSPEC_CF_XCM} << _EOF_
 ## read data from tprofile line by line
 while { [ gets \${tpro_fd} tpro_line ] != -1 } {
     scan \${tpro_line} "%f %f" radius temperature
