@@ -24,7 +24,7 @@ endif
 OPT_UTIL_INC ?= -I../opt_utilities
 
 TARGETS= fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp \
-		fit_direct_beta fit_wang2012_model \
+		fit_wang2012_model \
 		fit_nfw_mass fit_mt_pl fit_lt_pl fit_mt_bpl \
 		fit_lt_bpl calc_lx_dbeta calc_lx_beta
 HEADERS= projector.hpp spline.hpp vchisq.hpp
@@ -46,9 +46,6 @@ fit_wang2012_model: fit_wang2012_model.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
 
 fit_nfw_mass: fit_nfw_mass.o
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
-
-fit_direct_beta: fit_direct_beta.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
 
 calc_lx_dbeta: calc_lx_dbeta.o beta_cfg.o report_error.o
