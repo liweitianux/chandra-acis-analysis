@@ -23,7 +23,7 @@ endif
 
 OPT_UTIL_INC ?= -I../opt_utilities
 
-TARGETS= fit_nfw_sbp fit_dbeta_sbp fit_beta_sbp \
+TARGETS= fit_dbeta_sbp fit_beta_sbp \
 		fit_wang2012_model \
 		fit_nfw_mass fit_mt_pl fit_lt_pl fit_mt_bpl \
 		fit_lt_bpl calc_lx_dbeta calc_lx_beta
@@ -33,8 +33,6 @@ all: $(TARGETS)
 
 # NOTE:
 # Object/source files should placed *before* libraries (order matters)
-fit_nfw_sbp: fit_nfw_sbp.o
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
 
 fit_dbeta_sbp: fit_dbeta_sbp.o beta_cfg.o report_error.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(OPT_UTIL_INC)
@@ -66,9 +64,6 @@ fit_mt_bpl: fit_mt_bpl.cpp
 fit_lt_bpl: fit_lt_bpl.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@ $(OPT_UTIL_INC)
 
-
-fit_nfw_sbp.o: fit_nfw_sbp.cpp nfw_ne.hpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
 
 fit_dbeta_sbp.o: fit_dbeta_sbp.cpp constrained_dbeta.hpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
