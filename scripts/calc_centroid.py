@@ -146,9 +146,14 @@ def main():
                         "(default: using the peak of the image)")
     parser.add_argument("-V", "--view", dest="view", action="store_true",
                         help="open DS9 to view output centroid")
+    parser.add_argument("-C", "--clobber", dest="clobber", action="store_true",
+                        help="overwrite existing files")
     args = parser.parse_args()
 
     setup_pfiles(["aconvolve", "dmstat"])
+
+    print("Smooth input image using 'aconvolve' ...", file=sys.stderr)
+    img_smoothed = smooth_image(args.infile, clobber=args.clobber)
 
     if args.start:
         print("Get starting point from region file: %s" % args.start,
@@ -156,7 +161,7 @@ def main():
         raise NotImplementedError
     else:
         print("Use peak as the starting point ...", file=sys.stderr)
-        center = get_peak(args.infile)
+        center = get_peak(img_smoothed)
     print("Starting point: (%f, %f)" % center, file=sys.stderr)
 
     centroid = center
@@ -165,16 +170,16 @@ def main():
               (phase+1, radius), file=sys.stderr)
         for i in range(args.niter):
             print("%d..." % (i+1), end="", flush=True, file=sys.stderr)
-            centroid = get_centroid(args.infile, center=centroid,
+            centroid = get_centroid(img_smoothed, center=centroid,
                                     radius=radius)
         print("Done!", file=sys.stderr)
 
     open(args.outfile, "w").write("point(%f,%f)\n" % centroid).close()
     print("Saved centroid to file:", args.outfile, file=sys.stderr)
     if args.view:
-        ds9_view(args.infile, regfile=args.outfile)
+        ds9_view(img_smoothed, regfile=args.outfile)
 
-    # Add created image to manifest
+    # Add calculated centroid region to manifest
     manifest = get_manifest()
     key = "reg_centroid"
     manifest.setpath(key, args.outfile)
