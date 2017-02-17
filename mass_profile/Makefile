@@ -8,8 +8,8 @@
 
 
 CXX ?= g++
-#CXXFLAGS += -Wall -Werror
 CXXFLAGS += -Wall
+CXXFLAGS += -Werror
 
 ifdef OPENMP
 	CXXFLAGS += -fopenmp
@@ -98,9 +98,6 @@ report_error.o: report_error.cpp report_error.hpp
 	$(CXX) $(CXXFLAGS) -c $<
 
 dump_fit_qdp.o: dump_fit_qdp.cpp dump_fit_qdp.hpp
-	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
-
-%.o: %.cc
 	$(CXX) $(CXXFLAGS) -c $< $(OPT_UTIL_INC)
 
 %.o: %.cpp
