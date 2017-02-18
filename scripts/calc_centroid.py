@@ -19,6 +19,7 @@ import tempfile
 from manifest import get_manifest
 from setup_pfiles import setup_pfiles
 from ds9 import ds9_view
+from regions import Regions
 
 
 def smooth_image(infile, outfile=None,
@@ -158,7 +159,8 @@ def main():
     if args.start:
         print("Get starting point from region file: %s" % args.start,
               file=sys.stderr)
-        raise NotImplementedError
+        region = Regions(args.start).regions[0]
+        center = (region.xc, region.yc)
     else:
         print("Use peak as the starting point ...", file=sys.stderr)
         center = get_peak(img_smoothed)
