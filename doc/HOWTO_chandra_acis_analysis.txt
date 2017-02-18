@@ -129,15 +129,12 @@ Step-by-step guide to analyze ACIS data:
      $ getlxfx . 500 200  # for all results (with errors)
 
 ## --------------------------------------------------------
-(47) $ cd ..; cd spc/profile;
-     calculate cooling time and Csb value:
-     $ ciao_calc_ct_csb.sh
-     check the region whether exceeds ccd edge, and answer y/n
-     check results in file 'ct_csb_results.txt'
-     ---
-     Alternatively:
+(47) $ cd ..; cd spc/profile
+(48) Calculate cooling time:
      $ ciao_calc_ct.sh
+     check results in file 'cooling_results.txt'
+(49) Calculate Csb (surface brightness concentration):
      $ ciao_calc_csb.sh
-     check the region whether exceeds ccd edge, and answer y/n
-     check results in file 'cooling_results.txt' and 'csb_results.txt'
-     ---
+     (it will open ds9 to show the regions, modify the regions if necessary;
+      and answer y/n/m to continue)
+     check results in file 'csb_results.txt'
