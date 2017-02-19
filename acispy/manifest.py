@@ -196,7 +196,12 @@ class Manifest:
         """
         Try to parse the given value from string to integer, float, boolean
         or string.
+
+        If the input value is not string, then just ignore the parse.
         """
+        if not isinstance(value, str):
+            return value
+
         try:
             v = int(value)
         except ValueError:
