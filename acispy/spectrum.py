@@ -8,7 +8,7 @@ Chandra ACIS spectrum.
 
 from astropy.io import fits
 
-from acis import ACIS
+from .acis import ACIS
 
 
 class Spectrum:
