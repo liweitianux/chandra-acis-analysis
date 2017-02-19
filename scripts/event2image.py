@@ -13,9 +13,10 @@ import sys
 import argparse
 import subprocess
 
-from manifest import get_manifest
-from setup_pfiles import setup_pfiles
-from acis import ACIS
+from context import acispy
+from acispy.manifest import get_manifest
+from acispy.pfiles import setup_pfiles
+from acispy.acis import ACIS
 
 
 def make_image(infile, outfile, chips, erange, fov, clobber=False):

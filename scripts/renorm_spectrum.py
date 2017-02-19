@@ -15,7 +15,8 @@ import sys
 import argparse
 import subprocess
 
-from spectrum import Spectrum
+from context import acispy
+from acispy.spectrum import Spectrum
 
 
 def renorm_spectrum(specfile, specfile_ref, elow=9500, ehigh=12000):

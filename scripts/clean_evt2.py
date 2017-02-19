@@ -22,10 +22,11 @@ import subprocess
 import shutil
 import logging
 
-from manifest import get_manifest
-from setup_pfiles import setup_pfiles
-from acis import ACIS
-from ds9 import ds9_view
+from context import acispy
+from acispy.manifest import get_manifest
+from acispy.pfiles import setup_pfiles
+from acispy.acis import ACIS
+from acispy.ds9 import ds9_view
 
 
 logging.basicConfig(level=logging.INFO)

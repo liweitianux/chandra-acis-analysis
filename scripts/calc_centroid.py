@@ -16,10 +16,11 @@ import argparse
 import subprocess
 import tempfile
 
-from manifest import get_manifest
-from setup_pfiles import setup_pfiles
-from ds9 import ds9_view
-from regions import Regions
+from context import acispy
+from acispy.manifest import get_manifest
+from acispy.pfiles import setup_pfiles
+from acispy.ds9 import ds9_view
+from acispy.regions import Regions
 
 
 def smooth_image(infile, outfile=None,
