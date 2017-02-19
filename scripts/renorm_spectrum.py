@@ -63,7 +63,7 @@ def main():
                         "background [eV] (default: 12000 eV)")
     parser.add_argument("-r", "--spec-ref", dest="spec_ref", required=True,
                         help="Reference (source) spectrum")
-    parser.add_argument("spec", dest="spec",
+    parser.add_argument("spec",
                         help="(background) spectrum to be renormalized")
     args = parser.parse_args()
 
