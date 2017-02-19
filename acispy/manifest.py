@@ -174,36 +174,43 @@ class Manifest:
         del self.manifest[key]
         self.save()
 
-    @staticmethod
-    def parse_value(values):
+    @classmethod
+    def parse_value(self, value):
         """
-        Try to parse the given (list of) value(s) from string to
-        integer or float.
+        Parse the given (list of) value(s) from string.
+
+        If the value list only has length of 1, then just return
+        the only element without list enclosure.
         """
-        if not isinstance(values, list):
-            values = [values]
-        #
-        parsed_values = []
-        for value in values:
-            try:
-                v = int(value)
-            except ValueError:
-                try:
-                    v = float(value)
-                except ValueError:
-                    # string/boolean
-                    if value.lower() in ["true", "yes"]:
-                        v = True
-                    elif value.lower() in ["false", "no"]:
-                        v = False
-                    else:
-                        v = value  # string
-            parsed_values.append(v)
-        #
-        if len(parsed_values) == 1:
-            return parsed_values[0]
+        if isinstance(value, list):
+            pv = [self.parse_value_single(v) for v in value]
+            if len(pv) == 1:
+                return pv[0]
+            else:
+                return pv
         else:
-            return parsed_values
+            return self.parse_value_single(value)
+
+    @staticmethod
+    def parse_value_single(value):
+        """
+        Try to parse the given value from string to integer, float, boolean
+        or string.
+        """
+        try:
+            v = int(value)
+        except ValueError:
+            try:
+                v = float(value)
+            except ValueError:
+                # string/boolean
+                if value.lower() in ["true", "yes"]:
+                    v = True
+                elif value.lower() in ["false", "no"]:
+                    v = False
+                else:
+                    v = value  # string
+        return v
 
 
 def find_manifest(filename="manifest.yaml", startdir=os.getcwd()):
@@ -275,7 +282,8 @@ def cmd_get(args, manifest):
         if args.field:
             print(value[args.field-1])
         else:
-            print(args.separator.join(value))
+            vs = [str(v) for v in value]
+            print(args.separator.join(vs))
     else:
         print(value)
 
