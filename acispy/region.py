@@ -210,7 +210,7 @@ class Regions:
 
     def __init__(self, regfile=None):
         if regfile:
-            self.regions = self.load(regfile)
+            self.load(regfile)
         else:
             self.regions = []
 

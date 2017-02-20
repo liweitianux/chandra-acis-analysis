@@ -20,7 +20,7 @@ from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.ds9 import ds9_view
-from acispy.regions import Regions
+from acispy.region import Regions
 
 
 def smooth_image(infile, outfile=None,
@@ -177,7 +177,8 @@ def main():
                                     radius=radius)
         print("Done!", file=sys.stderr)
 
-    open(args.outfile, "w").write("point(%f,%f)\n" % centroid).close()
+    with open(args.outfile, "w") as f:
+        f.write("point(%f,%f)\n" % centroid)
     print("Saved centroid to file:", args.outfile, file=sys.stderr)
     if args.view:
         ds9_view(img_smoothed, regfile=args.outfile)
