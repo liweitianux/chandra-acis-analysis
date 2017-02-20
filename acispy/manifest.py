@@ -104,10 +104,21 @@ class Manifest:
             data = ds
         return data
 
-    def getpath(self, key, relative=False):
+    def getpath(self, key, relative=False, sep=None):
         """
         Get the absolute path to the specified item by joining
         with the location of this manifest file.
+
+        Parameters
+        ----------
+        key : str
+            Key of the file item
+        relative : bool, optional
+            Whether return the file path(s) as relative path w.r.t.
+            the current working directory?
+        sep : str, optional
+            If not ``None``, join the multiple file paths with the
+            specified separator, instead of returning a list of paths.
         """
         value = self.get(key)
         cwd = os.getcwd()
@@ -116,6 +127,8 @@ class Manifest:
                     for f in value]
             if relative:
                 path = [os.path.relpath(p, start=cwd) for p in path]
+            if sep is not None:
+                path = sep.join(path)
         else:
             path = os.path.join(os.path.dirname(self.filepath), value)
             if relative:
@@ -301,11 +314,9 @@ def cmd_getpath(args, manifest):
     """
     if not args.brief:
         print("%s:" % args.key, end=" ")
-    path = manifest.getpath(args.key, relative=args.relative)
-    if isinstance(path, list):
-        print(args.separator.join(path))
-    else:
-        print(path)
+    path = manifest.getpath(args.key, relative=args.relative,
+                            sep=args.separator)
+    print(path)
 
 
 def cmd_set(args, manifest):
