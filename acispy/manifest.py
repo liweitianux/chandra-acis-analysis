@@ -45,6 +45,9 @@ class Manifest:
     def show(self):
         print(self.dump())
 
+    def has(self, key):
+        return True if key in self.manifest else False
+
     def get(self, key):
         """
         Get the value of the specified item in the manifest.
@@ -59,7 +62,7 @@ class Manifest:
         KeyError :
             If the specified item doesn't exist.
         """
-        if key in self.manifest:
+        if self.has(key):
             return self.manifest[key]
         else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
@@ -67,8 +70,6 @@ class Manifest:
     def gets(self, keys, default=None, splitlist=False):
         """
         Get the value of the specified item in the manifest.
-
-        TODO: splitlist
 
         Parameters
         ----------
