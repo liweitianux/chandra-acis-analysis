@@ -84,3 +84,15 @@ dump_fit_qdp.o: dump_fit_qdp.cpp dump_fit_qdp.hpp
 
 clean:
 	rm -f *.o $(TARGETS)
+
+
+install: $(TARGETS)
+	@for f in $(TARGETS); do \
+		(cd ../bin && ln -svf ../src/$$f . ); \
+	done
+
+
+uninstall:
+	@for f in $(TARGETS); do \
+		rm -fv ../bin/$$f; \
+	done
