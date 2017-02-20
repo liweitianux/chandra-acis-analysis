@@ -58,18 +58,9 @@ def smooth_image(infile, outfile=None,
     return outfile
 
 
-def get_peak(image, center=None, radius=300):
+def get_peak(image):
     """
-    Get the peak coordinate on the image within the circle if specified.
-
-    Parameters
-    ----------
-    image : str
-        Path to the image file.
-    center : 2-float tuple
-        Central (physical) coordinate of the circle.
-    radius : float
-        Radius (pixel) of the circle.
+    Get the peak coordinate on the image.
 
     Returns
     -------
@@ -79,7 +70,7 @@ def get_peak(image, center=None, radius=300):
     subprocess.check_call(["punlearn", "dmstat"])
     subprocess.check_call([
         "dmstat", "infile=%s" % image,
-        "centroid=no", "media=no", "sigma=no", "clip=no"
+        "centroid=no", "media=no", "sigma=no", "clip=no", "verbose=0"
     ])
     peak = subprocess.check_output([
         "pget", "dmstat", "out_max_loc"
@@ -88,7 +79,7 @@ def get_peak(image, center=None, radius=300):
     return (float(peak[0]), float(peak[1]))
 
 
-def get_centroid(image, center, radius=100):
+def get_centroid(image, center, radius=50):
     """
     Calculate the centroid on image within the specified circle.
 
@@ -113,7 +104,7 @@ def get_centroid(image, center, radius=100):
         subprocess.check_call(["punlearn", "dmstat"])
         subprocess.check_call([
             "dmstat", "infile=%s[sky=region(%s)]" % (image, fp.name),
-            "centroid=yes", "media=no", "sigma=no", "clip=no"
+            "centroid=yes", "media=no", "sigma=no", "clip=no", "verbose=0"
         ])
     centroid = subprocess.check_output([
         "pget", "dmstat", "out_cntrd_phys"
@@ -132,16 +123,16 @@ def main():
                         help="output centroid region file " +
                         "(default: centroid.reg")
     parser.add_argument("-R", "--radius1", dest="radius1",
-                        type=float, default=300,
-                        help="circle radius [pixel] for first phase " +
-                        "centroid calculation (default: 300 pixel)")
-    parser.add_argument("-r", "--radius2", dest="radius2",
                         type=float, default=100,
+                        help="circle radius [pixel] for first phase " +
+                        "centroid calculation (default: 100 pixel)")
+    parser.add_argument("-r", "--radius2", dest="radius2",
+                        type=float, default=50,
                         help="circle radius [pixel] for second phase " +
-                        "calculation to tune centroid (default: 100 pixel)")
+                        "calculation to tune centroid (default: 50 pixel)")
     parser.add_argument("-n", "--niter", dest="niter",
-                        type=int, default=5,
-                        help="iterations for each phase (default: 5)")
+                        type=int, default=10,
+                        help="iterations for each phase (default: 10)")
     parser.add_argument("-s", "--start", dest="start",
                         help="a region file containing a circle/point " +
                         "that specifies the starting point " +
