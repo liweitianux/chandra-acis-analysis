@@ -56,14 +56,14 @@ Installation
    $ git submodule update --init --recursive
    ```
 
-2. Build ``mass_profile`` tools:
+2. Build tools in ``src`` directory:
 
    ```
-   $ cd mass_profile
+   $ cd src
    $ make clean
    $ make
-   (or use this to enable OpenMP)
-   $ make OPENMP=yes
+   (append 'OPENMP=yes' to enable OpenMP)
+   $ make install
    ```
 
 3. Install the following runtime dependencies:
@@ -81,16 +81,15 @@ Add the following settings to your shell's initialization file
 (e.g., ``~/.bashrc`` or ``~/.zshrc``).
 ```
 # Environment variables:
-export MASS_PROFILE_DIR="<path>/chandra-acis-analysis/mass_profile"
-export CHANDRA_SCRIPT_DIR="<path>/chandra-acis-analysis/scripts"
+export CHANDRA_ACIS_BIN="<path>/chandra-acis-analysis/bin"
 
 # Handy aliases:
-alias fitmass="${MASS_PROFILE_DIR}/fit_mass.sh"
-alias fitnfw="${MASS_PROFILE_DIR}/fit_nfw_mass mass_int.dat"
-alias fitsbp="${MASS_PROFILE_DIR}/fit_sbp.sh"
-alias fittp="${MASS_PROFILE_DIR}/fit_wang2012_model"
-alias calclxfx="${MASS_PROFILE_DIR}/calc_lxfx_wrapper.sh"
-alias getlxfx="${MASS_PROFILE_DIR}/get_lxfx_data.sh"
+alias fitmass="${CHANDRA_ACIS_BIN}/fit_mass.sh"
+alias fitnfw="${CHANDRA_ACIS_BIN}/fit_nfw_mass mass_int.dat"
+alias fitsbp="${CHANDRA_ACIS_BIN}/fit_sbp.sh"
+alias fittp="${CHANDRA_ACIS_BIN}/fit_wang2012_model"
+alias calclxfx="${CHANDRA_ACIS_BIN}/calc_lxfx_wrapper.sh"
+alias getlxfx="${CHANDRA_ACIS_BIN}/get_lxfx_data.sh"
 ```
 
 
