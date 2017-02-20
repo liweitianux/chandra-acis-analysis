@@ -10,7 +10,7 @@
 Manage the analysis results in YAML format.
 """
 
-from context import acispy
+from _context import acispy
 from acispy import results
 
 

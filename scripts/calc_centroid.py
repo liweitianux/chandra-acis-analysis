@@ -16,7 +16,7 @@ import argparse
 import subprocess
 import tempfile
 
-from context import acispy
+from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.ds9 import ds9_view

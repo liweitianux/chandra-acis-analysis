@@ -15,7 +15,7 @@ import sys
 import argparse
 import subprocess
 
-from context import acispy
+from _context import acispy
 from acispy.spectrum import Spectrum
 
 

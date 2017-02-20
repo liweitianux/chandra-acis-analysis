@@ -22,7 +22,7 @@ import subprocess
 import shutil
 import logging
 
-from context import acispy
+from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.acis import ACIS

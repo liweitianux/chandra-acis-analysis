@@ -15,7 +15,7 @@ import sys
 import argparse
 import csv
 
-from context import acispy
+from _context import acispy
 from acispy.manifest import Manifest
 
 

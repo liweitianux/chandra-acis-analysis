@@ -18,7 +18,7 @@ and other structures in the YAML file.
 .. _`PyYAML`: http://pyyaml.org/
 """
 
-from context import acispy
+from _context import acispy
 from acispy import manifest
 
 

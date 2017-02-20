@@ -9,7 +9,7 @@ Cosmology calculator with support of Chandra ACIS-specific quantities.
 
 import argparse
 
-from context import acispy
+from _context import acispy
 from acispy.cosmo import Calculator
 
 

@@ -16,7 +16,7 @@ The root directory of the object data has the format:
 import os
 import argparse
 
-from context import acispy
+from _context import acispy
 from acispy.analyze_path import get_name, get_obsid
 
 
