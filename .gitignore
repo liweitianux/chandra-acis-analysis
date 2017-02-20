@@ -5,6 +5,14 @@
 *.o
 *.so
 
+# Built executables
+calc_lx_beta
+calc_lx_dbeta
+fit_beta_sbp
+fit_dbeta_sbp
+fit_nfw_mass
+fit_wang2012_model
+
 # Python
 *.py[cod]
 **/__pycache__
