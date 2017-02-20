@@ -57,7 +57,7 @@ class Calculator:
         1 ACIS pixel (i.e., 0.492 arcsec) at the *angular diameter distance*
         of z.
         """
-        return self.kpc_per_pix * au.kpc.to(au.cm)
+        return self.kpc_per_pix(z) * au.kpc.to(au.cm)
 
     def norm_apec(self, z):
         """
@@ -65,6 +65,7 @@ class Calculator:
         EM = 1 (i.e., n_e = n_H = 1 cm^-3, and V = 1 cm^3)
 
         norm = 1e-14 / (4*pi* (D_A * (1+z))^2) * int(n_e * n_H) dV
+        unit: [cm^-5]
 
         This value will be used to calculate the cooling function values.
 
