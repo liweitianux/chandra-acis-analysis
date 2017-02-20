@@ -37,7 +37,6 @@ These tools are currently under **heavy development**, therefore may have
 TODO
 ----
 + rewrite most scripts using Python
-+ rewrite ``cosmo_calc`` using Python and Astropy with fine-tuning arguments
 + write memos/docs for Chandra data analysis
 
 
@@ -67,14 +66,7 @@ Installation
    $ make OPENMP=yes
    ```
 
-3. Get and build ``cosmo_calc``:
-
-   Get it from repository [atoolbox](https://github.com/liweitianux/atoolbox),
-   under the directory ``astro/cosmo_calc``.
-   Then place the built binary to where can be searched by shell
-   (e.g., ``~/bin``, and add ``~/bin`` to ``$PATH``).
-
-4. Install the following runtime dependencies:
+3. Install the following runtime dependencies:
 
    * Python (>=3.5)
    * [ruamel.yaml](https://bitbucket.org/ruamel/yaml)
