@@ -196,7 +196,7 @@ if [ `echo "${Z} < 0.3" | bc -l` -eq 1 ]; then
 #    exit ${ERR_Z}
 fi
 
-KPC_PER_PIX=`cosmo_calc ${Z} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+KPC_PER_PIX=`cosmo_calc.py -b --kpc-per-pix ${Z}`
 RC_PIX=`echo "scale=2; 0.048 * ${R500} / ${KPC_PER_PIX}" | bc -l`
 # test counts_in_0.048R500<500?
 RC_REG="pie(${X},${Y},0,${RC_PIX},0,360)"

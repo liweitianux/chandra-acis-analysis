@@ -71,7 +71,7 @@ sbp_data=`grep      '^sbp_data'      ${sbp_cfg} | awk '{ print $2 }'`
 tprofile=`grep      '^tprofile'      ${sbp_cfg} | awk '{ print $2 }'`
 cfunc_profile=`grep '^cfunc_profile' ${sbp_cfg} | awk '{ print $2 }'`
 z=`grep             '^z'             ${sbp_cfg} | awk '{ print $2 }'`
-cm_per_pixel=`cosmo_calc ${z} | grep 'cm/pixel' | awk -F':' '{ print $2 }'`
+cm_per_pixel=`cosmo_calc.py -b --cm-per-pixel ${z}`
 sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
 
 if grep -q '^beta2' $sbp_cfg; then

@@ -234,7 +234,7 @@ case "${R500_UNI}" in
         ;;
     *)
         printf "## units in \`kpc', convert to \`Chandra pixel'\n" | ${TOLOG}
-        KPC_PER_PIX=`cosmo_calc ${REDSHIFT} | \grep 'kpc.*pix' | tr -d 'a-zA-Z_#=(),:/ '`
+        KPC_PER_PIX=`cosmo_calc.py -b --kpc-per-pix ${REDSHIFT}`
         # convert scientific notation for `bc'
         KPC_PER_PIX_B=`echo ${KPC_PER_PIX} | sed 's/[eE]/\*10\^/' | sed 's/+//'`
         printf "## calculated \`kpc/pixel': ${KPC_PER_PIX_B}\n"
