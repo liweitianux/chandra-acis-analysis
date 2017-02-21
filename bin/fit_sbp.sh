@@ -41,6 +41,8 @@ sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
 cfunc_profile=`grep '^cfunc_profile' ${sbp_cfg} | awk '{ print $2 }'`
 tprofile=`grep '^tprofile' ${sbp_cfg} | awk '{ print $2 }'`
 
+cfunc_table="coolfunc_table_photon.txt"
+
 if grep -q '^beta2' ${sbp_cfg}; then
     MODEL="double-beta"
     PROG=fit_dbeta_sbp
@@ -52,10 +54,12 @@ fi
 ${base_path}/fit_wang2012_model ${tprofile_data} ${tprofile_cfg} \
             ${cm_per_pixel} 2> /dev/null
 cp wang2012_dump.qdp ${tprofile}
-if [ ! -f ${cfunc_profile} ]; then
-    ${base_path}/calc_coolfunc.sh ${tprofile} ${abund} ${nh} ${z} \
-                ${cfunc_profile}
+if [ ! -f ${cfunc_table} ]; then
+    ${base_path}/calc_coolfunc_table.py -Z ${abund} -n ${nh} -z ${z} \
+                -u photon -o ${cfunc_table}
 fi
+${base_path}/calc_coolfunc_profile.py -C -t ${cfunc_table} -T ${tprofile} \
+            -o ${cfunc_profile}
 ${base_path}/${PROG} ${sbp_cfg}
 echo "## MODEL: ${MODEL}"
 echo "## z: ${z}"
