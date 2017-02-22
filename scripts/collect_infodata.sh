@@ -235,8 +235,7 @@ ABUND=`\grep '^abund' ${CFG_FILE} | awk '{ print $2 }'`
 TPROFILE_DATA=`\grep '^tprofile_data' ${CFG_FILE} | awk '{ print $2 }'`
 NFW_RMIN_KPC=`\grep '^nfw_rmin_kpc' ${CFG_FILE} | awk '{ print $2 }'`
 Z=`\grep '^z' ${SBP_CFG} | awk '{ print $2 }'`
-E_Z=`cosmo_calc ${Z} | \grep -i 'Hubble_parameter' | awk '{ print $3 }'`
-KPC_PER_PIXEL=`cosmo_calc ${Z} | \grep 'kpc/pixel' | awk '{ print $3 }'`
+KPC_PER_PIXEL=`cosmo_calc -b --kpc-per-pix ${Z}`
 SBP_DATA=`\grep '^sbp_data' ${SBP_CFG} | awk '{ print $2 }'`
 RMAX_SBP_PIX=`tail -n 1 ${SBP_DATA} | awk '{ print $1+$2 }'`
 RMAX_SBP_KPC=`echo "${RMAX_SBP_PIX} ${KPC_PER_PIXEL}" | awk '{ printf("%.2f", $1*$2) }'`
@@ -480,7 +479,7 @@ cat > ${JSON_FILE} << _EOF_
     "XCNTRD_DEC": "${OBJ_XCDEC}",
     "nH (10^22 cm^-2)": ${N_H},
     "redshift": ${REDSHIFT},
-    "E(z)": ${E_Z},
+    "E(z)": null,
     "T_ref (keV)": null,
     "Z_ref (solar)": ${ABUND},
     "Rmax_SBP (pixel)": ${RMAX_SBP_PIX},

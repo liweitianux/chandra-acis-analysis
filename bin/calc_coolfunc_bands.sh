@@ -27,7 +27,7 @@ N_H=$3
 REDSHIFT=$4
 COOLFUNC_PREFIX=$5
 BLIST=$6
-NORM=`cosmo_calc ${REDSHIFT} | grep 'norm.*cooling_function' | awk -F':' '{ print $2 }'`
+NORM=`cosmo_calc.py -b --norm-apec ${REDSHIFT}`
 
 if [ ! -r "${TPROFILE}" ]; then
     printf "ERROR: given tprofile '${TPROFILE}' NOT accessiable\n"

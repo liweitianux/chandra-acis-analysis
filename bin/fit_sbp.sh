@@ -36,7 +36,7 @@ tprofile_data=`grep '^tprofile_data' ${mass_cfg} | awk '{ print $2 }'`
 tprofile_cfg=`grep '^tprofile_cfg' ${mass_cfg} | awk '{ print $2 }'`
 
 z=`grep '^z' ${sbp_cfg} | awk '{ print $2 }'`
-cm_per_pixel=`cosmo_calc.py -b --cm-per-pixel ${z}`
+cm_per_pixel=`cosmo_calc.py -b --cm-per-pix ${z}`
 sed -i'' "s/^cm_per_pixel.*$/cm_per_pixel   ${cm_per_pixel}/" ${sbp_cfg}
 cfunc_profile=`grep '^cfunc_profile' ${sbp_cfg} | awk '{ print $2 }'`
 tprofile=`grep '^tprofile' ${sbp_cfg} | awk '{ print $2 }'`
