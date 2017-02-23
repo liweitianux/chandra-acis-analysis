@@ -17,6 +17,7 @@ from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.acis import ACIS
+from acispy.header import write_keyword
 
 
 def make_image(infile, outfile, chips, erange, fov, clobber=False):
@@ -95,6 +96,9 @@ def main():
         print("erange:", erange, file=sys.stderr)
 
     make_image(infile, outfile, chips, erange, fov, args.clobber)
+    chips_all = ACIS.get_chips_str(infile)
+    write_keyword(outfile, keyword="DETNAM",
+                  value="ACIS-{0}".format(chips_all))
 
     # Add created image to manifest
     key = "img_e{erange}".format(erange=erange)
