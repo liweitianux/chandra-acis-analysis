@@ -64,7 +64,7 @@ class ACIS:
             raise ValueError("unknown chip combination: %s" % detnam)
 
     @classmethod
-    def get_chips_str(self, filepath, sep=":"):
+    def get_chips_str(self, filepath, sep=None):
         """
         Return a string of the chips of interest according to the
         active ACIS type.
@@ -74,17 +74,21 @@ class ACIS:
         filepath : str
             Path to the input FITS file
         sep : str, optional
-            Separator to join the chip ranges, e.g., 0:3, 0-3
+            Use a separator to join the chip ranges (e.g., ``0:3``, ``0-3``)
+            instead of including all chips (e.g., ``0123``).
 
         Returns
         -------
         chips : str
-            ``0:3`` if ACIS-I, ``7`` if ACIS-S;
+            ``0123`` or ``0<sep>3`` if ACIS-I, ``7`` if ACIS-S;
             otherwise, ``ValueError`` raised.
         """
         acis_type = self.get_type(filepath)
         if acis_type == "I":
-            return sep.join(["0", "3"])
+            if sep is None:
+                return "0123"
+            else:
+                return sep.join(["0", "3"])
         elif acis_type == "S":
             return "7"
         else:
