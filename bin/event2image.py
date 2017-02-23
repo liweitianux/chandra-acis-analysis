@@ -5,19 +5,21 @@
 
 """
 Make image by binning the event file, and update the manifest.
-
-TODO: use logging module instead of print()
 """
 
-import sys
 import argparse
 import subprocess
+import logging
 
 from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.acis import ACIS
 from acispy.header import write_keyword
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def make_image(infile, outfile, chips, erange, fov, clobber=False):
@@ -43,6 +45,8 @@ def make_image(infile, outfile, chips, erange, fov, clobber=False):
     fregion = "sky=region(%s[ccd_id=%s])" % (fov, chips)
     fenergy = "energy=%s" % erange
     fbin = "bin sky=::1"
+    logger.info("Make image: %s[%s][%s][%s]" %
+                (infile, fregion, fenergy, fbin))
     subprocess.check_call(["punlearn", "dmcopy"])
     subprocess.check_call([
         "dmcopy", "infile=%s[%s][%s][%s]" % (infile, fregion, fenergy, fbin),
@@ -56,7 +60,7 @@ def main():
     parser.add_argument("-L", "--elow", dest="elow", type=int, default=700,
                         help="lower energy limit [eV] of the output image " +
                         "(default: 700 [eV])")
-    parser.add_argument("-H", "--ehigh", dest="ehigh", type=int,
+    parser.add_argument("-H", "--ehigh", dest="ehigh", type=int, default=7000,
                         help="upper energy limit [eV] of the output image " +
                         "(default: 7000 [eV])")
     parser.add_argument("-i", "--infile", dest="infile",
@@ -65,8 +69,6 @@ def main():
     parser.add_argument("-o", "--outfile", dest="outfile",
                         help="output image filename (default: " +
                         "build in format 'img_c<chip>_e<elow>-<ehigh>.fits')")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
-                        help="show verbose information")
     parser.add_argument("-C", "--clobber", dest="clobber", action="store_true",
                         help="overwrite existing file")
     args = parser.parse_args()
@@ -88,12 +90,11 @@ def main():
     else:
         outfile = "img_c{chips}_e{erange}.fits".format(
             chips=chips, erange=erange)
-    if args.verbose:
-        print("infile:", infile, file=sys.stderr)
-        print("outfile:", outfile, file=sys.stderr)
-        print("fov:", fov, file=sys.stderr)
-        print("chips:", chips, file=sys.stderr)
-        print("erange:", erange, file=sys.stderr)
+    logger.info("infile: %s" % infile)
+    logger.info("outfile: %s" % outfile)
+    logger.info("fov: %s" % fov)
+    logger.info("chips: %s" % chips)
+    logger.info("erange: %s" % erange)
 
     make_image(infile, outfile, chips, erange, fov, args.clobber)
     chips_all = ACIS.get_chips_str(infile)
