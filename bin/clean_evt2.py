@@ -27,6 +27,7 @@ from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.acis import ACIS
 from acispy.ds9 import ds9_view
+from acispy.header import write_keyword
 
 
 logging.basicConfig(level=logging.INFO)
@@ -176,6 +177,7 @@ def main():
     else:
         infile = manifest.getpath("evt2", relative=True)
     chips = ACIS.get_chips_str(infile, sep="-")
+    chips_all = ACIS.get_chips_str(infile)
     logger.info("infile: %s" % infile)
     logger.info("chips: %s" % chips)
 
@@ -187,6 +189,8 @@ def main():
     gtifile = os.path.splitext(lcfile)[0] + ".gti"
 
     filter_chips(infile, evt2_chips, chips, clobber=args.clobber)
+    write_keyword(evt2_chips, keyword="DETNAM",
+                  value="ACIS-{0}".format(chips_all))
     detect_sources(evt2_chips, srcfile, clobber=args.clobber)
     remove_sources(evt2_chips, evt2_rmsrc, srcfile, clobber=args.clobber)
     extract_lightcurve(evt2_rmsrc, lcfile, clobber=args.clobber)
