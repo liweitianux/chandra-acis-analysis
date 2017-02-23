@@ -90,6 +90,7 @@ tprofile_param_center="wang2012_param_center.txt"
 tprofile_fit_center="tprofile_fit_center.qdp"
 tprofile_center="tprofile_dump_center.qdp"
 
+printf "Fitting temperature profile ...\n"
 ${base_path}/${PROG_TPROFILE} ${tprofile_data} ${tprofile_cfg} \
             ${cm_per_pixel} 2> /dev/null | tee ${tprofile_param_center}
 cp -fv ${tprofile_dump} ${tprofile}
@@ -108,6 +109,7 @@ cp -f ${cfunc_profile} ${cfunc_profile_center}
 PROG_SBPFIT="fit_${MODEL}_sbp"
 RES_SBPFIT="${MODEL}_param.txt"
 RES_SBPFIT_CENTER="${MODEL}_param_center.txt"
+printf "Fitting SBP profile ...\n"
 ${base_path}/${PROG_SBPFIT} ${sbp_cfg} 2> /dev/null
 mv -fv ${RES_SBPFIT} ${RES_SBPFIT_CENTER}
 cat ${RES_SBPFIT_CENTER}
@@ -115,6 +117,7 @@ mv -fv sbp_fit.qdp sbp_fit_center.qdp
 mv -fv rho_fit.qdp rho_fit_center.qdp
 mv -fv rho_fit.dat rho_fit_center.dat
 mv -fv entropy.qdp entropy_center.qdp
+printf "Fitting NFW mass profile ...\n"
 ${base_path}/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null
 mv -fv nfw_param.txt      nfw_param_center.txt
 mv -fv nfw_fit_result.qdp nfw_fit_center.qdp
@@ -147,10 +150,14 @@ rm -f summary_entropy.qdp
 printf "\n+++++++++++++++++++ Monte Carlo +++++++++++++++++++++\n"
 MC_TIMES=100
 for i in `seq 1 ${MC_TIMES}`; do
+    printf "\n## ${i} / ${MC_TIMES} ##\n"
+    printf "## `pwd` ##\n"
+
+    printf "Shuffling temperature profile & SBP ...\n"
     ${base_path}/shuffle_profile.py ${tprofile_data} tmp_tprofile.txt
     ${base_path}/shuffle_profile.py ${sbp_data} tmp_sbprofile.txt
 
-    # temperature profile
+    printf "Fitting temperature profile ...\n"
     ${base_path}/${PROG_TPROFILE} tmp_tprofile.txt ${tprofile_cfg} \
                 ${cm_per_pixel} 2> /dev/null
     mv -f ${tprofile_dump} ${tprofile}
@@ -167,10 +174,9 @@ for i in `seq 1 ${MC_TIMES}`; do
         fi
     done
 
-    printf "## ${i} / ${MC_TIMES} ##\n"
-    printf "## `pwd -P` ##\n"
     ${base_path}/calc_coolfunc_profile.py -C -t ${cfunc_table} \
                 -T ${tprofile} -o ${cfunc_profile}
+    printf "Fitting SBP profile ...\n"
     ${base_path}/${PROG_SBPFIT} ${TMP_SBP_CFG} 2> /dev/null
     cat ${RES_SBPFIT}
     ${base_path}/fit_nfw_mass mass_int.dat ${z} ${nfw_rmin_kpc} 2> /dev/null
@@ -187,7 +193,7 @@ done  # end of `for'
 # recover the files of original center values
 cp -f ${cfunc_profile_center} ${cfunc_profile}
 cp -f ${tprofile_center} ${tprofile}
-printf "\n+++++++++++++++++ MONTE CARLO END +++++++++++++++++++\n"
+printf "\n+++++++++++++++++ MONTE CARLO END +++++++++++++++++++\n\n"
 
 ## analyze results
 RES_TMP="_tmp_result_mrl.txt"

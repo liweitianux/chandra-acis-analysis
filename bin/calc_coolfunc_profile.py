@@ -31,6 +31,7 @@ def interpolate_cf(table, logy=True):
 
 
 def calc_cf_profile(tprofile, interp, logy=True):
+    print("Calculating cooling function profile ...", file=sys.stderr)
     radius, temp = tprofile[:, 0], tprofile[:, 1]
     cf = interp(temp)
     if logy:
