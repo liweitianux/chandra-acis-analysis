@@ -51,26 +51,11 @@ from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.acis import ACIS
 from acispy.header import write_keyword
+from acispy.image import get_xygrid
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def get_xygrid(image):
-    """
-    Get the ``xygrid`` of the input image for later ``mkexpmap``'s use.
-    """
-    logger.info("Get the 'xygrid' of image: %s" % image)
-    subprocess.check_call(["punlearn", "get_sky_limits"])
-    subprocess.check_call([
-        "get_sky_limits", "image=%s" % image, "verbose=0"
-    ])
-    xygrid = subprocess.check_output([
-        "pget", "get_sky_limits", "xygrid"
-    ]).decode("utf-8").strip()
-    logger.info("xygrid: %s" % xygrid)
-    return xygrid
 
 
 def make_aspect_histogram(outfile, asol, evtfile, chip, clobber=False):
@@ -211,6 +196,7 @@ def main():
     logger.info("msk: %s" % msk)
 
     xygrid = get_xygrid(args.infile)
+    logger.info("%s:xygrid: %s" % (args.infile, xygrid))
     expmaps = []
 
     for c in chips:
@@ -237,7 +223,7 @@ def main():
     logger.info("Update keyword 'DETNAM' to %s" % detnam)
     write_keyword(args.outfile, keyword="DETNAM", value=detnam)
 
-    # Add created exposure map and exposure-corrected image to manifest
+    logger.info("Add created exposure map to manifest ...")
     key = "expmap"
     manifest.setpath(key, args.outfile)
     logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
