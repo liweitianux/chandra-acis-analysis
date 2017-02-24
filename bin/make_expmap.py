@@ -50,7 +50,7 @@ from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
 from acispy.acis import ACIS
-from acispy.header import write_keyword
+from acispy.header import write_keyword, copy_keyword
 from acispy.image import get_xygrid
 
 
@@ -124,6 +124,9 @@ def make_exposure_map(outfile, asphistfile, instmapfile, xygrid,
         "normalize=no", "useavgaspect=no",
         "clobber=%s" % clobber, "mode=h"
     ])
+    # Copy several keywords from instrument map (as ``fluximage`` does)
+    copy_keyword(instmapfile, outfile,
+                 keyword=["SPECTRUM", "WGTFILE", "ENERG_LO", "ENERG_HI"])
 
 
 def combine_expmaps(outfile, expmaps, clobber=False):
@@ -140,7 +143,7 @@ def combine_expmaps(outfile, expmaps, clobber=False):
         subprocess.check_call(["punlearn", "dmimgcalc"])
         subprocess.check_call([
             "dmimgcalc", "infile=%s" % ",".join(expmaps),
-            "infile2=none", "outfile=%s" % outfile,
+            "infile2=none", "outfile=%s[EXPMAP]" % outfile,
             "operation=%s" % operation,
             "clobber=%s" % clobber
         ])
@@ -151,6 +154,31 @@ def combine_expmaps(outfile, expmaps, clobber=False):
         if os.path.exists(outfile) and (not clobber):
             raise OSError("File already exists: %s" % outfile)
         os.rename(expmaps[0], outfile)
+
+
+def threshold_expmap(expmap, cut="1.5%", clobber=False):
+    """
+    The strongly variable exposure near the edge of a dithered field
+    may produce "hot" pixels when divided into an image.  Therefore,
+    apply a threshold to the exposure map pixels that cuts the pixels
+    with value of exposure less than this threshold.
+
+    NOTE
+    ----
+    The original/input exposure map is *replaced* by the threshold-cut
+    exposure map.
+    """
+    logger.info("Apply threshold to cut the exposure map: cut=%s" % cut)
+    clobber = "yes" if clobber else "no"
+    expmap_thresh = os.path.splitext(expmap)[0] + "_thresh.fits"
+    subprocess.check_call(["punlearn", "dmimgthresh"])
+    subprocess.check_call([
+        "dmimgthresh", "infile=%s" % expmap,
+        "outfile=%s" % expmap_thresh,
+        "cut=%s" % cut,
+        "clobber=%s" % clobber
+    ])
+    os.rename(expmap_thresh, expmap)
 
 
 def main():
@@ -170,8 +198,8 @@ def main():
                         help="filename of output exposure map")
     args = parser.parse_args()
 
-    setup_pfiles(["get_sky_limits", "asphist", "mkinstmap", "ardlib",
-                  "acis_set_ardlib", "mkexpmap", "dmimgcalc"])
+    setup_pfiles(["get_sky_limits", "asphist", "mkinstmap", "mkexpmap",
+                  "ardlib", "acis_set_ardlib", "dmimgcalc", "dmimgthresh"])
 
     manifest = get_manifest()
     if args.weights:
@@ -222,6 +250,7 @@ def main():
     detnam = "ACIS-{0}".format(chips)
     logger.info("Update keyword 'DETNAM' to %s" % detnam)
     write_keyword(args.outfile, keyword="DETNAM", value=detnam)
+    threshold_expmap(args.outfile, clobber=args.clobber)
 
     logger.info("Add created exposure map to manifest ...")
     key = "expmap"
