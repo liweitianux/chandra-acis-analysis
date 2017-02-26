@@ -1,22 +1,57 @@
 #!/bin/sh
-##
-## This script generate a series of regions for the extraction of
-## radial surface brightness profile (SBP).
-##
-## Regions geneartion algorithm:
-## (TODO)
-##
-## Author: Zhenghao ZHU
-## Created: ???
-##
-UPDATED="2015/06/03"
-## ChangeLogs:
-## v2.0, 2015/06/03, Aaron LI
-##   * Copy needed pfiles to current working directory, and
-##     set environment variable $PFILES to use these first.
-##   * Added missing punlearn
-##   * Removed the section of dmlist.par & dmextract.par deletion
-##
+#
+# This script generate a series of regions for the extraction of
+# radial surface brightness profile (SBP).
+#
+# Regions geneartion algorithm:
+# (TODO)
+#
+# Author: Zhenghao ZHU
+# Created: ???
+#
+# Change logs:
+# 2017-02-26, Weitian LI
+#   * Further simplify arguments handling
+#   * Remove test support (-t) for simplification
+#   * Rename 'stn' to 'SNR'
+#   * Add ds9 view
+# v2.0, 2015/06/03, Weitian LI
+#   * Copy needed pfiles to current working directory, and
+#     set environment variable $PFILES to use these first.
+#   * Added missing punlearn
+#   * Removed the section of dmlist.par & dmextract.par deletion
+
+# minimal counts
+CNT_MIN=2500
+
+# energy: 700-7000eV -- channel 49:479
+ERANGE=700:7000
+CH_LOW=49
+CH_HI=479
+
+# energy 9.5-12keV -- channel 651:822
+CH_BKG_LOW=651
+CH_BKG_HI=822
+
+if [ $# -ne 4 ] ; then
+    printf "usage:\n"
+    printf " `basename $0` <evt> <bkg_pi> <reg_in> <reg_out>\n"
+    exit 1
+fi
+
+EVT=$1
+BKGSPC=$2
+REG_IN=$3
+REG_OUT=$4
+
+X=`\grep -i 'point' ${REG_IN} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $1 }'`
+Y=`\grep -i 'point' ${REG_IN} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $2 }'`
+
+echo "EVT:      ${EVT}"
+echo "ERANGE:   ${ERANGE}"
+echo "Center:   (${X},${Y})"
+echo "BKGSPC:   ${BKGSPC}"
+echo ""
 
 ## prepare parameter files (pfiles) {{{
 CIAO_TOOLS="dmstat dmlist dmextract"
@@ -31,50 +66,18 @@ done
 export PFILES="./:${PFILES}"
 ## pfiles }}}
 
-if [ $# -ne 6 ] ; then
-    printf "usage:\n"
-    printf " `basename $0` <evt> <evt_e> <bkg_pi> <x> <y>  <reg_out>\n"
-    printf "updated:\n"
-    printf "    ${UPDATED}\n"
-    exit 1
-fi
 
-EVT=$1
-EVT_E=$2
-BKGSPC=$3
-X=$4
-Y=$5
-REG_OUT=$6
 [ -f "${REG_OUT}" ] && mv -fv ${REG_OUT} ${REG_OUT}_bak
-
-echo "EVT:      ${EVT}"
-echo "EVT_E:    ${EVT_E}"
-echo "BKGSPC:   ${BKGSPC}"
-echo "X:        ${X}"
-echo "Y:        ${Y}"
-echo ""
-
-#min counts
-CNT_MIN=2500
-#singal to noise
-STN=10
-
-#energy700:7000 -- channel 49:479
-CH_LOW=49
-CH_HI=479
-#energy 9,5kev-12kev -- channel 651:822
-CH_BKG_LOW=651
-CH_BKG_HI=822
-
 RIN=0
 ROUT=0
 CNTS=0
 ROUT_MAX=1500
+SNR=10
 
-STN_FILE="spc_stn.dat"
-[ -e ${STN_FILE} ] && mv -fv ${STN_FILE} ${STN_FILE}_bak
+SNR_FILE="spc_snr.dat"
+[ -e ${SNR_FILE} ] && mv -fv ${SNR_FILE} ${SNR_FILE}_bak
 i=0
-while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
+while [ `echo "$SNR > 2 "| bc -l` -eq 1 ]  ; do
     if [ `echo "$ROUT > $ROUT_MAX" | bc -l` -eq 1 ]; then
         break
     fi
@@ -84,13 +87,13 @@ while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
         echo "${TMP_REG}" >> ${REG_OUT}
     fi
     i=`expr $i + 1`
-    printf "gen reg#$i ...\n"
-    if [ ${ROUT} -eq 0 ] ; then 
+    printf "Generate region #$i ...\n"
+    if [ ${ROUT} -eq 0 ] ; then
         ROUT=5
     fi
     TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
     punlearn dmlist
-    CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
+    CNTS=`dmlist "${EVT}[energy=${ERANGE}][sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
     while [ ${CNTS} -lt ${CNT_MIN} ]; do
         ROUT=`expr $ROUT + 1 `
         if [ `echo "$ROUT > $ROUT_MAX" | bc -l` -eq 1 ]; then
@@ -98,7 +101,7 @@ while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
         fi
         TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
         punlearn dmlist
-        CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
+        CNTS=`dmlist "${EVT}[energy=${ERANGE}][sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
     done
     TMP_SPC=_tmpspc.pi
     punlearn dmextract
@@ -109,13 +112,13 @@ while [ `echo "$STN > 2 "| bc -l` -eq 1 ]  ; do
 
     COUNT_SRC=`dmstat "${TMP_SPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}' `
     COUNT_BKG=`dmstat "${BKGSPC}[channel=${CH_LOW}:${CH_HI}][cols counts]" | \grep "sum:" | awk '{print $2}' `
-    if [ ${INDEX_SRC} -eq 0 ] ;then 
-        STN=10000
+    if [ ${INDEX_SRC} -eq 0 ] ;then
+        SNR=10000
     else
-        STN=`echo ${COUNT_SRC} ${INDEX_SRC} ${COUNT_BKG} ${INDEX_BKG} | awk '{ printf("%f",$1/$2/$3*$4) }' `
+        SNR=`echo ${COUNT_SRC} ${INDEX_SRC} ${COUNT_BKG} ${INDEX_BKG} | awk '{ printf("%f",$1/$2/$3*$4) }' `
     fi
-    echo "  STN: ${STN}"
-    echo "${STN}" >> "${STN_FILE}"
+    echo "  SNR: ${SNR}"
+    echo "${SNR}" >> "${SNR_FILE}"
 done
 
 ## fix 'i', to consistent with the actual annuluses
@@ -133,7 +136,7 @@ elif [ $i -gt 6 ]; then
     mv -fv ${REG_OUT} ${REG_OUT}_2500bak
     CNTS=0
     punlearn dmlist
-    CNTS_TOTAL=`dmlist "${EVT_E}[sky=pie($X,$Y,0,$RIN,0,360)]" blocks | \grep 'EVENTS' | awk '{print $8}'`
+    CNTS_TOTAL=`dmlist "${EVT}[energy=${ERANGE}][sky=pie($X,$Y,0,$RIN,0,360)]" blocks | \grep 'EVENTS' | awk '{print $8}'`
     CNTS_USE=`echo "${CNTS_TOTAL} 6" | awk '{printf("%d", $1/$2)}'`
     echo "CNT_USE: ${CNT_USE}"
     printf "*** too many annulus ***\n"
@@ -144,12 +147,12 @@ elif [ $i -gt 6 ]; then
     while [ $j -le 6 ] ; do
        while [ ${CNTS} -lt ${CNTS_USE} ] ; do
            ROUT=`expr ${ROUT} + 1 `
-           if [ ${ROUT} -gt ${ROUT_MAX} ]; then 
+           if [ ${ROUT} -gt ${ROUT_MAX} ]; then
                break
            fi
            TMP_REG="pie($X,$Y,$RIN,$ROUT,0,360)"
            punlearn dmlist
-           CNTS=`dmlist "${EVT_E}[sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
+           CNTS=`dmlist "${EVT}[energy=${ERANGE}][sky=${TMP_REG}]" blocks | \grep 'EVENTS' | awk '{print $8}'`
        done
        j=`expr $j + 1 `
        echo "${TMP_REG}" >> ${REG_OUT}
@@ -158,3 +161,6 @@ elif [ $i -gt 6 ]; then
     done
 fi
 
+printf "check SBP regions ...\n"
+ds9 ${EVT} -regions format ciao -regions system physical \
+    -regions ${REG_OUT} -cmap he -bin factor 4
