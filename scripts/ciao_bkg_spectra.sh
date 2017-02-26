@@ -16,7 +16,7 @@
 
 # Change logs:
 # 2017-02-26, Weitian LI
-#   * Use 'manifest.py' and 'results.py'
+#   * Use 'manifest.py', 'results.py', and 'renorm_spectrum.py'
 #   * Simplify 'specextract' parameters handling
 # v5.0, 2015/06/02, Weitian LI
 #   * Removed 'GREP_OPTIONS' and replace 'grep' with '\grep'
@@ -100,39 +100,6 @@ getopt_keyval() {
         shift                           # shift, process next one
     done
 }
-
-## background renormalization (BACKSCAL) {{{
-# renorm background according to particle background
-# energy range: 9.5-12.0 keV (channel: 651-822)
-CH_LOW=651
-CH_HI=822
-pb_flux() {
-    punlearn dmstat
-    COUNTS=`dmstat "$1[channel=${CH_LOW}:${CH_HI}][cols COUNTS]" | \grep -i 'sum:' | awk '{ print $2 }'`
-    punlearn dmkeypar
-    EXPTIME=`dmkeypar $1 EXPOSURE echo=yes`
-    BACK=`dmkeypar $1 BACKSCAL echo=yes`
-    # fix `scientific notation' bug for `bc'
-    EXPTIME_B=`echo ${EXPTIME} | sed 's/[eE]/\*10\^/' | sed 's/+//'`
-    BACK_B=`echo "( ${BACK} )" | sed 's/[eE]/\*10\^/' | sed 's/+//'`
-    PB_FLUX=`echo "scale = 16; ${COUNTS} / ${EXPTIME_B} / ${BACK_B}" | bc -l`
-    echo ${PB_FLUX}
-}
-
-bkg_renorm() {
-    # $1: src spectrum, $2: back spectrum
-    PBFLUX_SRC=`pb_flux $1`
-    PBFLUX_BKG=`pb_flux $2`
-    BACK_OLD=`dmkeypar $2 BACKSCAL echo=yes`
-    BACK_OLD_B=`echo "( ${BACK_OLD} )" | sed 's/[eE]/\*10\^/' | sed 's/+//'`
-    BACK_NEW=`echo "scale = 16; ${BACK_OLD_B} * ${PBFLUX_BKG} / ${PBFLUX_SRC}" | bc -l`
-    printf "\`$2': BACKSCAL:\n"
-    printf "    ${BACK_OLD} --> ${BACK_NEW}\n"
-    punlearn dmhedit
-    dmhedit infile=$2 filelist=none operation=add \
-        key=BACKSCAL value=${BACK_NEW} comment="old value: ${BACK_OLD}"
-}
-## bkg renorm }}}
 ## functions end }}}
 
 ## parameters {{{
@@ -307,7 +274,7 @@ for reg_i in ${REGLIST}; do
 
     ## bkg renormalization {{{
     printf "Renormalize background ...\n"
-    bkg_renorm ${LBKG_PI} ${BBKG_PI}
+    renorm_spectrum.py -r ${LBKG_PI} ${BBKG_PI}
     ## bkg renorm }}}
 
     ## group spectrum {{{
