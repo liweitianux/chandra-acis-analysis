@@ -153,6 +153,8 @@ class Manifest:
         if isinstance(path, list):
             abspath = [os.path.abspath(p) for p in path]
             relpath = [os.path.relpath(p, start=dirname) for p in abspath]
+            if len(relpath) == 1:
+                relpath = relpath[0]
         else:
             abspath = os.path.abspath(path)
             relpath = os.path.relpath(abspath, start=dirname)
