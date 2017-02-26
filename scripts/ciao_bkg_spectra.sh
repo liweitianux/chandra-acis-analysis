@@ -45,7 +45,7 @@
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> reg=<reglist> blank=<blanksky_evt> nh=<nH> z=<redshift> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
+        printf "    `basename $0` reg=<reglist> [ evt=<evt2_clean> blank=<blanksky_evt> nh=<nH> z=<redshift> grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
         printf "\nNotes:\n"
         printf "    If grouptype=NUM_CTS, then grouptypeval required.\n"
         printf "    If grouptype=BIN, then binspec required.\n"
@@ -155,14 +155,14 @@ else
 fi
 # check given nH
 if [ -z "${nh}" ]; then
-    N_H=$(results.py get nh)
+    N_H=$(results.py -b get nh)
 else
     N_H=${nh}
 fi
 printf "## use nH: ${N_H}\n" | ${TOLOG}
 # check given redshift
 if [ -z "${z}" ]; then
-    REDSHIFT=$(results.py get z)
+    REDSHIFT=$(results.py -b get z)
 else
     REDSHIFT=${z}
 fi
