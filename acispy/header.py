@@ -3,16 +3,25 @@
 
 """
 Manipulate the FITS header keywords using CIAO tools
-``dmkeypar`` and ``dmhedit``.
+``dmkeypar`` and ``dmhedit``, as well as ``astropy.io.fits``.
 """
 
 import subprocess
 
+from astropy.io import fits
+
 
 def read_keyword(infile, keyword):
     """
-    Read the specified header keyword, and return a dictionary
-    with its value, unit, data type, and comment.
+    Read the specified header keyword using CIAO tool ``dmkeypar``,
+    and return a dictionary with its value, unit, data type, and comment.
+
+    NOTE
+    ----
+    The ``dmkeypar`` tool cannot read some raw/reserved keywords in FITS
+    header, e.g., ``BUNIT``.  These raw header keywords can be obtained
+    using ``dmlist <infile> opt=header,raw``, or using the following
+    ``read_keyword2()``.
     """
     DATATYPES = {
         "real": float,
@@ -39,6 +48,25 @@ def read_keyword(infile, keyword):
     ]).decode("utf-8").strip()
     return {"value": value, "datatype": datatype,
             "unit": unit, "comment": comment}
+
+
+def read_keyword2(infile, keyword):
+    """
+    Read the specified header keyword using ``astropy.io.fits``
+    and return a tuple of ``(value, comment)``.
+
+    NOTE
+    ----
+    Header of all extensions (a.k.a. blocks) are combined to locate
+    the keyword.
+    """
+    with fits.open(infile) as f:
+        h = fits.header.Header()
+        for hdu in f:
+            h.extend(hdu.header)
+        value = h[keyword]
+        comment = h.comments[keyword]
+    return (value, comment)
 
 
 def write_keyword(infile, keyword, value, datatype=None,
