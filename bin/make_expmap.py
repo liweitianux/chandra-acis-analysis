@@ -125,8 +125,10 @@ def make_exposure_map(outfile, asphistfile, instmapfile, xygrid,
         "clobber=%s" % clobber, "mode=h"
     ])
     # Copy several keywords from instrument map (as ``fluximage`` does)
+    logger.info("Copy several keywords from instrument map ...")
     copy_keyword(instmapfile, outfile,
-                 keyword=["SPECTRUM", "WGTFILE", "ENERG_LO", "ENERG_HI"])
+                 keyword=["SPECTRUM", "WGTFILE",
+                          "ENERG_LO", "ENERG_HI", "GRATING"])
 
 
 def combine_expmaps(outfile, expmaps, clobber=False):
@@ -147,6 +149,9 @@ def combine_expmaps(outfile, expmaps, clobber=False):
             "operation=%s" % operation,
             "clobber=%s" % clobber
         ])
+        # Add the lost "BUNIT" keyword during ``dmimgcalc``
+        write_keyword(outfile, keyword="BUNIT", value="cm**2 s")
+        # Remove original exposure maps for single chip
         for f in expmaps:
             os.remove(f)
     else:
