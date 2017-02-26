@@ -355,10 +355,10 @@ cat ${REG_IN} | sed 's/#.*$//' | \grep -Ev '^\s*$' > ${REG_NEW}
 ## REG_IN }}}
 
 ## `specextract' to extract spectrum {{{
-LINES="`wc -l ${REG_NEW} | cut -d' ' -f1`"
+NREG="`wc -l ${REG_NEW} | cut -d' ' -f1`"
 printf "\n======================================\n"
-printf "TOTAL *${LINES}* regions to process ......\n"
-for i in `seq ${LINES}`; do
+printf "TOTAL *${NREG}* regions to process ......\n"
+for i in `seq ${NREG}`; do
     printf "\n==============================\n"
     printf ">>> PROCESS REGION ${i} ...\n"
 
@@ -510,7 +510,7 @@ statistic chi
 # load data
 _EOF_
 
-for i in `seq ${LINES}`; do
+for i in `seq ${NREG}`; do
     RSPEC="r${i}_${ROOTNAME}"
     [ -r "${RSPEC}.wrmf" ] && RMF="${RSPEC}.wrmf" || RMF="${RSPEC}.rmf"
     [ -r "${RSPEC}.warf" ] && ARF="${RSPEC}.warf" || ARF="${RSPEC}.arf"
@@ -554,7 +554,7 @@ model  projct*wabs*apec
               1       0.01          0          0      1e+24      1e+24
 _EOF_
 
-INPUT_TIMES=`expr ${LINES} - 1`
+INPUT_TIMES=`expr ${NREG} - 1`
 for i in `seq ${INPUT_TIMES}`; do
     cat >> ${XSPEC_DEPROJ} << _EOF_
 = 1
@@ -588,7 +588,7 @@ statistic chi
 # load data
 _EOF_
 
-for i in `seq ${LINES}`; do
+for i in `seq ${NREG}`; do
     RSPEC="r${i}_${ROOTNAME}"
     [ -r "${RSPEC}.wrmf" ] && RMF="${RSPEC}.wrmf" || RMF="${RSPEC}.rmf"
     [ -r "${RSPEC}.warf" ] && ARF="${RSPEC}.warf" || ARF="${RSPEC}.arf"
@@ -629,7 +629,7 @@ model  wabs*apec
               1       0.01          0          0      1e+24      1e+24
 _EOF_
 
-INPUT_TIMES=`expr ${LINES} - 1`
+INPUT_TIMES=`expr ${NREG} - 1`
 for i in `seq ${INPUT_TIMES}`; do
     cat >> ${XSPEC_PROJTD} << _EOF_
 = 1
