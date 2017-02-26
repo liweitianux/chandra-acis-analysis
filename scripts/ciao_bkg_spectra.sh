@@ -1,26 +1,24 @@
 #!/bin/sh
 #
-unalias -a
-export LC_COLLATE=C
-###########################################################
-## extract background spectra from src and blanksky      ##
-## renormalization the blank spectrum                    ##
-##                                                       ##
-## Ref: Chandra spectrum analysis                        ##
-## http://cxc.harvard.edu/ciao/threads/extended/         ##
-## Ref: specextract                                      ##
-## http://cxc.harvard.edu/ciao/ahelp/specextract.html    ##
-## Ref: CIAO v4.4 region bugs                            ##
-## http://cxc.harvard.edu/ciao/bugs/regions.html#bug-12187
-##                                                       ##
-## Weitian LI                                            ##
-## 2012/07/24                                            ##
-###########################################################
+# extract background spectra from src and blanksky
+# renormalization the blank spectrum
+#
+# References:
+# * Chandra spectrum analysis
+#   http://cxc.harvard.edu/ciao/threads/extended/
+# * specextract
+#   http://cxc.harvard.edu/ciao/ahelp/specextract.html
+# * CIAO v4.4 region bugs
+#   http://cxc.harvard.edu/ciao/bugs/regions.html#bug-12187
+#
+# Weitian LI
+# 2012-07-24
 
-VERSION="v5.0"
-UPDATED="2015/06/02"
-# ChangeLogs:
-# v5.0, 2015/06/02, Aaron LI
+# Change logs:
+# 2017-02-26, Weitian LI
+#   * Use 'manifest.py' and 'results.py'
+#   * Simplify 'specextract' parameters handling
+# v5.0, 2015/06/02, Weitian LI
 #   * Removed 'GREP_OPTIONS' and replace 'grep' with '\grep'
 #   * Removed 'trap INT date'
 #   * Copy needed pfiles to current working directory, and
@@ -47,12 +45,10 @@ UPDATED="2015/06/02"
 case "$1" in
     -[hH]*|--[hH]*)
         printf "usage:\n"
-        printf "    `basename $0` evt=<evt2_clean> reg=<reglist> blank=<blanksky_evt> basedir=<base_dir> nh=<nH> z=<redshift> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
+        printf "    `basename $0` evt=<evt2_clean> reg=<reglist> blank=<blanksky_evt> nh=<nH> z=<redshift> [ grouptype=<NUM_CTS|BIN> grouptypeval=<number> binspec=<binspec> log=<log_file> ]\n"
         printf "\nNotes:\n"
         printf "    If grouptype=NUM_CTS, then grouptypeval required.\n"
         printf "    If grouptype=BIN, then binspec required.\n"
-        printf "\nversion:\n"
-        printf "    ${VERSION}, ${UPDATED}\n"
         exit ${ERR_USG}
         ;;
 esac
@@ -60,14 +56,9 @@ esac
 
 ## default parameters {{{
 # default `event file' which used to match `blanksky' files
-#DFT_EVT="_NOT_EXIST_"
-DFT_EVT="`\ls evt2*_clean.fits`"
+DFT_EVT=$(manifest.py -b getpath -r evt2_clean)
 # default `blanksky file'
-#DFT_BLANK="_NOT_EXIST_"
-DFT_BLANK="`\ls blanksky*.fits`"
-# default dir which contains `asols, asol.lis, ...' files
-#DFT_BASEDIR="_NOT_EXIST_"
-DFT_BASEDIR=".."
+DFT_BLANK=$(manifest.py -b getpath -r bkg_blank)
 # default parameters for 'dmgroup'
 DFT_GROUPTYPE="NUM_CTS"
 DFT_GROUPTYPEVAL="20"
@@ -76,15 +67,9 @@ DFT_BINSPEC="1:128:2,129:256:4,257:512:8,513:1024:16"
 # default `log file'
 DFT_LOGFILE="bkg_spectra_`date '+%Y%m%d'`.log"
 
-## howto find files in `basedir'
-# default `asol.lis pattern'
-DFT_ASOLIS_PAT="acis*asol?.lis"
-# default `bad pixel filename pattern'
-DFT_BPIX_PAT="acis*repro*bpix?.fits"
-# default `pbk file pattern'
-DFT_PBK_PAT="acis*pbk?.fits"
-# default `msk file pattern'
-DFT_MSK_PAT="acis*msk?.fits"
+ASOL=$(manifest.py -b -s "," getpath -r asol)
+BPIX=$(manifest.py -b getpath -r bpix)
+MSK=$(manifest.py -b getpath -r msk)
 ## default parameters }}}
 
 ## error code {{{
@@ -203,33 +188,18 @@ else
 fi
 # check given nH
 if [ -z "${nh}" ]; then
-    read -p "> value of nH: " N_H
+    N_H=$(results.py get nh)
 else
     N_H=${nh}
 fi
 printf "## use nH: ${N_H}\n" | ${TOLOG}
 # check given redshift
 if [ -z "${z}" ]; then
-    read -p "> value of redshift: " REDSHIFT
+    REDSHIFT=$(results.py get z)
 else
     REDSHIFT=${z}
 fi
 printf "## use redshift: ${REDSHIFT}\n" | ${TOLOG}
-# check given dir
-if [ -d "${basedir}" ]; then
-    BASEDIR=${basedir}
-elif [ -d "${DFT_BASEDIR}" ]; then
-    BASEDIR=${DFT_BASEDIR}
-else
-    read -p "> basedir (contains asol files): " BASEDIR
-    if [ ! -d "${BASEDIR}" ]; then
-        printf "ERROR: given \`${BASEDIR}' NOT a directory\n"
-        exit ${ERR_DIR}
-    fi
-fi
-# remove the trailing '/'
-BASEDIR=`echo ${BASEDIR} | sed 's/\/*$//'`
-printf "## use basedir: \`${BASEDIR}'\n" | ${TOLOG}
 # check given dmgroup parameters: grouptype, grouptypeval, binspec
 if [ -z "${grouptype}" ]; then
     GROUPTYPE="${DFT_GROUPTYPE}"
@@ -270,37 +240,6 @@ if [ "x${INVALID}" != "x" ]; then
     printf "WARNING: some pie region's END_ANGLE > 360\n" | ${TOLOG}
     printf "    CIAO v4.4 tools may run into trouble\n"
 fi
-
-# check files in `basedir'
-printf "check needed files in basedir \`${BASEDIR}' ...\n"
-# check asolis files
-ASOLIS=`\ls -1 ${BASEDIR}/${DFT_ASOLIS_PAT} | head -n 1`
-if [ -z "${ASOLIS}" ]; then
-    printf "ERROR: cannot find \"${DFT_ASOLIS_PAT}\" in dir \`${BASEDIR}'\n"
-    exit ${ERR_ASOL}
-fi
-printf "## use asolis: \`${ASOLIS}'\n" | ${TOLOG}
-# check badpixel file
-BPIX=`\ls -1 ${BASEDIR}/${DFT_BPIX_PAT} | head -n 1`
-if [ -z "${BPIX}" ]; then
-    printf "ERROR: cannot find \"${DFT_BPIX_PAT}\" in dir \`${BASEDIR}'\n"
-    exit ${ERR_BPIX}
-fi
-printf "## use badpixel: \`${BPIX}'\n" | ${TOLOG}
-# check pbk file
-PBK=`\ls -1 ${BASEDIR}/${DFT_PBK_PAT} | head -n 1`
-if [ -z "${PBK}" ]; then
-    printf "ERROR: cannot find \"${DFT_PBK_PAT}\" in dir \`${BASEDIR}'\n"
-    exit ${ERR_PBK}
-fi
-printf "## use pbk: \`${PBK}'\n" | ${TOLOG}
-# check msk file
-MSK=`\ls -1 ${BASEDIR}/${DFT_MSK_PAT} | head -n 1`
-if [ -z "${MSK}" ]; then
-    printf "ERROR: cannot find \"${DFT_MSK_PAT}\" in dir \`${BASEDIR}'\n"
-    exit ${ERR_MSK}
-fi
-printf "## use msk: \`${MSK}'\n" | ${TOLOG}
 ## check files }}}
 
 ## prepare parameter files (pfiles) {{{
@@ -347,39 +286,11 @@ for reg_i in ${REGLIST}; do
     # NO background response files
     # NO background spectrum (generate by self)
     # NO spectrum grouping (group by self using `dmgroup')
-    # Determine parameters for different versions of specextract {{{
-    # 'pbkfile' parameter deprecated in CIAO-4.6
-    if `pget specextract pbkfile >/dev/null 2>&1`; then
-        P_PBKFILE="pbkfile=${PBK}"
-    else
-        P_PBKFILE=""
-    fi
-    # specextract: revision 2013-06:
-    # 'correct' parameter renamed to 'correctpsf'
-    if `pget specextract correct >/dev/null 2>&1`; then
-        P_CORRECT="correct=no"
-    else
-        P_CORRECT="correctpsf=no"
-    fi
-    # specextract: revision 2013-12:
-    # 'weight' parameter controls whether ONLY ARFs are weighted.
-    # 'weight_rmf' added to control whether RMFs are weighted.
-    # NOTE: 
-    #   (1) only when 'weight=yes' will the 'weight_rmf' parameter be used.
-    #   (2) no longer distingush between unweighted and weighted reponses
-    #       in file extension; only .arf & .rmf are now used.
-    if `pget specextract weight_rmf >/dev/null 2>&1`; then
-        P_WEIGHTRMF="weight_rmf=yes"
-    else
-        P_WEIGHTRMF=""
-    fi
-    # }}}
     punlearn specextract
     specextract infile="${EVT}[sky=region(${REG_TMP})]" \
-        outroot=${LBKG_PI%.pi} bkgfile="" asp="@${ASOLIS}" \
+        outroot=${LBKG_PI%.pi} bkgfile="" asp="${ASOL}" \
         mskfile="${MSK}" badpixfile="${BPIX}" \
-        ${P_PBKFILE} ${P_CORRECT} \
-        weight=yes ${P_WEIGHTRMF} \
+        correctpsf=no weight=yes weight_rmf=yes \
         energy="0.3:11.0:0.01" channel="1:1024:1" \
         bkgresp=no combine=no binarfwmap=2 \
         grouptype=NONE binspec=NONE \
