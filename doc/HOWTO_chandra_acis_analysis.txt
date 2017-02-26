@@ -10,14 +10,15 @@
 Step-by-step guide to analyze ACIS data:
 
  (1) $ chandra_repro indir=. outdir=repro verbose=2
- (2) $ cd repro
-     $ mkdir -p evt bkg img spc/profile mass
+ (2) $ mkdir -p evt bkg img spc/profile mass
+(??) <TODO> build 'manifest.yaml' (repro/*)
+(??) <TODO> build 'results.yaml' (ra_ned, dec_ned, nh, z, etc.)
  (3) $ cd evt
      $ ln -s ../*_repro_evt2.fits .
- (4) $ ciao_procevt.sh
+ (4) $ clean_evt2.py
  (5) $ cd ../bkg
      $ ln -s ../evt/evt2*_clean.fits .
- (6) $ ciao_blanksky.sh
+ (6) $ make_blanksky.py
  (7) $ ds9 evt2*_clean.fits
      Select some region on the CCD edges that are as far from the
      extended source as possible as the *local background*, then
@@ -27,36 +28,39 @@ Step-by-step guide to analyze ACIS data:
      Enlarge the regions if the total photon counts are too small
      (e.g., say 2,000).
  (9) Query the redshift from NED and nH from the HEASARC nH tool
-(10) $ ciao_bkg_spectra.sh reg="lbkg.reg" basedir=.. nh=<nh> z=<z>
+(10) $ ciao_bkg_spectra.sh reg=lbkg.reg
 (11) $ xspec
      xspec> @xspec_lbkg_model.xcm
      xspec> fit
      xspec> cpd /xs
      xspec> pl l del
      xspec> @<path>/xspec_bkgcorr.tcl
+(??) <TODO> Add background spectrum to manifest:
+     $ manifest.py setpath bkg_spec <bkgcorr_blanksky_lbkg.pi | lbkg.pi>
 (12) $ cd ../img
      $ ln -s ../evt/evt2*_clean.fits .
      $ ln -s ../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
-     $ ln -s ../pcadf*_asol1.fits .
+(??) <TODO> create an image (0.7-2 keV) to determine the centroid
+     $ event2image.py -H 2000
 (13) $ ds9 evt2*_clean.fits
-     Roughly select the source center and save the region as 'center.reg'
-(14) $ ciao_genregs.sh reg_in=center.reg bkgd=<bkgd>
+     Roughly select the source center and save the region as 'cstart.reg'
+(??) <TODO> Calculate the X-ray centroid:
+     $ calc_centroid.py -i img_c*_e700-2000.fits -V
      Check whether the calculated centroid is OK; if not, manually
-     adjust the centroid position, and save & overwrite the
-     'centroid_phy.reg'.
+     adjust the centroid position, and overwrite 'centroid.reg'
+(??) <TODO> Generate regions for SBP extraction (sbprofile.reg):
+     $ chandra_gensbpreg.sh evt2_c*_clean.fits <bkgd> centroid.reg sbprofile.reg
+     $ manifest.py setpath sbp_reg sbprofile.reg
+(??) <TODO> Generate regions for deprojected spectral analysis (rspec.reg):
+     $ chandra_genspcreg.sh evt2_c*_clean.fits <bkgd> centroid.reg rspec.reg
+     $ manifest.py setpath rspec_reg rspec.reg
 (15) $ cd ../spc/profile
      $ ln -s ../../evt/evt2*_clean.fits .
      $ ln -s ../../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
      $ ln -s ../../img/rspec.reg img_rspec.reg
 (16) ds9 open 'evt2*_clean.fits' with regs 'img_rspec.reg';
      adjust the regions and save as 'rspec.reg'
-(17) create a config file '<NAME>_spec.conf' looks like (for batch process):
-     basedir    ../..
-     reg        rspec.reg
-     bkgd       bkgcorr_blanksky_lbkg.pi | lbkg.pi
-     nh         <nh>
-     z          <redshift>
-(18) $ ciao_deproj_spectra.sh reg="rspec.reg" bkgd=<bkgd> basedir="../.." nh=<nh> z=<z>
+(18) $ ciao_deproj_spectra.sh reg=rspec.reg
 (19) Fit the radial spectra to derive the radial temperature profile,
      as well as the average temperature and abundance:
      $ xspec
