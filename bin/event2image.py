@@ -65,7 +65,7 @@ def main():
                         "(default: 7000 [eV])")
     parser.add_argument("-i", "--infile", dest="infile",
                         help="event file from which to create the image " +
-                        "(default: evt2_clean from manifest)")
+                        "(default: 'evt2_clean' from manifest)")
     parser.add_argument("-o", "--outfile", dest="outfile",
                         help="output image filename (default: " +
                         "build in format 'img_c<chip>_e<elow>-<ehigh>.fits')")
@@ -104,6 +104,7 @@ def main():
     # Add created image to manifest
     key = "img_e{erange}".format(erange=erange)
     manifest.setpath(key, outfile)
+    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
 
 
 if __name__ == "__main__":

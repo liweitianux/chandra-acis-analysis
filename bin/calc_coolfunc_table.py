@@ -132,8 +132,8 @@ def main():
                         type=float, default=15.0,
                         help="upper temperature limit [keV] (default: 15.0)")
     parser.add_argument("-s", "--tstep", dest="tstep",
-                        type=float, default=0.01,
-                        help="temperature step size [keV] (default: 0.01)")
+                        type=float, default=0.02,
+                        help="temperature step size [keV] (default: 0.02)")
     parser.add_argument("-u", "--unit", dest="unit", required=True,
                         choices=["erg", "photon"],
                         help="use flux values of unit [erg/cm^2/s] or " +
