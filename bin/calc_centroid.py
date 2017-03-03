@@ -14,7 +14,6 @@ import os
 import sys
 import argparse
 import subprocess
-import tempfile
 
 from _context import acispy
 from acispy.manifest import get_manifest
@@ -98,14 +97,12 @@ def get_centroid(image, center, radius=50):
         (Physical) coordinate of the centroid.
     """
     x, y = center
-    with tempfile.NamedTemporaryFile(mode="w+") as fp:
-        fp.file.write("circle(%f,%f,%f)\n" % (x, y, radius))
-        fp.file.flush()
-        subprocess.check_call(["punlearn", "dmstat"])
-        subprocess.check_call([
-            "dmstat", "infile=%s[sky=region(%s)]" % (image, fp.name),
-            "centroid=yes", "media=no", "sigma=no", "clip=no", "verbose=0"
-        ])
+    region = "circle(%f,%f,%f)" % (x, y, radius)
+    subprocess.check_call(["punlearn", "dmstat"])
+    subprocess.check_call([
+        "dmstat", "infile=%s[sky=%s]" % (image, region),
+        "centroid=yes", "media=no", "sigma=no", "clip=no", "verbose=0"
+    ])
     centroid = subprocess.check_output([
         "pget", "dmstat", "out_cntrd_phys"
     ]).decode("utf-8").strip()
