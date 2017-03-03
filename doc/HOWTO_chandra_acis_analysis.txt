@@ -49,8 +49,7 @@ Step-by-step guide to analyze ACIS data:
      Check whether the calculated centroid is OK; if not, manually
      adjust the centroid position, and overwrite 'centroid.reg'
 (??) <TODO> Generate regions for SBP extraction (sbprofile.reg):
-     $ chandra_gensbpreg.sh evt2_c*_clean.fits <bkgd> centroid.reg sbprofile.reg
-     $ manifest.py setpath sbp_reg sbprofile.reg
+     $ make_sbprofile_reg.py -b <bkgd>
 (??) <TODO> Generate regions for deprojected spectral analysis (rspec.reg):
      $ chandra_genspcreg.sh evt2_c*_clean.fits <bkgd> centroid.reg rspec.reg
      $ manifest.py setpath rspec_reg rspec.reg
