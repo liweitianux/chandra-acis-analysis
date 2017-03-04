@@ -190,6 +190,23 @@ class Manifest:
         del self.manifest[key]
         self.save()
 
+    def rename(self, oldkey, newkey):
+        """
+        Rename the specified key in the manifest.
+
+        If the specified old key doesn't exist, or the new key already
+        exists, the error ``KeyError`` is raised.
+        """
+        if oldkey not in self.manifest:
+            raise KeyError("manifest doesn't have item: '%s'" % oldkey)
+        if newkey in self.manifest:
+            raise KeyError("manifest already has item: '%s'" % newkey)
+        # Add item with the new key
+        self.manifest[newkey] = self.manifest[oldkey]
+        # Delete old item
+        del self.manifest[oldkey]
+        self.save()
+
     @classmethod
     def parse_value(self, value):
         """
@@ -372,6 +389,15 @@ def cmd_delete(args, manifest):
         print("Deleted item: %s" % args.key)
 
 
+def cmd_rename(args, manifest):
+    """
+    Sub-command "rename": Rename an item in the manifest.
+    """
+    manifest.rename(args.key, args.newkey)
+    if not args.brief:
+        print("Renamed item key: '%s' -> '%s'" % (args.key, args.newkey))
+
+
 def main(description="Manage the observation manifest (YAML format)",
          default_file="manifest.yaml"):
     parser = argparse.ArgumentParser(description=description)
@@ -435,9 +461,15 @@ def main(description="Manage the observation manifest (YAML format)",
     parser_update.set_defaults(func=cmd_update)
     # sub-command: delete
     parser_delete = subparsers.add_parser(
-        "delete", help="Delete item from manifest")
+        "delete", help="Delete an item from the manifest")
     parser_delete.add_argument("key", help="key of the item")
     parser_delete.set_defaults(func=cmd_delete)
+    # sub-command: rename
+    parser_rename = subparsers.add_parser(
+        "rename", help="Rename an item in the manifest")
+    parser_rename.add_argument("key", help="old item key")
+    parser_rename.add_argument("newkey", help="new item key")
+    parser_rename.set_defaults(func=cmd_rename)
     #
     args = parser.parse_args()
 
