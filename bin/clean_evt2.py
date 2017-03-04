@@ -133,6 +133,9 @@ def make_gti(infile, outfile, scale=1.2, clobber=False):
         "print_window('%s', ['format', 'jpg', 'clobber', 'True'])" % outimg
     ]
     open(chipsfile, "w").write("\n".join(lines) + "\n")
+    logger.warning("ChIPS may sometimes just failed to execute the script " +
+                   "to create the GTI file.  If this happens, try manually " +
+                   "run 'execfile(%s)' in ChIPS." % chipsfile)
     subprocess.check_call(["chips", "-x", chipsfile])
 
     if not os.path.exists(outfile):
