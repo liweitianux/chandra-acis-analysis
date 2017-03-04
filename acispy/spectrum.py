@@ -27,7 +27,7 @@ class Spectrum:
         self.EXPOSURE = self.header.get("EXPOSURE")
         self.BACKSCAL = self.header.get("BACKSCAL")
 
-    def calc_flux(self, elow, ehigh):
+    def calc_flux(self, elow, ehigh, verbose=False):
         """
         Calculate the flux:
             flux = counts / exposure / area
@@ -40,11 +40,14 @@ class Spectrum:
         chlow = ACIS.energy2channel(elow)
         chhigh = ACIS.energy2channel(ehigh)
         counts = self.counts[(chlow-1):chhigh].sum()
+        if verbose:
+            print("counts / exposure / backscale :: %d / %.1f / %.5g" %
+                  (counts, self.EXPOSURE, self.BACKSCAL))
         flux = counts / self.EXPOSURE / self.BACKSCAL
         return flux
 
-    def calc_pb_flux(self, elow=9500, ehigh=12000):
+    def calc_pb_flux(self, elow=9500, ehigh=12000, verbose=False):
         """
         Calculate the particle background (default: 9.5-12 keV) flux.
         """
-        return self.calc_flux(elow=elow, ehigh=ehigh)
+        return self.calc_flux(elow=elow, ehigh=ehigh, verbose=verbose)
