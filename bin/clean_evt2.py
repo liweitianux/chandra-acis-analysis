@@ -197,9 +197,15 @@ def main():
     make_gti(lcfile, gtifile, clobber=args.clobber)
     filter_gti(evt2_rmsrc, evt2_clean, gtifile, clobber=args.clobber)
 
-    # Add cleaned evt2 to manifest
+    # Add cleaned evt2 and other products to manifest
     key = "evt2_clean"
     manifest.setpath(key, evt2_clean)
+    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
+    key = "reg_sources"
+    manifest.setpath(key, srcfile)
+    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
+    key = "gti"
+    manifest.setpath(key, gtifile)
     logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
 
     # Remove useless intermediate files
