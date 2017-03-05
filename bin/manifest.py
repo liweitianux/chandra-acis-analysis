@@ -18,8 +18,13 @@ and other structures in the YAML file.
 .. _`PyYAML`: http://pyyaml.org/
 """
 
+import logging
+
 from _context import acispy
 from acispy import manifest
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":

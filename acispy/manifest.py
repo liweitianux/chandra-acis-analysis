@@ -17,10 +17,15 @@ and other structures in the YAML file.
 """
 
 import os
-from collections import OrderedDict
+import sys
 import argparse
+import logging
+from collections import OrderedDict
 
 import ruamel.yaml
+
+
+logger = logging.getLogger(__name__)
 
 
 class Manifest:
@@ -142,6 +147,7 @@ class Manifest:
         """
         self.manifest[key] = self.parse_value(value)
         self.save()
+        logger.info("Set item '{0}': {1}".format(key, self.get(key)))
 
     def setpath(self, key, path):
         """
@@ -160,6 +166,7 @@ class Manifest:
             relpath = os.path.relpath(abspath, start=dirname)
         self.manifest[key] = relpath
         self.save()
+        logger.info("Set file item '{0}': {1}".format(key, self.get(key)))
 
     def add(self, key, value):
         """
@@ -167,7 +174,7 @@ class Manifest:
 
         If the specified item already exists, raise a ``KeyError``.
         """
-        if key in self.manifest:
+        if self.has(key):
             raise KeyError("manifest already has item: '%s'" % key)
         else:
             self.set(key, value)
@@ -178,7 +185,7 @@ class Manifest:
 
         If the specified item doesn't exist, raise a ``KeyError``.
         """
-        if key in self.manifest:
+        if self.has(key):
             self.set(key, value)
         else:
             raise KeyError("manifest doesn't have item: '%s'" % key)
@@ -187,8 +194,12 @@ class Manifest:
         """
         Delete the specified item from the manifest.
         """
-        del self.manifest[key]
-        self.save()
+        if self.has(key):
+            del self.manifest[key]
+            self.save()
+            logger.info("Deleted item: '%s'" % key)
+        else:
+            logger.warning("manifest does not have item '%s'" % key)
 
     def rename(self, oldkey, newkey):
         """
@@ -206,6 +217,7 @@ class Manifest:
         # Delete old item
         del self.manifest[oldkey]
         self.save()
+        logger.info("Renamed item key: '%s' -> '%s'" % (oldkey, newkey))
 
     @classmethod
     def parse_value(self, value):
@@ -344,8 +356,6 @@ def cmd_set(args, manifest):
     (Will add a new item or update an existing item.)
     """
     manifest.set(args.key, args.value)
-    if not args.brief:
-        print("Set item '{0}': {1}".format(args.key, manifest.get(args.key)))
 
 
 def cmd_setpath(args, manifest):
@@ -354,9 +364,6 @@ def cmd_setpath(args, manifest):
     to be the relative path of the given file w.r.t. the manifest file.
     """
     manifest.setpath(args.key, args.value)
-    if not args.brief:
-        print("Set file item '{0}': {1}".format(args.key,
-                                                manifest.get(args.key)))
 
 
 def cmd_add(args, manifest):
@@ -364,8 +371,6 @@ def cmd_add(args, manifest):
     Sub-command "add": Add a new item to the manifest.
     """
     manifest.add(args.key, args.value)
-    if not args.brief:
-        print("Added item '{0}': {1}".format(args.key, manifest.get(args.key)))
 
 
 def cmd_update(args, manifest):
@@ -373,11 +378,7 @@ def cmd_update(args, manifest):
     Sub-command "update": Update the value of an existing item in the
     manifest.
     """
-    value_old = manifest.get(args.key)
     manifest.update(args.key, args.value)
-    if not args.brief:
-        print("Updated item '{0}': {1} -> {2}".format(
-              args.key, value_old, manifest.get(args.key)))
 
 
 def cmd_delete(args, manifest):
@@ -385,8 +386,6 @@ def cmd_delete(args, manifest):
     Sub-command "delete": Delete an item from the manifest.
     """
     manifest.delete(args.key)
-    if not args.brief:
-        print("Deleted item: %s" % args.key)
 
 
 def cmd_rename(args, manifest):
@@ -394,8 +393,6 @@ def cmd_rename(args, manifest):
     Sub-command "rename": Rename an item in the manifest.
     """
     manifest.rename(args.key, args.newkey)
-    if not args.brief:
-        print("Renamed item key: '%s' -> '%s'" % (args.key, args.newkey))
 
 
 def main(description="Manage the observation manifest (YAML format)",

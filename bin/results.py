@@ -10,8 +10,13 @@
 Manage the analysis results in YAML format.
 """
 
+import logging
+
 from _context import acispy
 from acispy import results
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
