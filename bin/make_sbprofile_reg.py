@@ -222,8 +222,7 @@ def main():
                         help="overwrite existing files")
     parser.add_argument("-b", "--bkg", dest="bkg",
                         help="background file for SNR calculation; " +
-                        "may be the corrected background spectrum " +
-                        "(default: 'bkg_blank' from manifest)")
+                        "may be blanksky or corrected background spectrum")
     parser.add_argument("-c", "--center", dest="center",
                         help="Region file specifying the center " +
                         "(default: 'reg_centroid' from manifest)")
@@ -249,10 +248,6 @@ def main():
         infile = args.infile
     else:
         infile = manifest.getpath("evt2_clean", relative=True)
-    if args.bkg:
-        bkg = args.bkg
-    else:
-        bkg = manifest.getpath("bkg_blank", relative=True)
     if args.center:
         center_reg = args.center
     else:
@@ -260,7 +255,7 @@ def main():
     region = Regions(center_reg).regions[0]
     center = (region.xc, region.yc)
 
-    regions = gen_regions(center=center, evt=infile, bkg=bkg,
+    regions = gen_regions(center=center, evt=infile, bkg=args.bkg,
                           n_inner=args.n_inner,
                           min_counts=args.min_counts,
                           min_width=args.min_width,

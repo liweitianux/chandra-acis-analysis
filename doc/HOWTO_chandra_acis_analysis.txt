@@ -53,11 +53,11 @@ Step-by-step guide to analyze ACIS data:
 (13) $ ds9 evt2*_clean.fits
      Roughly select the source center and save the region as 'cstart.reg'
 (??) <TODO> Calculate the X-ray centroid:
-     $ calc_centroid.py -i img_c*_e700-2000.fits -V
+     $ calc_centroid.py -s cstart.reg -i img_c*_e700-2000.fits -V
      Check whether the calculated centroid is OK; if not, manually
      adjust the centroid position, and overwrite 'centroid.reg'
 (??) <TODO> Generate regions for SBP extraction (sbprofile.reg):
-     $ make_sbprofile_reg.py -b <bkgd>
+     $ make_sbprofile_reg.py -b <bkgd> -V
 (??) <TODO> Generate regions for deprojected spectral analysis (rspec.reg):
      $ chandra_genspcreg.sh evt2_c*_clean.fits <bkgd> centroid.reg rspec.reg
      $ manifest.py setpath rspec_reg rspec.reg
