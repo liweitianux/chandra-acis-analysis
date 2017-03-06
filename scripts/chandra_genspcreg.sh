@@ -33,16 +33,15 @@ CH_HI=479
 CH_BKG_LOW=651
 CH_BKG_HI=822
 
-if [ $# -ne 4 ] ; then
-    printf "usage:\n"
-    printf " `basename $0` <evt> <bkg_pi> <reg_in> <reg_out>\n"
+if [ $# -lt 2 ] ; then
+    echo "usage: `basename $0` <evt> <bkg_pi> [ centroid.reg rspec.reg ]"
     exit 1
 fi
 
 EVT=$1
 BKGSPC=$2
-REG_IN=$3
-REG_OUT=$4
+REG_IN=${3:-centroid.reg}
+REG_OUT=${4:-rspec.reg}
 
 X=`\grep -i 'point' ${REG_IN} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $1 }'`
 Y=`\grep -i 'point' ${REG_IN} | head -n 1 | tr -d 'a-zA-Z() ' | awk -F',' '{ print $2 }'`

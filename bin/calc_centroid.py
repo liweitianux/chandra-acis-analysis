@@ -175,6 +175,8 @@ def main():
     manifest = get_manifest()
     key = "reg_centroid"
     manifest.setpath(key, args.outfile)
+    print("Added item '%s' to manifest: %s" % (key, manifest.get(key)),
+          file=sys.stderr)
 
 
 if __name__ == "__main__":
