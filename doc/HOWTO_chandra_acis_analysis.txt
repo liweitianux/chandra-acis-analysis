@@ -24,9 +24,9 @@ Step-by-step guide to analyze ACIS data:
      extended source as possible as the *local background*, then
      save to a region file: 'lbkg.reg'.
  (8) Estimate the total photon counts within the local background region:
-     $ dmlist "evt2*_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" blocks
+     $ dmlist "evt2*_clean.fits[sky=region(lbkg.reg)][energy=400:8000]" counts
      Enlarge the regions if the total photon counts are too small
-     (e.g., say 2,000).
+     (e.g., say 3,000).
  (9) Query the redshift from NED and nH from the HEASARC nH tool
 (10) $ ciao_bkg_spectra.sh reg=lbkg.reg
 (11) $ xspec
@@ -35,8 +35,16 @@ Step-by-step guide to analyze ACIS data:
      xspec> cpd /xs
      xspec> pl l del
      xspec> @<path>/xspec_bkgcorr.tcl
+(??) <TODO> If the background correction does not look good, e.g., the source
+     is very distant and compact and the emission is very faint, then it is
+     recommended to just use the *local background*.
+     Therefore, shrink the above 'lbkg.reg' accordingly and save as
+     'localbkg.reg', then extract the local background spectrum:
+     $ punlearn dmextract
+     $ dmextract infile="evt2_*_clean.fits[sky=region(localbkg.reg)][bin pi" \
+       outfile=localbkg.pi
 (??) <TODO> Add background spectrum to manifest:
-     $ manifest.py setpath bkg_spec <bkgcorr_blanksky_lbkg.pi | lbkg.pi>
+     $ manifest.py setpath bkg_spec <bkgcorr_blanksky_lbkg.pi | localbkg.pi>
 (12) $ cd ../img
      $ ln -s ../evt/evt2*_clean.fits .
      $ ln -s ../bkg/bkgcorr_blanksky_lbkg.pi .  # maybe 'lbkg.pi'
