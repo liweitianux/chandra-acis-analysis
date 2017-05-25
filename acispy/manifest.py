@@ -1,8 +1,5 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
-#
-# Weitian LI
-# 2017-02-11
 
 """
 Manage the observation manifest in YAML format.
@@ -17,7 +14,6 @@ and other structures in the YAML file.
 """
 
 import os
-import sys
 import argparse
 import logging
 from collections import OrderedDict
