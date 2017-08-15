@@ -54,10 +54,17 @@ def add_repro(reprodir, manifest):
 def main():
     parser = argparse.ArgumentParser(
         description="Update manifest.yaml with generated products")
+    parser.add_argument("-c", "--create", dest="create",
+                        action="store_true",
+                        help="create 'manifest.yaml' under current working " +
+                        "directory if necessary")
     parser.add_argument("-r", "--repro", dest="reprodir", default=None,
                         help="path to the repro directory; add the " +
                         "reprocessed products to manifest if specified")
     args = parser.parse_args()
+
+    if args.create:
+        open("manifest.yaml", "a").close()
     manifest = get_manifest()
 
     if args.reprodir:
