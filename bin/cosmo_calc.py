@@ -74,15 +74,22 @@ def calc_quantity(q, calculator, args):
 
 
 def main():
+    # Hubble parameter at present day
+    H0 = 71.0  # [km/s/Mpc]
+    # Present-day matter density
+    Om0 = 0.27
+    # Chandra ACIS pixel size
+    pixelsize = 0.492  # [arcsec]
+
     parser = argparse.ArgumentParser(
         description="Cosmology calculator with Chandra-specific quantities")
     parser.add_argument("-H", "--hubble", dest="H0",
-                        type=float, default=71.0,
+                        type=float, default=H0,
                         help="Present-day Hubble parameter " +
-                        "(default: 71 km/s/Mpc)")
+                        "(default: %s [km/s/Mpc])" % H0)
     parser.add_argument("-M", "--omega-m", dest="Om0",
-                        type=float, default=0.27,
-                        help="Present-day matter density (default: 0.27")
+                        type=float, default=Om0,
+                        help="Present-day matter density (default: %s)" % Om0)
     parser.add_argument("-b", "--brief", dest="brief", action="store_true",
                         help="be brief")
     parser.add_argument("-U", "--unit", dest="unit",
@@ -102,11 +109,11 @@ def main():
     parser.add_argument("--kpc-per-pix", dest="kpc_per_pix",
                         action="store_true",
                         help="calculate the transversal length [kpc] " +
-                        "w.r.t. 1 ACIS pixel (0.492 arcsec) at DA(z)")
+                        "w.r.t. 1 pixel (%s [arcsec]) at DA(z)" % pixelsize)
     parser.add_argument("--cm-per-pix", dest="cm_per_pix",
                         action="store_true",
                         help="calculate the transversal length [cm] " +
-                        "w.r.t. 1 ACIS pixel (0.492 arcsec) at DA(z)")
+                        "w.r.t. 1 pixel (%s [arcsec]) at DA(z)" % pixelsize)
     parser.add_argument("--norm-apec", dest="norm_apec",
                         action="store_true",
                         help="calculate the normalization factor " +
