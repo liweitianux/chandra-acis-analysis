@@ -3,7 +3,7 @@
 ## Analyze Chandra ACIS data
 ##
 ## Weitian LI <liweitianux@gmail.com>
-## Updated: 2017-02-07
+## Updated: 2017-08-15
 ##
 
 
@@ -12,8 +12,7 @@ Step-by-step guide to analyze ACIS data:
  (1) Create new level=2 events with newest calibrations, and build
      "manifest.yaml" for later use:
      $ chandra_repro indir=. outdir=repro verbose=2
-     $ touch manifest.yaml
-     $ update_manifest.py -r repro
+     $ update_manifest.py -c -r repro
 (??) <TODO> build 'results.yaml' (ra_ned, dec_ned, nh, z, etc.)
  (2) $ mkdir -p evt bkg img spc/profile mass
  (3) $ cd evt
