@@ -33,6 +33,15 @@ def get_path(pglob, pdir=None):
         return p
 
 
+def add_directory(manifest):
+    """
+    Add the directory where this manifest file locates as the item
+    ``directory`` into the manifest.
+    """
+    directory = os.path.dirname(manifest.filepath)
+    manifest.set("directory", directory)
+
+
 def add_repro(reprodir, manifest):
     """
     Add the generated products by ``chandra_repro`` to the manifest.
@@ -60,6 +69,10 @@ def main():
                         action="store_true",
                         help="create '%s' under current " % manifestfile +
                         "working directory if not exists")
+    parser.add_argument("-D", "--add-directory", dest="add_directory",
+                        action="store_true",
+                        help="add an 'directory' item to the manifest " +
+                        "storing the directory where the manifest locates")
     parser.add_argument("-r", "--repro", dest="reprodir", default=None,
                         help="path to the repro directory; add the " +
                         "reprocessed products to manifest if specified")
