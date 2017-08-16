@@ -37,7 +37,7 @@ def add_repro(reprodir, manifest):
     """
     Add the generated products by ``chandra_repro`` to the manifest.
     """
-    logging.info("Adding repro products from: {0}".format(reprodir))
+    logger.info("Adding repro products from: {0}".format(reprodir))
     keyglobs = OrderedDict([
         ("evt2", "acisf*_repro_evt2.fits"),
         ("bpix", "acisf*_repro_bpix1.fits"),
@@ -52,19 +52,22 @@ def add_repro(reprodir, manifest):
 
 
 def main():
+    manifestfile = "manifest.yaml"
+
     parser = argparse.ArgumentParser(
-        description="Update manifest.yaml with generated products")
+        description="Update %s with generated products" % manifestfile)
     parser.add_argument("-c", "--create", dest="create",
                         action="store_true",
-                        help="create 'manifest.yaml' under current working " +
-                        "directory if necessary")
+                        help="create '%s' under current " % manifestfile +
+                        "working directory if not exists")
     parser.add_argument("-r", "--repro", dest="reprodir", default=None,
                         help="path to the repro directory; add the " +
                         "reprocessed products to manifest if specified")
     args = parser.parse_args()
 
-    if args.create:
-        open("manifest.yaml", "a").close()
+    if (not os.path.exists(manifestfile)) and args.create:
+        logger.info("Create %s" % manifestfile)
+        open(manifestfile, "a").close()
     manifest = get_manifest()
 
     if args.reprodir:
