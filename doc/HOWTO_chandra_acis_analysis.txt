@@ -11,12 +11,11 @@ Step-by-step guide to analyze ACIS data:
 
  (1) Create new level=2 events with newest calibrations, and build
      "manifest.yaml" for later use:
-     $ chandra_repro indir=. outdir=repro verbose=2
-     $ update_manifest.py -c -r repro
+     $ repro_acis.py
 (??) <TODO> build 'results.yaml' (ra_ned, dec_ned, nh, z, etc.)
  (2) $ mkdir -p evt bkg img spc/profile mass
  (3) $ cd evt
-     $ ln -s ../*_repro_evt2.fits .
+     $ ln -s ../repro/*_repro_evt2.fits .
  (4) $ clean_evt2.py
  (5) $ cd ../bkg
      $ ln -s ../evt/evt2*_clean.fits .
