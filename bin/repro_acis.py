@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 #
-# 2017-02-27
 
 """
 Reprocess Chandra ACIS raw "secondary" (level=1) data using the
@@ -19,6 +18,8 @@ from glob import glob
 from _context import acispy
 from acispy.manifest import get_manifest
 from acispy.pfiles import setup_pfiles
+
+import update_manifest
 
 
 logging.basicConfig(level=logging.INFO)
@@ -56,36 +57,15 @@ def build_manifest(reprodir="repro", manifestfile="manifest.yaml"):
         open(manifestfile, "w").close()
 
     manifest = get_manifest(manifestfile)
-    key = "directory"
-    manifest.set(key, os.path.basename(os.getcwd()))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "evt2"
-    manifest.setpath(key, glob("%s/acisf*_repro_evt2.fits" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "bpix"
-    manifest.setpath(key, glob("%s/acisf*_repro_bpix1.fits" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "asol"
-    manifest.setpath(key, glob("%s/pcadf*_asol1.fits" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "asol_lis"
-    manifest.setpath(key, glob("%s/acisf*_asol1.lis" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "fov"
-    manifest.setpath(key, glob("%s/acisf*_repro_fov1.fits" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "pbk"
-    manifest.setpath(key, glob("%s/acisf*_pbk0.fits" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
-    key = "msk"
-    manifest.setpath(key, glob("%s/acisf*_msk1.fits" % reprodir))
-    logger.info("Added '%s' to manifest: %s" % (key, manifest.get(key)))
+    update_manifest.add_directory(manifest)
+    update_manifest.add_repro(reprodir=reprodir, manifest=manifest)
 
 
 def main():
     parser = argparse.ArgumentParser(
-            description="Extract surface brightness profile (SBP)")
-    parser.add_argument("-C", "--clobber", dest="clobber", action="store_true",
+            description="Reprocess ACIS raw data & create manifest.yaml")
+    parser.add_argument("-C", "--clobber",
+                        dest="clobber", action="store_true",
                         help="overwrite existing file")
     args = parser.parse_args()
 
