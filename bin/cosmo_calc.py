@@ -48,6 +48,11 @@ QUANTITIES = OrderedDict([
         "label": "norm (APEC)",
         "kwargs": ["z"],
     }),
+    ("evolution_factor", {
+        "unit": None,
+        "label": "Evolution factor",
+        "kwargs": ["z"],
+    }),
 ])
 
 
@@ -95,6 +100,10 @@ def main():
                         help="be brief")
     parser.add_argument("-u", "--unit", dest="unit",
                         help="set the unit for output quantity if supported")
+    parser.add_argument("-E", "--evolution-factor",
+                        dest="evolution_factor",
+                        action="store_true",
+                        help="calculate the redshift evolution factor E(z)")
     parser.add_argument("-L", "--luminosity-distance",
                         dest="luminosity_distance",
                         action="store_true",

@@ -1,8 +1,8 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
-Cosmology calculator for Chandra ACIS.
+Cosmology calculator with Chandra ACIS-specific quantities support.
 """
 
 import math
@@ -24,6 +24,9 @@ class Calculator:
         self.Ode0 = 1.0 - Om0
         self.Ob0 = Ob0
         self._cosmo = FlatLambdaCDM(H0=H0, Om0=Om0, Ob0=Ob0)
+
+    def evolution_factor(self, z):
+        return self._cosmo.efunc(z)
 
     def luminosity_distance(self, z, unit="Mpc"):
         dist = self._cosmo.luminosity_distance(z)
