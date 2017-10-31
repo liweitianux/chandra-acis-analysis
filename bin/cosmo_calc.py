@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
+#
 
 """
 Cosmology calculator with support of Chandra ACIS-specific quantities.
@@ -85,15 +86,15 @@ def main():
         description="Cosmology calculator with Chandra-specific quantities")
     parser.add_argument("-H", "--hubble", dest="H0",
                         type=float, default=H0,
-                        help="Present-day Hubble parameter " +
+                        help="present-day Hubble parameter " +
                         "(default: %s [km/s/Mpc])" % H0)
     parser.add_argument("-M", "--omega-m", dest="Om0",
                         type=float, default=Om0,
-                        help="Present-day matter density (default: %s)" % Om0)
+                        help="present-day matter density (default: %s)" % Om0)
     parser.add_argument("-b", "--brief", dest="brief", action="store_true",
                         help="be brief")
-    parser.add_argument("-U", "--unit", dest="unit",
-                        help="unit for output quantity if supported")
+    parser.add_argument("-u", "--unit", dest="unit",
+                        help="set the unit for output quantity if supported")
     parser.add_argument("-L", "--luminosity-distance",
                         dest="luminosity_distance",
                         action="store_true",
@@ -125,6 +126,8 @@ def main():
 
     q_active = get_quantities(args)
     if len(q_active) > 1:
+        # Multiple quantities to be calculated, thus unit specification
+        # and brief output are disabled.
         if args.unit is not None:
             args.unit = None
             print("WARNING: ignored argument --unit", file=sys.stderr)
