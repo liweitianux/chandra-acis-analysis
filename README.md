@@ -1,7 +1,7 @@
-Chandra ACIS analysis tools and documents
-=========================================
+Chandra ACIS Data Analysis Tools
+================================
 
-Weitian (Aaron) LI, Junhu GU, and Zhenghao ZHU
+Weitian LI, Junhu GU, and Zhenghao ZHU
 
 
 Introduction
@@ -21,65 +21,63 @@ big galaxy groups and clusters sample observed by Chandra ACIS.
 Therefore, there are many assumptions and hacks in these tools, and many
 cleanups are needed.  Last but not least, documents are badly needed.
 
-These tools are tested with:
-+ CIAO v4.6
-+ CIAO v4.9 (testing ...)
-+ HEASoft v6.16
-+ HEASoft v6.19
-
-
-WARNING
--------
-These tools are currently under **heavy development**, therefore may have
-**various bugs**.
-
 
 TODO
 ----
-+ rewrite most scripts using Python
-+ write memos/docs for Chandra data analysis
++ Rewrite more scripts in Python
++ Write more docs
+
+
+Requirements
+------------
++ Python (>=3.5)
++ CIAO (tested with v4.6, v4.9)
++ HEASoft (tested with v6.16, v6.19)
 
 
 Installation
 ------------
 1. Clone this repository with ``opt_utilities``:
 
-   ```
+   ```sh
    $ git clone --recursive https://github.com/liweitianux/chandra-acis-analysis.git
    ```
 
    or in this way:
 
-   ```
+   ```sh
    $ git clone https://github.com/liweitianux/chandra-acis-analysis.git
    $ cd chandra-acis-analysis
    $ git submodule update --init --recursive
    ```
 
-2. Build tools in ``src`` directory:
+2. Install the following Python packages:
 
+   ```sh
+   $ sudo apt install python3-numpy python3-scipy python3-astropy python3-ruamel.yaml
    ```
+
+   or
+
+   ```sh
+   $ pip3 install --user -r requirements.txt
+   ```
+
+3. Build tools in ``src`` directory:
+
+   ```sh
    $ cd src
    $ make clean
-   $ make
-   (append 'OPENMP=yes' to enable OpenMP)
+   $ make [OPENMP=yes]
    $ make install
    ```
-
-3. Install the following runtime dependencies:
-
-   * Python (>=3.5)
-   * [ruamel.yaml](https://bitbucket.org/ruamel/yaml)
-   * [numpy](http://numpy.org/)
-   * [scipy](https://scipy.org/)
-   * [astropy](http://www.astropy.org/)
-
 
 Settings
 --------
 Add the following settings to your shell's initialization file
 (e.g., ``~/.bashrc`` or ``~/.zshrc``).
-```
+
+```sh
 # Environment variables:
 export CHANDRA_ACIS_BIN="<path>/chandra-acis-analysis/bin"
 
