@@ -72,6 +72,7 @@ Installation
    $ make install
    ```
 
+
 Settings
 --------
 Add the following settings to your shell's initialization file
@@ -88,6 +89,56 @@ alias fitsbp="${CHANDRA_ACIS_BIN}/fit_sbp.sh"
 alias fittp="${CHANDRA_ACIS_BIN}/fit_wang2012_model"
 alias calclxfx="${CHANDRA_ACIS_BIN}/calc_lxfx_wrapper.sh"
 alias getlxfx="${CHANDRA_ACIS_BIN}/get_lxfx_data.sh"
+```
+
+HEASoft Setup
+-------------
+To avoid the conflicts between HEASoft and system libraries,
+a [wrapper script](scripts/heasoft.sh) is provided.
+
+```sh
+$ mkdir ~/.heasoft
+$ cp scripts/heasoft.sh ~/.heasoft
+
+# Assume that your HEASoft is installed at '~/local/heasoft/heasoft-x.xx/'
+$ cd ~/local/heasoft
+$ ln -s heasoft-x.xx default
+$ cd default
+$ ln -s x86_64-unknown-linux-gnu-libc* PORTAL
+```
+
+Then add the following `heainit()` shell function:
+```sh
+heainit() {
+    local ld_lib_bak i tool
+    local wrapper="${HOME}/.heasoft/heasoft.sh"
+    local wrapper_dir=$(dirname ${wrapper})
+    local wrapper_name=$(basename ${wrapper})
+    if [ -z "${HEADAS}" ]; then
+        ld_lib_bak=${LD_LIBRARY_PATH}
+        export HEADAS="${HOME}/local/heasoft/default/PORTAL"
+        source ${HEADAS}/headas-init.sh
+        export LD_LIBRARY_PATH=${ld_lib_bak}
+        export PATH="${wrapper_dir}:${PATH}"
+
+        if [ ! -f "${wrapper}" ]; then
+            echo "ERROR: wrapper '${wrapper}' not found!"
+            return
+        fi
+        chmod u=rwx ${wrapper}
+
+        echo "Initializing HEASoft from ${HEADAS} ..."
+        for i in ${HEADAS}/bin/*; do
+            tool=$(basename $i)
+            ln -sf ${wrapper_name} ${wrapper_dir}/${tool}
+        done
+        rehash
+
+        echo "HEASoft initialized."
+    else
+        echo "HEASoft already initialized from: ${HEADAS}"
+    fi
+}
 ```
 
 
