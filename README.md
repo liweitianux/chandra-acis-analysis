@@ -132,7 +132,6 @@ heainit() {
             tool=$(basename $i)
             ln -sf ${wrapper_name} ${wrapper_dir}/${tool}
         done
-        rehash
 
         echo "HEASoft initialized."
     else
