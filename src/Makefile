@@ -8,8 +8,8 @@
 
 
 CXX ?= g++
-CXXFLAGS += -Wall
-CXXFLAGS += -Werror
+CXXFLAGS += -Wall -Wextra
+#CXXFLAGS += -Werror
 
 ifdef OPENMP
 	CXXFLAGS += -fopenmp
