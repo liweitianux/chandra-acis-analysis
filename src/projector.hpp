@@ -36,8 +36,9 @@ namespace opt_utilities
     {}
     //copy cstr
     projector(const projector& rhs)
-      :cm_per_pixel(rhs.cm_per_pixel)
+      :model<std::vector<T>,std::vector<T>,std::vector<T> >(rhs)
     {
+      cm_per_pixel=rhs.cm_per_pixel;
       attach_model(*(rhs.pmodel));
       if(rhs.pcfunc)
         {
@@ -51,7 +52,6 @@ namespace opt_utilities
     //assign operator
     projector& operator=(const projector& rhs)
     {
-      cm_per_pixel=rhs.cm_per_pixel;
       if(pmodel)
         {
           pmodel->destroy();
