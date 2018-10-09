@@ -26,7 +26,6 @@ namespace opt_utilities
   {
   private:
     bool verb;
-    int n;
     bool limit_bound;
     typedef std::vector<T> Tp;
 
@@ -75,6 +74,7 @@ namespace opt_utilities
       std::vector<float> vye;
       std::vector<float> my;
       float x1=1e99,x2=-1e99,y1=1e99,y2=-1e99;
+      int n=0;
       if(verb)
 	{
 	  n++;

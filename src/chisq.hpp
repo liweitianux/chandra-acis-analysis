@@ -47,7 +47,6 @@ namespace opt_utilities
   private:
     bool verb;
     bool limit_bound;
-    int n;
 
     statistic<Ty,Tx,Tp,Ts,Tstr>* do_clone()const
     {
@@ -100,6 +99,7 @@ namespace opt_utilities
       std::vector<float> vye2;
       std::vector<float> my;
       float xmin=1e99,xmax=-1e99,ymin=1e99,ymax=-1e99;
+      int n=0;
       if(verb)
 	{
 	  n++;
