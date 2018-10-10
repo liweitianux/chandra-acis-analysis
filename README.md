@@ -19,13 +19,29 @@ This repository currently contains the following tools:
 These tools are developed to help and automate our batch analysis of the
 big galaxy groups and clusters sample observed by Chandra ACIS.
 Therefore, there are many assumptions and hacks in these tools, and many
-cleanups are needed.  Last but not least, documents are badly needed.
+cleanups are needed.
+In addition, documents are badly needed!
 
 
 TODO
 ----
-+ Rewrite more scripts in Python
-+ Write more docs
++ Rewrite more shell scripts in Python, use YAML configuration files, and
+  store results into `results.yaml` (get rid of `INFO.json`).  e.g.,
+  - `bin/fit_mass.sh`
+  - `bin/fit_sbp.sh`
+  - `bin/calc_lxfx.sh`
+  - `bin/calc_lxfx_wrapper.sh`
+  - `bin/get_lxfx_data.sh`
+  - `bin/fg_2500_500.py`
+  - `scripts/chandra_genspcreg.sh`
+  - `scripts/ciao_bkg_spectra.sh`
+  - `scripts/ciao_deproj_spectra.sh`
+  - `scripts/ciao_r500avgt.sh`
+  - more scripts in the `scripts` directory (also cleanups)
++ Some Python programs need rewrite, e.g.,
+  - `bin/analyze_lxfx.py`
+  - `bin/analyze_mass_profile.py`
++ Update the current docs and write more!
 
 
 Requirements
