@@ -160,6 +160,6 @@ elif [ $i -gt 6 ]; then
     done
 fi
 
-printf "check SBP regions ...\n"
+printf "check rspec regions ...\n"
 ds9 ${EVT} -regions format ciao -regions system physical \
     -regions ${REG_OUT} -cmap he -bin factor 4
