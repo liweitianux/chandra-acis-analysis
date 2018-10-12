@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017-2018 Weitian LI <wt@liwt.net>
 # MIT license
 #
-# Weitian LI
-# 2017-02-06
 
 """
 Extract the object name and observation ID from the directory path.
 
-The root directory of the object data has the format:
-    <name>_oi<obsid>
+The base directory of the object data has the format: <name>_oi<obsid>
 """
 
 import os
 import argparse
 
 from _context import acispy
-from acispy.analyze_path import get_name, get_obsid
+from acispy.utils import get_name_from_path, get_obsid_from_path
 
 
 def main():
@@ -41,11 +38,11 @@ def main():
     if b_get_name:
         if not args.brief:
             print("Name:", end=" ")
-        print(get_name(path))
+        print(get_name_from_path(path))
     if b_get_obsid:
         if not args.brief:
             print("ObsID:", end=" ")
-        print(get_obsid(path))
+        print(get_obsid_from_path(path))
 
 
 if __name__ == "__main__":
