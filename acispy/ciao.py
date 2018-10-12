@@ -4,6 +4,41 @@
 import os
 import subprocess
 import shutil
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def run_command(tool, args, capture_stdout=True, check=True):
+    """
+    Clear and then run the CIAO tool with the arguments.
+
+    Parameters
+    ----------
+    tool : str
+        Name of the CIAO tool.
+    args : list[str]
+        List of arguments for the tool.
+    capture_stdout : bool
+        Capture the standard output of the command and return.
+    check : bool
+        Do not ignore the command failure if ``check=True``.
+
+    Returns
+    -------
+    stdout : str
+        Decoded standard output of the command if ``capture_stdout=True``.
+    """
+    subprocess.run(['punlearn', tool], check=check)
+    cmd = [tool] + args
+    logger.info('Run command: %s' % ' '.join(cmd))
+    stdout = subprocess.PIPE if capture_stdout else None
+    p = subprocess.run(cmd, check=check, stdout=stdout)
+    try:
+        return p.stdout.decode('utf-8').strip()
+    except AttributeError:
+        return None
 
 
 def setup_pfiles(tools):
