@@ -29,14 +29,14 @@ class ACIS:
     echannel = 14.6  # [eV]
 
     @classmethod
-    def energy2channel(self, energy):
+    def energy2channel(cls, energy):
         """
         Convert energy [eV] to channel number.
         """
-        return math.floor(energy/self.echannel + 1)
+        return math.floor(energy/cls.echannel + 1)
 
-    @classmethod
-    def get_type(self, filepath):
+    @staticmethod
+    def get_type(filepath):
         """
         Determine the Chandra ACIS type (``I`` or ``S``) according the
         active ACIS chips.
@@ -64,7 +64,7 @@ class ACIS:
             raise ValueError("unknown chip combination: %s" % detnam)
 
     @classmethod
-    def get_chips_str(self, filepath, sep=None):
+    def get_chips_str(cls, filepath, sep=None):
         """
         Return a string of the chips of interest according to the
         active ACIS type.
@@ -83,7 +83,7 @@ class ACIS:
             ``0123`` or ``0<sep>3`` if ACIS-I, ``7`` if ACIS-S;
             otherwise, ``ValueError`` raised.
         """
-        acis_type = self.get_type(filepath)
+        acis_type = cls.get_type(filepath)
         if acis_type == "I":
             if sep is None:
                 return "0123"
@@ -92,4 +92,4 @@ class ACIS:
         elif acis_type == "S":
             return "7"
         else:
-            raise ValueError("unknown ACIS type")
+            raise ValueError("unknown ACIS type: %s" % acis_type)
