@@ -1,14 +1,5 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017-2018 Weitian LI <wt@liwt.net>
 # MIT license
-#
-# Weitian LI
-# 2017-02-06
-
-"""
-Prepare the CIAO parameter files and setup the PFILES environment
-variable to keep the pfiles locally, in order to avoid the conflicts
-between multiple instance of the same CIAO tools.
-"""
 
 import os
 import subprocess
@@ -19,6 +10,8 @@ def setup_pfiles(tools):
     """
     Copy the parameter files of the specified tools to the current
     working directory, and setup the ``PFILES`` environment variable.
+    By perferring the local copy of parameter files, the conflicts
+    when running multiple instance of the same CIAO tools can be avoided.
 
     Parameters
     ----------
@@ -34,5 +27,6 @@ def setup_pfiles(tools):
             shutil.copy(pfile, ".")
         except shutil.SameFileError:
             pass
-    # Setup the ``PFILES`` environment variable
+
+    # Update the ``PFILES`` environment variable to prefer the local copy
     os.environ["PFILES"] = "./:" + os.environ["PFILES"]

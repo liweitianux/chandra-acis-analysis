@@ -24,7 +24,7 @@ import logging
 
 from _context import acispy
 from acispy.manifest import get_manifest
-from acispy.pfiles import setup_pfiles
+from acispy.ciao import setup_pfiles
 from acispy.acis import ACIS
 from acispy.ds9 import ds9_view
 from acispy.header import write_keyword

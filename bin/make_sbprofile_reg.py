@@ -28,7 +28,7 @@ import math
 from _context import acispy
 from acispy.header import read_keyword
 from acispy.manifest import get_manifest
-from acispy.pfiles import setup_pfiles
+from acispy.ciao import setup_pfiles
 from acispy.region import Regions
 from acispy.spectrum import Spectrum
 from acispy.ds9 import ds9_view

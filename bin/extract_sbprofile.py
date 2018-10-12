@@ -54,7 +54,7 @@ from astropy.io import fits
 
 from _context import acispy
 from acispy.manifest import get_manifest
-from acispy.pfiles import setup_pfiles
+from acispy.ciao import setup_pfiles
 
 
 logging.basicConfig(level=logging.INFO)
